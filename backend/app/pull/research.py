@@ -6,6 +6,7 @@ The record says what ran. `status` is "ready" (promises judged), "statements_onl
 """
 from __future__ import annotations
 
+import threading
 from collections import OrderedDict
 from typing import Any, Callable
 
@@ -117,17 +118,19 @@ def research(
 
 # ------------------------------------------------------------------------------------------------ for "Ask the documents"
 _MEMO: OrderedDict[str, tuple[Index, Corpus]] = OrderedDict()
+_MEMO_LOCK = threading.Lock()
 MEMO_SIZE = 3  # a corpus is a few hundred KB of text; three keep a small instance well inside its memory
 
 
 def corpus_index(symbol: str, sources: IngestSources | None = None) -> tuple[Index, Corpus]:
     """The searchable index of a company's documents (built from the cached pages, so it costs no download after the first)."""
-    if symbol in _MEMO:
-        _MEMO.move_to_end(symbol)
+    with _MEMO_LOCK:  # one request builds a company's index; a second asking at the same moment waits and then reuses it
+        if symbol in _MEMO:
+            _MEMO.move_to_end(symbol)
+            return _MEMO[symbol]
+        corpus = ingest(symbol, sources)
+        index = Index([c for chunks in chunks_of(corpus).values() for c in chunks])
+        _MEMO[symbol] = (index, corpus)
+        while len(_MEMO) > MEMO_SIZE:
+            _MEMO.popitem(last=False)
         return _MEMO[symbol]
-    corpus = ingest(symbol, sources)
-    index = Index([c for chunks in chunks_of(corpus).values() for c in chunks])
-    _MEMO[symbol] = (index, corpus)
-    while len(_MEMO) > MEMO_SIZE:
-        _MEMO.popitem(last=False)
-    return _MEMO[symbol]

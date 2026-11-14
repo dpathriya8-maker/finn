@@ -7,7 +7,7 @@ import { CompanyResearch } from "@/components/research/CompanyResearch";
 import { isValidTicker, normaliseTicker, type ResearchIndex } from "@/lib/research";
 import { useJson } from "@/lib/useJson";
 
-const STATUS_NOTE = { ready: "Promises judged", statements_only: "Documents read", no_documents: "No documents" } as const;
+const STATUS_NOTE = { ready: "verdicts ready", statements_only: "no verdict yet", no_documents: "nothing to read" } as const;
 
 /** The Research tab: a ticker box and the companies researched in advance; with ?symbol=, one company's research. */
 export function ResearchScreen() {

@@ -8,6 +8,7 @@ model quota. The count lives in the cache, so a restart of a free instance reset
 from __future__ import annotations
 
 import os
+import threading
 import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
@@ -71,6 +72,7 @@ class Engine:
         self.router_factory = router_factory or (lambda: llm.Router(cache=self.cache) if llm.available("cheap") else None)
         self.static_dir, self.daily_cap, self.today, self.run_inline = static_dir, daily_cap, today, run_inline
         self.jobs: dict[str, Job] = {}
+        self._start_lock = threading.Lock()  # FastAPI runs these routes in a thread pool: checking, counting and creating a job must not interleave
         self.recent: OrderedDict[str, tuple[float, dict[str, Any]]] = OrderedDict()
         self.pool = None if run_inline else ThreadPoolExecutor(max_workers=workers, thread_name_prefix="research")
 
@@ -126,13 +128,14 @@ class Engine:
     # ------------------------------------------------------------------ jobs
     def start(self, symbol: str) -> dict[str, Any]:
         """Begin fresh research unless a record exists or a job is running. Raises CapReached over the daily cap."""
-        current = self.state(symbol)
-        if current["state"] in ("ready", "running"):
-            return current
-        if self.cap_used() >= self.daily_cap:
-            raise CapReached(self.daily_cap)
-        self._count_fresh_run()
-        job = self.jobs[symbol] = Job(symbol)
+        with self._start_lock:
+            current = self.state(symbol)
+            if current["state"] in ("ready", "running"):
+                return current
+            if self.cap_used() >= self.daily_cap:
+                raise CapReached(self.daily_cap)
+            self._count_fresh_run()
+            job = self.jobs[symbol] = Job(symbol)
         if self.pool is None:
             self._run(job)
         else:

@@ -237,3 +237,26 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 71 frontend unit tests (the flow that fetches, wakes, starts and polls, with a fake clock); lint, type-check and production build. 11 checks in a real phone-sized Chromium against the real local engine and the real data: the tab and the ticker form; a bad ticker refused where it is typed; a prepared company opening at once with 11 quotes and 11 page links; every quote on screen matching the engine's own record; Ask returning passages and "Not found in the documents"; a question that is too short refused without a request; a sleeping engine described as asleep; an unprepared company followed through its stages to its record; a record with verdicts (bad news first, evidence on demand, counts as calculated); no overflow at 390 px with 44 px tap targets, in light and dark; and an invalid ticker in the address. I looked at the screenshots.
 
 **Limits:** the verdict view was exercised with a hand-built record because no model has run; its own text says what each part is. The browser opens a PDF at the page only where its viewer honours `#page=`.
+
+## Step 11: Polish, documentation and the submission pack (2026-11-15)
+
+**Asked:** a 390 px phone pass, then the README, an architecture diagram, the cost table, a write-up and the build history, so the submission email is ready.
+
+**Done:**
+- **Phone pass.** Every screen was captured at 390 px on the production build with real data, in light and dark, and looked at: Brief, results and management cards, Alerts, Research home, a company's research, Settings. One wording fix (the Research list said "Documents read" twice). No overflow, no console errors, contrast good in dark.
+- **README** rewritten: what it does, a table of what is verified and what is not, how it avoids making things up, the architecture diagram, cost and efficiency, how to run, where things are. Seven screenshots in `docs/screens/`.
+- **Architecture** doc with the final diagram, the three flows (push, pull prepared in advance, pull on demand) and how the pieces are kept honest.
+- **Write-up** (`docs/write-up.md`): the approach, the decisions that mattered, and what to do next.
+- **Submission pack** (`docs/submission.md`): a checklist of what only the owner can do (keys, the first real verdicts, deploy, the Render check) and the email, with the places to fill in marked. `docs/deploy.md` gained the steps to turn on the Promise Tracker and a smoke test after deploying.
+
+**Verified:**
+- Backend 564 tests, frontend 71 unit tests, type-check, lint, production build, secret scan.
+- All earlier browser checks re-run on the **production build**: the Brief 11/11, Alerts and Settings 9/9, the cards 17/17, Research 11/11. The Step 2 skeleton check "A" is retired: it hard-codes the skeleton's sample timestamp and "Sample data" label, which real data replaced in Step 4. Built with `NEXT_PUBLIC_API_URL` set, as it will be on Vercel; without it the pill correctly says "Engine not configured".
+- **Memory on a free instance:** the API idles at 63 MB. A cold research of a company never fetched before (Pidilite: four transcripts and an 11.5 MB, 338-page annual report) took 8 seconds and peaked at 131 MB, against Render's 512 MB.
+
+**Issues found and fixed:**
+- Two simultaneous requests for one ticker could each start a job and count the daily cap twice. Now under a lock; the test would fail without it (8 jobs, 7 counts).
+- A blank line copied from `.env.example` ("RATE_LIMIT_DEFAULT=") gave an empty limit string that broke the limiter; blank now means "not set".
+- The deploy guide still described the skeleton's "Sample data" tag.
+
+**Not done, and why:** deployment to Vercel and Render, the API keys and the first real run of the model path need the owner's accounts; the checklist is in `docs/submission.md`.

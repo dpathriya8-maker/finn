@@ -263,3 +263,44 @@ def test_ask_works_for_a_company_whose_documents_ship_with_the_app_even_without_
     other = TestClient(create_app(engine=fresh)).post("/ask", json={"ticker": "OTHER", "question": "What is the capex plan for the new plant?"})
     assert other.status_code == 409  # nothing shipped and nothing researched for this one
     rs._MEMO.clear()
+
+
+# ---------------------------------------------------------------------------------------------- two requests at once
+def test_two_simultaneous_requests_for_the_same_ticker_start_one_job_and_count_once(tmp_path):
+    release = threading.Event()
+    starts = []
+
+    def slow_resolve(symbol):
+        starts.append(symbol)
+        release.wait(timeout=10)
+        return LISTING
+
+    eng = engine(tmp_path, resolve=slow_resolve, inline=False, workers=2, cap=5)
+    real_cap_used = eng.cap_used
+
+    def slow_cap_used():  # widen the window between "is anything running?" and "start a job", so an unlocked start would be caught
+        time.sleep(0.02)
+        return real_cap_used()
+
+    eng.cap_used = slow_cap_used
+    results = []
+    barrier = threading.Barrier(8)
+
+    def post():
+        barrier.wait()
+        try:
+            results.append(eng.start("ACME")["state"])
+        except Exception as exc:  # a failure here would be the bug
+            results.append(repr(exc))
+
+    threads = [threading.Thread(target=post) for _ in range(8)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=10)
+    release.set()
+    assert results == ["running"] * 8 and eng.cap_used() == 1  # eight at once: one job, one count
+    deadline = time.time() + 10
+    while time.time() < deadline and eng.state("ACME")["state"] != "ready":
+        time.sleep(0.05)
+    assert eng.state("ACME")["state"] == "ready" and starts == ["ACME"]

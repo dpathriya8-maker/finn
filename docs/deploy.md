@@ -47,7 +47,7 @@ If the build fails, open the service's **Logs** tab. The two things worth checki
 1. In Render, open **finn-api** then **Environment**.
 2. Edit `ALLOWED_ORIGINS` to the Vercel production URL, for example `https://finn-xxxx.vercel.app`. It must match exactly: `https` and no path or trailing slash. For more than one origin, separate them with commas. `http://localhost:3000` is always allowed.
 3. Save. Render redeploys by itself (about a minute).
-4. Open the Vercel URL on your phone. After a short "Engine waking up..." the pill should turn green: **Engine online**. Below the title you should see "Data as of ..." with a "Sample data" tag.
+4. Open the Vercel URL on your phone. After a short "Engine waking up..." the pill should turn green: **Engine online**. Below the title you should see "Data as of ..." with the time the data was produced.
 
 ## D. Add to home screen
 
@@ -70,6 +70,20 @@ This fills the "Render" column of [data-sources.md](data-sources.md). It needs `
 
 The route is temporary. It is removed once the table is filled in.
 
+## F. Turn on the Promise Tracker (needs your API keys)
+
+Until a model is configured, Research shows what management said about the future (found by rule) and "No verdict yet". To get verdicts and written answers:
+
+1. In your local `.env` set `GEMINI_API_KEY` and `LLM_CHEAP_MODEL` (and, if you want, `LLM_STRONG_MODEL`, `GROQ_API_KEY` and `LLM_FALLBACK_MODEL`; a model written `groq:name` goes to Groq). Never paste a key into a chat.
+2. From `backend/`: `.venv/Scripts/python -m pipeline.research`. This reads the four research companies again (from the saved documents, so no downloads: add `--offline`), builds the Promise Tracker, and writes `frontend/public/data/research/*.json`. It keeps an existing record that already has verdicts if a later run has no key.
+3. **Read the first verdicts against the transcripts yourself** (every card shows its quote and page, and "Open at that page"). This is the first real run of the model path, so expect to tune the two prompts in `backend/app/pull/promises.py`.
+4. `python -m app.core.llm` prints how many calls were made and their tokens, for the cost table in `docs/cost.md`.
+5. Commit and push the changed JSON. Put the same keys in Render's environment so unprepared tickers get verdicts too.
+
+## G. Smoke test after deploying
+
+On your phone, in this order: the Brief loads with "Data as of"; open the ITC card and the Apollo Hospitals card (results and management cards); Alerts shows a count; Research lists four companies and opens Info Edge with quotes; ask "What did management say about capex?" (the first ask after a sleep says the engine is waking, then answers); then try a company that is not listed, such as TITAN. It should show "Reading TITAN's filings" with its stages, then a record, or a stated reason if the exchanges refuse Render's address. If that fails, the four prepared companies are unaffected.
+
 ## If something looks wrong
 
 | You see | Why and what to do |
@@ -82,5 +96,6 @@ The route is temporary. It is removed once the table is filled in.
 
 ## Known limits
 
+- **Memory.** Measured locally: the API idles at 63 MB, and a cold research of a company never fetched before (four transcripts and an 11.5 MB annual report) peaked at 131 MB, so the 512 MB free instance has plenty of room.
 - The per-IP rate limit reads the client IP from `X-Forwarded-For`, which a determined client could spoof behind Render's proxy. The real guard on the free LLM quota is the global `DAILY_FRESH_RESEARCH_CAP`, not the per-IP limit.
 - The GitHub Actions workflows (CI and the scheduled data refresh) need the `workflow` scope on your GitHub login: run `gh auth refresh -h github.com -s workflow` once and approve it in the browser.
