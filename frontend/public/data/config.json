@@ -1,0 +1,164 @@
+{
+ "schema": 1,
+ "defaults": {
+  "window_hours": 24,
+  "volume_multiple": 2.0,
+  "price_move_pct": 5.0,
+  "volume_lookback_days": 20
+ },
+ "categories": [
+  {
+   "id": "litigation",
+   "label": "Litigation & regulatory action",
+   "why": "Legal or regulatory action can move a stock fast",
+   "weight": 95,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "pledging",
+   "label": "Promoter pledging",
+   "why": "Pledged promoter shares signal financial stress",
+   "weight": 90,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "results",
+   "label": "Financial results",
+   "why": "Quarterly results are the most material filing",
+   "weight": 88,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "results"
+  },
+  {
+   "id": "management_change",
+   "label": "Management change",
+   "why": "Leadership changes move stocks",
+   "weight": 85,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "management"
+  },
+  {
+   "id": "m_and_a",
+   "label": "M&A and restructuring",
+   "why": "Changes what the company is",
+   "weight": 80,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "credit_rating",
+   "label": "Credit rating",
+   "why": "Ratings affect what the company pays to borrow",
+   "weight": 78,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "fund_raise",
+   "label": "Fund raise",
+   "why": "Raising money can dilute shareholders or add debt",
+   "weight": 70,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "bonus_split",
+   "label": "Bonus & split",
+   "why": "Corporate action with a record date",
+   "weight": 60,
+   "is_routine": false,
+   "default_alert": true,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "capex",
+   "label": "Capex & expansion",
+   "why": "Expansion plan: forward-looking",
+   "weight": 55,
+   "is_routine": false,
+   "default_alert": false,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "dividend",
+   "label": "Dividend",
+   "why": "Cash returned to shareholders",
+   "weight": 50,
+   "is_routine": false,
+   "default_alert": false,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "press_release",
+   "label": "Press release",
+   "why": "Company news",
+   "weight": 40,
+   "is_routine": false,
+   "default_alert": false,
+   "card_type": "one_liner"
+  },
+  {
+   "id": "unclassified",
+   "label": "Unclassified",
+   "why": "Could not be classified, so it is shown rather than hidden",
+   "weight": 35,
+   "is_routine": false,
+   "default_alert": false,
+   "card_type": "surface_only"
+  },
+  {
+   "id": "insider_trading",
+   "label": "Insider trading",
+   "why": "Routine trading disclosure",
+   "weight": 30,
+   "is_routine": true,
+   "default_alert": false,
+   "card_type": "surface_only"
+  },
+  {
+   "id": "agm_egm",
+   "label": "AGM / EGM",
+   "why": "Routine governance notice",
+   "weight": 25,
+   "is_routine": true,
+   "default_alert": false,
+   "card_type": "surface_only"
+  },
+  {
+   "id": "earnings_call",
+   "label": "Earnings call",
+   "why": "Earnings call logistics or transcript",
+   "weight": 25,
+   "is_routine": true,
+   "default_alert": false,
+   "card_type": "surface_only"
+  },
+  {
+   "id": "postal_ballot",
+   "label": "Postal ballot",
+   "why": "Routine voting notice",
+   "weight": 20,
+   "is_routine": true,
+   "default_alert": false,
+   "card_type": "surface_only"
+  },
+  {
+   "id": "investor_meetings",
+   "label": "Investor meetings",
+   "why": "Routine investor meeting notice",
+   "weight": 15,
+   "is_routine": true,
+   "default_alert": false,
+   "card_type": "surface_only"
+  }
+ ]
+}

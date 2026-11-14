@@ -1,6 +1,6 @@
 import { BottomNav } from "@/components/BottomNav";
 import { DataAsOf } from "@/components/DataAsOf";
-import { FilingsList } from "@/components/FilingsList";
+import { MorningBrief } from "@/components/brief/MorningBrief";
 import { StatusPill } from "@/components/StatusPill";
 
 export default function Home() {
@@ -24,8 +24,8 @@ export default function Home() {
           </div>
         </section>
 
-        <div className="mt-6">
-          <FilingsList />
+        <div className="mt-5">
+          <MorningBrief />
         </div>
       </main>
 

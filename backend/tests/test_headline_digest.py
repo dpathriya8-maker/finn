@@ -179,8 +179,8 @@ def test_transcripts_are_routine_wherever_they_were_filed():
 def test_every_item_carries_what_the_app_needs_to_rank_filter_and_explain_it():
     keys = {
         "id", "symbol", "company", "source", "published_at", "category", "category_label", "card_type", "priority",
-        "routine", "default_alert", "why", "headline", "rule", "subject", "body", "raw_category", "raw_subcategory",
-        "url", "size_kb",
+        "routine", "default_alert", "why", "tone", "headline", "rule", "subject", "body", "raw_category",
+        "raw_subcategory", "url", "size_kb",
     }
     for row in ROWS:
         assert set(announcement_item(row, symbol="X", company="X Ltd")) == keys

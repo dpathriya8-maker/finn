@@ -119,3 +119,26 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 - Quality was judged by reading samples; there is no labelled test set, so accuracy is not measured.
 - Pledging has no real example in about 3,500 filings, so its rule is covered by written wording only.
 - About a sixth of non-routine filings stay `unclassified`; they are visible at low priority, not hidden.
+
+## Step 6: The Morning Brief screen (2026-11-15)
+
+**Asked:** a window selector, priority groups, a collapsed routine row and an "all caught up" ending; it has to work on a phone.
+
+**Done:**
+- The Brief screen: a 24 hours / 3 days / 7 days picker (default 24 hours), "N things that matter", then "Needs attention" and "Worth a look" (at most five cards each, the rest behind "Show N more"), a collapsed "N lower-priority filings" row, a collapsed "N routine filings" row, and "You're all caught up" with the time it was checked.
+- Each card shows the headline first, then a one-line reason it ranked where it did; tapping opens the details, the filing itself and exactly how it was ranked and labelled by the exchange. Headline size follows priority.
+- Colour only for meaning: the classifier now gives each filing a `tone`; red, amber and green appear with a "Risk", "Watch" or "Good news" tag.
+- Empty window: says so and offers "Look back 3 days". Stale data, a failed load, corrupt saved settings and muted companies are all handled and announced, never silent.
+- Settings storage (window, thresholds, category alerts, muted companies) with validated localStorage; the pipeline publishes `config.json` so the deployed app does not need files outside its folder.
+
+**Verified:**
+- Backend 191 tests. Frontend: 19 unit tests (window maths, grouping order, India-calendar day labels, settings validation), lint, type-check and production build.
+- 11 behaviour checks in a real phone-sized Chromium: card opens and closes from the keyboard, the five-card cap, collapsed routine rows, the empty state, tone tags in light and dark, stale banner, failed load, a muted company disappearing, a bad stored setting ignored, the chosen window surviving a reload, no horizontal scroll and no console errors.
+- I looked at the screenshots at 390 px, light and dark.
+
+**Issues found and fixed:**
+- "1 lower-priority filings" (plural bug).
+- HDFC Bank's re-appointment of a whole-time director sat under "Needs attention" at 85; re-appointments now rank below new hires.
+- vitest 5 needs `@types/node` 22 or newer and the project pinned 20, so npm refused to install it. I moved the types package to 22 (no runtime change) instead of forcing the install.
+
+**Not built yet:** the Alerts, Research and Settings tabs (Steps 7 and 10), so a company can be muted in storage but not yet from a screen.

@@ -69,6 +69,15 @@ def write_json(path: Path, data: Any, *, indent: int | None = None) -> None:
             os.unlink(tmp)
 
 
+def app_config() -> dict[str, Any]:
+    """The settings defaults and the category list, published as static JSON because the deployed
+    frontend cannot read files outside its own folder. config/ stays the single source of truth."""
+    defaults = json.loads((REPO_ROOT / "config" / "defaults.json").read_text(encoding="utf-8"))
+    categories = json.loads((REPO_ROOT / "config" / "categories.json").read_text(encoding="utf-8"))["categories"]
+    keep = ("id", "label", "why", "weight", "is_routine", "default_alert", "card_type")
+    return {"schema": digest.SCHEMA, "defaults": defaults, "categories": [{k: c[k] for k in keep} for c in categories]}
+
+
 def _read_previous(path: Path) -> dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -194,6 +203,7 @@ def run(
     # The brief is always rebuilt from every portfolio file on disk, so a partial run keeps the rest.
     records = [r for c in portfolio if (r := _read_previous(out_dir / f"{c['symbol']}.json"))]
     write_json(out_dir / "brief.json", digest.brief(records, now=now, item_days=days))
+    write_json(out_dir / "config.json", app_config(), indent=1)
     write_json(
         out_dir / "meta.json",
         {

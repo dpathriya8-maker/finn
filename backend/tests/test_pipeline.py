@@ -134,7 +134,15 @@ def test_a_partial_run_leaves_other_companies_in_the_brief(tmp_path):
 
 def test_no_temp_files_are_left_behind(tmp_path):
     go(tmp_path, sources=make_sources())
-    assert sorted(p.name for p in tmp_path.iterdir()) == ["RELIANCE.json", "brief.json", "meta.json"]
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["RELIANCE.json", "brief.json", "config.json", "meta.json"]
+
+
+def test_the_app_config_is_published_from_the_config_folder(tmp_path):
+    go(tmp_path, sources=make_sources())
+    config = read(tmp_path, "config.json")
+    assert config["defaults"] == {"window_hours": 24, "volume_multiple": 2.0, "price_move_pct": 5.0, "volume_lookback_days": 20}
+    assert len(config["categories"]) == 17
+    assert set(config["categories"][0]) == {"id", "label", "why", "weight", "is_routine", "default_alert", "card_type"}
 
 
 def test_research_companies_get_their_own_file_but_stay_out_of_the_brief(tmp_path):

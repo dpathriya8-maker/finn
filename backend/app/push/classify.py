@@ -21,6 +21,7 @@ class Classification:
     adjust: int = 0  # added to the category weight when scoring: bad news up, boring or good news down
     note: str = ""  # why the adjustment was made; shown on the card
     rule: str = ""  # which rule decided, kept for transparency and debugging
+    tone: str = "neutral"  # bad | watch | good | neutral: the only thing that may be coloured in the app
 
 
 @dataclass(frozen=True)
@@ -29,8 +30,8 @@ class Entry:
     read_text: bool = False  # True: the label is too vague, so keyword rules get the first say
 
 
-def E(category: str, *, routine: bool = False, adjust: int = 0, note: str = "", read: bool = False) -> Entry:
-    return Entry(Classification(category, routine, adjust, note), read)
+def E(category: str, *, routine: bool = False, adjust: int = 0, note: str = "", read: bool = False, tone: str = "neutral") -> Entry:
+    return Entry(Classification(category, routine, adjust, note, tone=tone), read)
 
 
 def _t(pattern: str) -> re.Pattern[str]:
@@ -100,9 +101,9 @@ BSE_LABELS: dict[tuple[str, str], Entry] = {
     ("Company Update", "Reg. 32 (1), (3) - Statement of Deviation & Variation"): E("fund_raise", routine=True, note="Routine fund-use report"),
     ("Company Update", "Buy back"): E("dividend", note="Share buy-back"),
     ("Company Update", "Post Buyback Public Announcement"): E("dividend", routine=True, note="Buy-back follow-up"),
-    ("Company Update", "Intimation of meeting of Committee of Creditors"): E("litigation", note="Insolvency process"),
-    ("Company Update", "Strikes /Lockouts / Disturbances"): E("unclassified", adjust=28, note="Operations may be disrupted"),
-    ("Company Update", "Clarification"): E("unclassified", read=True, adjust=15, note="Clarification given to the exchange"),
+    ("Company Update", "Intimation of meeting of Committee of Creditors"): E("litigation", note="Insolvency process", tone="bad"),
+    ("Company Update", "Strikes /Lockouts / Disturbances"): E("unclassified", adjust=28, note="Operations may be disrupted", tone="watch"),
+    ("Company Update", "Clarification"): E("unclassified", read=True, adjust=15, note="Clarification given to the exchange", tone="watch"),
     ("Company Update", "Board Meeting Rescheduled"): E("agm_egm", note="Board meeting rescheduled"),
     ("Company Update", "Meeting Updates"): E("agm_egm"),
     ("Company Update", "Revision of outcome"): E("agm_egm", note="Earlier outcome revised"),
@@ -134,9 +135,9 @@ NSE_LABELS: dict[str, Entry] = {
     "Press Release (Revised)": E("press_release", read=True),
     "Copy of Newspaper Publication": E("press_release", routine=True, note="Newspaper copy of an earlier filing"),
     "Integrated Filing- Financial": E("results"),
-    "Reasons for Delayed/Non-submission of Financial Results": E("litigation", note="Results delayed or not filed: a red flag"),
-    "Pendency of Litigation(s)/dispute(s) or the outcome impacting the Company": E("litigation"),
-    "Action(s) taken or orders passed": E("litigation"),
+    "Reasons for Delayed/Non-submission of Financial Results": E("litigation", note="Results delayed or not filed: a red flag", tone="bad"),
+    "Pendency of Litigation(s)/dispute(s) or the outcome impacting the Company": E("litigation", tone="bad"),
+    "Action(s) taken or orders passed": E("litigation", tone="bad"),
     "Appointment": E("management_change"),
     "Resignation": E("management_change"),
     "Resignation of Director/KMP/SMP": E("management_change"),
@@ -169,11 +170,11 @@ NSE_LABELS: dict[str, Entry] = {
     "Bagging/Receiving of orders/contracts": E("press_release", adjust=8, note="Order win"),
     "Capacity addition": E("capex"),
     "Commencement of commercial production/operations": E("capex"),
-    "Spurt in Volume": E("unclassified", adjust=22, note="The exchange asked the company to explain a volume spurt"),
-    "News Verification": E("unclassified", adjust=22, note="The exchange asked the company to confirm a news report"),
-    "Disruption of Operations": E("unclassified", adjust=28, note="Operations may be disrupted"),
+    "Spurt in Volume": E("unclassified", adjust=22, note="The exchange asked the company to explain a volume spurt", tone="watch"),
+    "News Verification": E("unclassified", adjust=22, note="The exchange asked the company to confirm a news report", tone="watch"),
+    "Disruption of Operations": E("unclassified", adjust=28, note="Operations may be disrupted", tone="watch"),
     "Disclosure of material issue": E("unclassified", read=True, adjust=10, note="Company flagged a material issue"),
-    "Giving guarantees/indemnity/ becoming a surety for third party": E("unclassified", adjust=12, note="Company is guaranteeing a third party"),
+    "Giving guarantees/indemnity/ becoming a surety for third party": E("unclassified", adjust=12, note="Company is guaranteeing a third party", tone="watch"),
     "Shareholders meeting": E("agm_egm"),
     "Committee Meeting Updates": E("agm_egm"),
     "Trading Window": E("insider_trading"),
@@ -199,9 +200,9 @@ TEXT_RULES: list[tuple[str, re.Pattern[str], Classification]] = [
             r"high court|supreme court|non-?submission of financial results|income[- ]tax (?:demand|department)|"
             r"gst (?:demand|notice))\b"  # a subsidiary's "voluntary winding up" is restructuring, not litigation
         ),
-        Classification("litigation"),
+        Classification("litigation", tone="bad"),
     ),
-    ("text:pledge", _t(r"pledge|encumbr"), Classification("pledging")),
+    ("text:pledge", _t(r"pledge|encumbr"), Classification("pledging", tone="watch")),
     (
         "text:results",
         _t(
@@ -262,12 +263,12 @@ TEXT_RULES: list[tuple[str, re.Pattern[str], Classification]] = [
     (
         "text:disruption",
         _t(r"\bstrikes?\b|lock-?out|fire (?:at|broke)|accident|shutdown|disruption of operations|force majeure|explosion|flood|cyber ?(?:attack|incident)|ransomware"),
-        Classification("unclassified", adjust=28, note="Operations may be disrupted"),
+        Classification("unclassified", adjust=28, note="Operations may be disrupted", tone="watch"),
     ),
     (
         "text:exchange_query",
         _t(r"spurt in volume|price movement|clarification (?:on|regarding|sought)|news verification|rumou?rs?"),
-        Classification("unclassified", adjust=22, note="The exchange asked the company to explain"),
+        Classification("unclassified", adjust=22, note="The exchange asked the company to explain", tone="watch"),
     ),
     (
         "text:investor",
@@ -305,29 +306,30 @@ TEXT_RULES: list[tuple[str, re.Pattern[str], Classification]] = [
 
 # ---------------------------------------------------------------------------------------------------
 # Refiners: inside a category, pull bad news up and good or empty news down. First match wins.
-# (regex, adjust, routine?, note)
+# (regex, adjust, routine?, note, tone)
 # ---------------------------------------------------------------------------------------------------
 _EXIT = r"resign\w*|cessation|ceases|ceased|demise|passed away|removal|terminat\w+|steps? down|relinquish\w*"
 _KEY_ROLE = r"chief financial officer|\bcfo\b|chief executive officer|\bceo\b|managing director|chairman|chairperson|statutory auditors?|chief operating officer|\bcoo\b"
 _MINOR_ROLE = r"company secretary|compliance officer|independent director|additional director|cost auditor|secretarial auditor|internal auditor"
-REFINERS: dict[str, list[tuple[re.Pattern[str], int, bool, str]]] = {
+REFINERS: dict[str, list[tuple[re.Pattern[str], int, bool, str, str]]] = {
     "credit_rating": [
-        (_t(r"downgrad\w*|negative outlook|outlook (?:to|revised to|changed to) negative|watch with negative|default|issuer not cooperating|suspended"), 14, False, "Downgrade or negative outlook"),
-        (_t(r"withdraw\w*"), 6, False, "Rating withdrawn"),  # usually after a repayment, so milder than a downgrade
-        (_t(r"upgrad\w*|positive outlook|outlook (?:to|revised to|changed to) positive|watch with positive"), -6, False, "Upgrade"),
-        (_t(r"reaffirm\w*|re-affirm\w*|retained|reiterat\w*"), -22, True, "Rating reaffirmed, nothing changed"),
+        (_t(r"downgrad\w*|negative outlook|outlook (?:to|revised to|changed to) negative|watch with negative|default|issuer not cooperating|suspended"), 14, False, "Downgrade or negative outlook", "bad"),
+        (_t(r"withdraw\w*"), 6, False, "Rating withdrawn", "watch"),  # usually after a repayment, so milder than a downgrade
+        (_t(r"upgrad\w*|positive outlook|outlook (?:to|revised to|changed to) positive|watch with positive"), -6, False, "Upgrade", "good"),
+        (_t(r"reaffirm\w*|re-affirm\w*|retained|reiterat\w*"), -22, True, "Rating reaffirmed, nothing changed", "neutral"),
     ],
     "pledging": [
-        (_t(r"invok\w+|invocation"), 6, False, "Pledge invoked: lenders may sell the shares"),
-        (_t(r"releas\w+|revok\w+|revocation|cessation of (?:the )?(?:pledge|encumbrance)"), -30, False, "Pledge released: good news"),
+        (_t(r"invok\w+|invocation"), 6, False, "Pledge invoked: lenders may sell the shares", "bad"),
+        (_t(r"releas\w+|revok\w+|revocation|cessation of (?:the )?(?:pledge|encumbrance)"), -30, False, "Pledge released: good news", "good"),
     ],
     "management_change": [
-        (_t(rf"(?:{_EXIT}).{{0,120}}(?:{_KEY_ROLE})|(?:{_KEY_ROLE}).{{0,120}}(?:{_EXIT})"), 12, False, "A key person is leaving: exits rank above hires"),
-        (_t(rf"(?:{_MINOR_ROLE})"), -12, False, "Minor role"),
-        (_t(_EXIT), 6, False, "An exit ranks above an appointment"),
+        (_t(rf"(?:{_EXIT}).{{0,120}}(?:{_KEY_ROLE})|(?:{_KEY_ROLE}).{{0,120}}(?:{_EXIT})"), 12, False, "A key person is leaving: exits rank above hires", "bad"),
+        (_t(r"re-?appoint\w*"), -15, False, "Re-appointment of someone already in the role", "neutral"),
+        (_t(rf"(?:{_MINOR_ROLE})"), -12, False, "Minor role", "neutral"),
+        (_t(_EXIT), 6, False, "An exit ranks above an appointment", "watch"),
     ],
     "fund_raise": [
-        (_t(r"esop|esps|esos|employee stock|stock options?|options to purchase"), -10, True, "Employee share allotment"),
+        (_t(r"esop|esps|esos|employee stock|stock options?|options to purchase"), -10, True, "Employee share allotment", "neutral"),
     ],
 }
 
@@ -354,9 +356,9 @@ def _best_text_match(text: str) -> Classification | None:
 
 
 def _refine(c: Classification, text: str) -> Classification:
-    for pattern, adjust, routine, note in REFINERS.get(c.category, []):
+    for pattern, adjust, routine, note, tone in REFINERS.get(c.category, []):
         if pattern.search(text):
-            return replace(c, adjust=c.adjust + adjust, routine=c.routine or routine, note=note)
+            return replace(c, adjust=c.adjust + adjust, routine=c.routine or routine, note=note, tone=tone)
     return c
 
 

@@ -18,6 +18,8 @@ export type Item = {
   default_alert: boolean;
   /** One line explaining the rank, for example "A key person is leaving: exits rank above hires". */
   why: string;
+  /** The only thing the app may colour: bad is red, watch is amber, good is green, neutral has no colour. */
+  tone: "bad" | "watch" | "good" | "neutral";
   /** One-line headline built by rules (not a model). */
   headline: string;
   /** Which classification rule decided, so it can be audited. */
@@ -40,6 +42,21 @@ export type Session = {
   volume: number;
   avg_volume: number | null;
   volume_ratio: number | null;
+};
+
+/** config.json: the pipeline copies config/defaults.json and config/categories.json here. */
+export type AppConfig = {
+  schema: number;
+  defaults: { window_hours: number; volume_multiple: number; price_move_pct: number; volume_lookback_days: number };
+  categories: {
+    id: string;
+    label: string;
+    why: string;
+    weight: number;
+    is_routine: boolean;
+    default_alert: boolean;
+    card_type: string;
+  }[];
 };
 
 export type BriefCompany = {

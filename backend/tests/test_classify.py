@@ -182,6 +182,19 @@ def test_a_cfo_leaving_outranks_a_cfo_arriving():
     assert "key person" in score(leaves).why.lower()
 
 
+def test_re_appointing_someone_already_in_the_role_ranks_below_a_new_hire():
+    # A real HDFC Bank filing: the Whole-time Director's re-appointment reached "Needs attention" at 85.
+    reappoint = bse("Company Update", "Change in Management", body="Re-appointment of Mr. V. Srinivasa Rangan as Whole-time Director")
+    hire = bse("Company Update", "Change in Management", body="Appointment of Mr. Rao as Whole-time Director")
+    assert rank(reappoint) < rank(hire)
+    assert score(reappoint).tone == "neutral" and 45 <= rank(reappoint) < 75  # worth a look, not urgent
+
+
+def test_a_key_person_leaving_still_beats_a_re_appointment_in_the_same_filing():
+    both = bse("Company Update", "Change in Management", body="Resignation of the CFO and re-appointment of the Chairman")
+    assert "key person" in score(both).why.lower()
+
+
 def test_a_company_secretary_change_is_a_minor_item():
     minor = bse("Company Update", "Resignation of Company Secretary / Compliance Officer")
     cfo = bse("Company Update", "Resignation of Chief Financial Officer (CFO)", body="Resignation of CFO")
@@ -208,6 +221,45 @@ def test_exchange_questions_and_disruptions_are_lifted_above_plain_unclassified(
     plain = rank(bse("Company Update", "General", "Update", "nothing recognisable here"))
     assert rank(nse("Spurt in Volume")) > plain
     assert rank(bse("Company Update", "Strikes /Lockouts / Disturbances")) > plain
+
+
+# ---------- tone: the only thing the app is allowed to colour ----------
+def tone(c):
+    return score(c).tone
+
+
+def test_bad_news_is_bad_and_good_news_is_good():
+    assert tone(bse("Company Update", "Credit Rating", body="CRISIL downgraded the rating")) == "bad"
+    assert tone(bse("Company Update", "Credit Rating", body="ICRA upgraded the rating")) == "good"
+    assert tone(bse("Company Update", "Credit Rating", body="CARE reaffirmed the rating")) == "neutral"
+    assert tone(bse("Company Update", "Credit Rating", body="Withdrawal of Credit Rating")) == "watch"
+    assert tone(bse("Company Update", "Intimation of meeting of Committee of Creditors")) == "bad"
+    assert tone(nse("Pendency of Litigation(s)/dispute(s) or the outcome impacting the Company")) == "bad"
+    assert tone(bse("Company Update", "General", "x", "The High Court passed an order against the company")) == "bad"
+
+
+def test_leadership_exits_are_coloured_by_how_serious_they_are():
+    assert tone(bse("Company Update", "Change in Management", body="Resignation of the CFO")) == "bad"
+    assert tone(bse("Company Update", "Change in Management", body="Resignation of a senior vice president")) == "watch"
+    assert tone(bse("Company Update", "Change in Management", body="Appointment of Mr. Rao as CFO")) == "neutral"
+
+
+def test_pledges_are_a_watch_item_unless_invoked_or_released():
+    pledge = ("Company Update", "General", "Disclosure under SEBI Takeover Regulations")
+    assert tone(bse(*pledge, "Promoter created a pledge on 1,000,000 shares")) == "watch"
+    assert tone(bse(*pledge, "Lenders have invoked the pledge on 2,000,000 shares")) == "bad"
+    assert tone(bse(*pledge, "Release of the pledge on 1,000,000 shares")) == "good"
+
+
+def test_disruptions_and_exchange_questions_are_watch_items():
+    assert tone(bse("Company Update", "Strikes /Lockouts / Disturbances")) == "watch"
+    assert tone(nse("Spurt in Volume")) == "watch"
+
+
+def test_ordinary_filings_and_results_stay_uncoloured_until_the_numbers_are_known():
+    assert tone(bse("Result", "Financial Results")) == "neutral"
+    assert tone(bse("Corp. Action", "Dividend")) == "neutral"
+    assert tone(bse("Company Update", "Newspaper Publication")) == "neutral"
 
 
 # ---------- scoring ----------

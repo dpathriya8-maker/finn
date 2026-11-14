@@ -14,6 +14,7 @@ class Scored:
     priority: int  # 0-100, higher is shown first
     routine: bool  # collapsed into the "N routine filings" row
     why: str  # one line explaining the rank, shown on the card
+    tone: str  # bad | watch | good | neutral: the only thing the app may colour
     default_alert: bool
     card_type: str
 
@@ -31,4 +32,4 @@ def score(c: Classification) -> Scored:
         why = cat.why if cat.is_routine and not c.note else f"Routine: {c.note or cat.why}"
     else:
         why = f"{c.note}. {cat.why}" if c.note else cat.why
-    return Scored(cat.id, cat.label, priority, routine, why, cat.default_alert, cat.card_type)
+    return Scored(cat.id, cat.label, priority, routine, why, c.tone, cat.default_alert, cat.card_type)

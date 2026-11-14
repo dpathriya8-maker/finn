@@ -32,6 +32,7 @@ def announcement_item(a: Announcement, *, symbol: str, company: str) -> dict[str
         "routine": scored.routine,
         "default_alert": scored.default_alert,
         "why": scored.why,
+        "tone": scored.tone,
         "headline": make_headline(a.subject, a.body),
         "rule": cls.rule,  # which rule decided, so a classification can be audited
         "subject": a.subject,
