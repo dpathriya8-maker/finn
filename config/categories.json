@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "description": "The 17 announcement categories. weight (0-100) is the base priority, higher shows first. is_routine collapses the filing into the 'routine filings' row. default_alert is the out-of-the-box alert preference; the user can change it. card_type picks the card layout: results, management, one_liner or surface_only. Negativity bias: risks and red flags outrank good news. Weights are starting points; the priority scorer may adjust per filing (a credit downgrade, a large miss in results).",
+  "categories": [
+    {
+      "id": "litigation",
+      "label": "Litigation & regulatory action",
+      "weight": 95,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "one_liner",
+      "rationale": "Court orders, regulator notices, penalties and tax demands can reprice a stock overnight; negativity bias puts them first."
+    },
+    {
+      "id": "pledging",
+      "label": "Promoter pledging",
+      "weight": 90,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "one_liner",
+      "rationale": "A new or invoked promoter pledge signals financial stress; a release is good news and should rank lower."
+    },
+    {
+      "id": "results",
+      "label": "Financial results",
+      "weight": 88,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "results",
+      "rationale": "The most material periodic filing; gets the full Revenue, EBITDA, PBT and PAT card with QoQ and YoY. A large miss should outrank a clean beat."
+    },
+    {
+      "id": "management_change",
+      "label": "Management change",
+      "weight": 85,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "management",
+      "rationale": "CEO, CFO, director and auditor changes move stocks, exits most of all; the card adds a short bio of the incoming person."
+    },
+    {
+      "id": "m_and_a",
+      "label": "M&A and restructuring",
+      "weight": 80,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "one_liner",
+      "rationale": "Acquisitions, mergers, demergers and stake sales change what the company is; one line on what and how much."
+    },
+    {
+      "id": "credit_rating",
+      "label": "Credit rating",
+      "weight": 78,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "one_liner",
+      "rationale": "Downgrades and negative outlooks are red flags and should be escalated; plain reaffirmations should be demoted."
+    },
+    {
+      "id": "fund_raise",
+      "label": "Fund raise",
+      "weight": 70,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "one_liner",
+      "rationale": "Equity raises dilute and big debt raises change leverage; one line on size and terms."
+    },
+    {
+      "id": "bonus_split",
+      "label": "Bonus & split",
+      "weight": 60,
+      "is_routine": false,
+      "default_alert": true,
+      "card_type": "one_liner",
+      "rationale": "Rare corporate action with a hard record date; cheap to alert and easy to miss."
+    },
+    {
+      "id": "capex",
+      "label": "Capex & expansion",
+      "weight": 55,
+      "is_routine": false,
+      "default_alert": false,
+      "card_type": "one_liner",
+      "rationale": "Forward-looking and often promotional; medium priority, no ping by default."
+    },
+    {
+      "id": "dividend",
+      "label": "Dividend",
+      "weight": 50,
+      "is_routine": false,
+      "default_alert": false,
+      "card_type": "one_liner",
+      "rationale": "Useful but usually expected; one line with the amount and record date, no ping by default."
+    },
+    {
+      "id": "press_release",
+      "label": "Press release",
+      "weight": 40,
+      "is_routine": false,
+      "default_alert": false,
+      "card_type": "one_liner",
+      "rationale": "Mostly marketing, occasionally an order win or a launch; one line for the so-what, no ping by default."
+    },
+    {
+      "id": "unclassified",
+      "label": "Unclassified",
+      "weight": 35,
+      "is_routine": false,
+      "default_alert": false,
+      "card_type": "surface_only",
+      "rationale": "Anything the rules cannot place stays visible at low priority instead of being hidden as routine; ambiguous ones go to the cheap model."
+    },
+    {
+      "id": "insider_trading",
+      "label": "Insider trading",
+      "weight": 30,
+      "is_routine": true,
+      "default_alert": false,
+      "card_type": "surface_only",
+      "rationale": "Mostly routine trade disclosures, so collapsed; a very large promoter sale could be escalated later."
+    },
+    {
+      "id": "agm_egm",
+      "label": "AGM / EGM",
+      "weight": 25,
+      "is_routine": true,
+      "default_alert": false,
+      "card_type": "surface_only",
+      "rationale": "Meeting notices and outcomes are routine governance; collapsed."
+    },
+    {
+      "id": "earnings_call",
+      "label": "Earnings call",
+      "weight": 25,
+      "is_routine": true,
+      "default_alert": false,
+      "card_type": "surface_only",
+      "rationale": "Call schedules and recordings are routine; transcripts feed the Pull side and are not pushed."
+    },
+    {
+      "id": "postal_ballot",
+      "label": "Postal ballot",
+      "weight": 20,
+      "is_routine": true,
+      "default_alert": false,
+      "card_type": "surface_only",
+      "rationale": "Voting notices and results are routine governance; collapsed."
+    },
+    {
+      "id": "investor_meetings",
+      "label": "Investor meetings",
+      "weight": 15,
+      "is_routine": true,
+      "default_alert": false,
+      "card_type": "surface_only",
+      "rationale": "Analyst and investor meet intimations are noise; collapsed."
+    }
+  ]
+}

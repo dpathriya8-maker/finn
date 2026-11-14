@@ -1,0 +1,45 @@
+# --- secrets: never commit ---
+.env*
+!.env.example
+
+# --- dependencies and build output ---
+node_modules/
+.next/
+out/
+dist/
+build/
+.vercel/
+*.tsbuildinfo
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# --- local data: LLM cache, downloaded filings (fetched at run time, never committed) ---
+*.sqlite
+*.sqlite3
+*.db
+cache/
+.cache/
+downloads/
+*.pdf
+
+# --- editor and OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+.claude/settings.local.json
+
+# --- logs ---
+*.log
+npm-debug.log*

@@ -1,0 +1,9 @@
+{
+  "description": "Demo companies for PULL research (Promise Tracker), deliberately outside the portfolio. Precomputed so the demo is instant; any other NSE ticker goes through the live backend. Symbols are not yet verified (Step 3).",
+  "companies": [
+    { "symbol": "BAJFINANCE", "name": "Bajaj Finance Ltd", "sector": "NBFC", "size_bucket": "large" },
+    { "symbol": "ASIANPAINT", "name": "Asian Paints Ltd", "sector": "Paints & Coatings", "size_bucket": "large" },
+    { "symbol": "HAL", "name": "Hindustan Aeronautics Ltd", "sector": "Aerospace & Defence", "size_bucket": "large" },
+    { "symbol": "NAUKRI", "name": "Info Edge (India) Ltd", "sector": "Internet & Online Classifieds", "size_bucket": "large" }
+  ]
+}

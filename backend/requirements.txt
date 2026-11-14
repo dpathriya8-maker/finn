@@ -1,0 +1,1 @@
+# Pinned in Step 2 (FastAPI, uvicorn, slowapi, ...). Always pin exact versions.

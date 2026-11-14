@@ -1,0 +1,23 @@
+{
+  "description": "The 18-company demo portfolio. Symbols are NSE tickers and are not yet verified against live data (Step 3 does that). size_bucket is a label (large, mid, small), not a market-cap lookup.",
+  "companies": [
+    { "symbol": "RELIANCE", "name": "Reliance Industries Ltd", "sector": "Energy & Conglomerate", "size_bucket": "large" },
+    { "symbol": "HDFCBANK", "name": "HDFC Bank Ltd", "sector": "Banking", "size_bucket": "large" },
+    { "symbol": "INFY", "name": "Infosys Ltd", "sector": "IT Services", "size_bucket": "large" },
+    { "symbol": "ITC", "name": "ITC Ltd", "sector": "FMCG & Conglomerate", "size_bucket": "large" },
+    { "symbol": "LT", "name": "Larsen & Toubro Ltd", "sector": "Engineering & Capital Goods", "size_bucket": "large" },
+    { "symbol": "SUNPHARMA", "name": "Sun Pharmaceutical Industries Ltd", "sector": "Pharmaceuticals", "size_bucket": "large" },
+    { "symbol": "MARUTI", "name": "Maruti Suzuki India Ltd", "sector": "Automobiles", "size_bucket": "large" },
+    { "symbol": "BHARTIARTL", "name": "Bharti Airtel Ltd", "sector": "Telecom", "size_bucket": "large" },
+    { "symbol": "TATASTEEL", "name": "Tata Steel Ltd", "sector": "Metals & Mining", "size_bucket": "large" },
+    { "symbol": "POLYCAB", "name": "Polycab India Ltd", "sector": "Cables & Electricals", "size_bucket": "mid" },
+    { "symbol": "DIXON", "name": "Dixon Technologies (India) Ltd", "sector": "Electronics Manufacturing", "size_bucket": "mid" },
+    { "symbol": "PERSISTENT", "name": "Persistent Systems Ltd", "sector": "IT Services", "size_bucket": "mid" },
+    { "symbol": "TRENT", "name": "Trent Ltd", "sector": "Retail", "size_bucket": "mid" },
+    { "symbol": "CHOLAFIN", "name": "Cholamandalam Investment and Finance Company Ltd", "sector": "NBFC", "size_bucket": "mid" },
+    { "symbol": "APOLLOHOSP", "name": "Apollo Hospitals Enterprise Ltd", "sector": "Healthcare", "size_bucket": "mid" },
+    { "symbol": "CDSL", "name": "Central Depository Services (India) Ltd", "sector": "Capital Markets Infrastructure", "size_bucket": "small" },
+    { "symbol": "KAYNES", "name": "Kaynes Technology India Ltd", "sector": "Electronics Manufacturing", "size_bucket": "small" },
+    { "symbol": "DEEPAKNTR", "name": "Deepak Nitrite Ltd", "sector": "Specialty Chemicals", "size_bucket": "small" }
+  ]
+}

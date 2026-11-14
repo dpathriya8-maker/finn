@@ -1,0 +1,6 @@
+{
+  "window_hours": 24,
+  "volume_multiple": 2.0,
+  "price_move_pct": 5.0,
+  "volume_lookback_days": 20
+}
