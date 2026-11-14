@@ -273,3 +273,25 @@ def test_the_why_line_explains_the_rank_in_plain_words():
     assert score(bse("Company Update", "Newspaper Publication")).why == "Routine: Newspaper copy of an earlier filing"
     assert score(bse("Insider Trading / SAST", "Closure of Trading Window")).why == "Routine trading disclosure"
     assert score(bse("Company Update", "Strikes /Lockouts / Disturbances")).why.startswith("Operations may be disrupted.")
+
+
+def test_a_non_independent_director_is_not_mistaken_for_an_independent_one():
+    # A real Tata Steel filing: the Vice-Chairman's retirement was labelled "Minor role" because "Non-Independent Director"
+    # contains the words "independent director".
+    retires = bse("Company Update", "Retirement", body="Retirement of Mr. Noel Naval Tata as Non-Executive, Non-Independent Director and as Vice-Chairman of the Board")
+    independent = bse("Company Update", "Change in Management", body="Appointment of Mr. Rao as an Independent Director")
+    assert "Minor role" not in score(retires).why and "Minor role" in score(independent).why
+    assert score(retires).tone == "watch" and "planned exit" in score(retires).why
+    assert rank(retires) > rank(independent)
+
+
+def test_a_planned_retirement_ranks_below_a_resignation_and_above_an_appointment():
+    retire = bse("Company Update", "Change in Management", body="Retirement of Mr. Rao as Whole-time Director")
+    resign = bse("Company Update", "Change in Management", body="Resignation of Mr. Rao as Whole-time Director")
+    hire = bse("Company Update", "Change in Management", body="Appointment of Mr. Rao as Whole-time Director")
+    assert rank(resign) > rank(retire) > rank(hire)
+
+
+def test_retirement_by_rotation_with_reappointment_is_still_a_reappointment():
+    both = bse("Company Update", "Change in Management", body="Mr. Rao retires by rotation and, being eligible, offers himself for re-appointment as Director")
+    assert "Re-appointment" in score(both).why

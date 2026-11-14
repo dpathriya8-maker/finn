@@ -162,3 +162,37 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Real-data note:** at the default lines (5% and 2 times) the whole portfolio produced one alert on the latest session, a quiet market with a largest move of 3.8%. At 3% and 1.5 times it produces 15 over the stored sessions. The sliders are therefore meaningful, not decorative.
 
 **Limits:** price and volume come from five stored sessions per company, so a 7-day window looks at five sessions at most; Yahoo's volume figures are not exchange-official.
+
+## Step 8: Results and management cards (2026-11-15)
+
+**Asked:** a results card (Revenue, EBITDA, PBT, PAT, quarter on quarter and year on year, from the actual filing, with a check against another source) and a management-change card (who, and a short bio of the incoming person).
+
+**Done:**
+- **Results card, no model.** Figures are read from the PDF by word position, converted to Rs crore, and every changed figure is computed in code. The card shows the numbers in a table (EBITDA marked as computed), margins, the page and the filing's own printed tokens one tap down, and a badge: matches Yahoo Finance, differs, or not cross-checked, always in words. Scanned filings show only what Yahoo confirms; a scan nothing can confirm is refused with a reason.
+- **Management card, no model.** Person, role, effective date, term, DIN and the filing's own "Profile" section (with its page), all literal spans of the filing. Its facts raise the rank of a key person leaving and replace a vague or cut-short headline with a real one.
+- **Pipeline:** downloads each results or management filing through the safe fetch (allow-list, 25 MB cap, `AttachLive` then `AttachHis`), once per file per company per run; keeps what it read in a SQLite cache (`backend/.cache`, git-ignored) so a second run downloads nothing; rebuilds each card every run so the Yahoo check stays current. A failure becomes a card that says so, and a good card from the previous run survives a failed download.
+- **App:** both cards inside the existing filing card (headline first, numbers one tap down, source one more); the Brief and Alerts show them the same way.
+- Also: `app/core/cache.py` (SQLite key-value, never a point of failure) and `app/sources/documents.py` are now real.
+
+**Real data (18 companies, 28 seconds cold, 0 problems):** 3 results cards in full (ITC, Tata Steel, Kaynes), 1 partial (Bharti Airtel, a scan: PBT only), 1 refusal (Apollo Hospitals, a scan nothing can confirm); 4 management cards (HDFC Bank twice, Tata Steel, Apollo Hospitals). Apollo's CEO-division exit went from "Change in Management", 85, neutral to a named headline at 97 as a risk.
+
+**Verified:**
+- Backend 389 tests (was 191): seven real results filings (word positions cut from them as fixtures), four real management filings, synthetic PDFs including pages drawn sideways and shown through /Rotate, the safety rules one by one, the cache, the downloader, the pipeline end to end.
+- Frontend 57 unit tests, lint, type-check, production build.
+- 17 checks in a real phone-sized Chromium on the real data: each card type opens and shows the right numbers and words, the headline is a sentence not a label, badges carry text as well as colour, no overflow at 390 px, tap targets at least 44 px, tables are real tables for screen readers, dark mode, and a filing with no card stays a plain filing. I looked at the screenshots.
+- Every number on every card was compared with the filing during development (Reliance, Kaynes, Bajaj Finance, Tata Steel, ITC) and with Yahoo.
+
+**Issues found and fixed:**
+- ITC prints its year-ago column second: the order is now read from the header dates.
+- ITC's own PDF has a damaged profit row (a figure stuck in the label, a "B" for an "8"): recomputed as PBT less tax only because the printed column confirms the sum, and labelled as computed.
+- A scanned filing parses garbage digits as numbers; it now shows a figure only where Yahoo agrees.
+- "Mr." and "w.e.f." were treated as ends of sentences, which cut HDFC's profile to a fragment.
+- A profile section ran into the next person's heading, so one appointee would have been shown another's profile. The two-appointee test caught it before it shipped.
+- A case-insensitive pattern read "has" as part of a name ("Mr. A. Kumar has").
+- A role ran on into the next sentence after "Ms." and hid the DIN.
+- Two regexes had lost their `\b` to a backspace character (the second time this class of bug has happened); a test now forbids control characters in source.
+- The classifier called Tata Steel's Vice-Chairman "a minor role" because "Non-Independent Director" contains "independent director".
+
+**Not built yet:** a web-search bio (needs search and model keys, and the filing's own profile already answers it); a model-written summary of the other categories. No model is used anywhere yet, so the cost log is still empty.
+
+**Limits:** the profile shown is the first sentences of what the company chose to file, so it is the company's own description, not an independent one. A filing whose reading order is scrambled (a scan) may yield only part of the facts, and says so. Yahoo's quarterly data lags a fresh filing by days.

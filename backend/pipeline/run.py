@@ -20,11 +20,12 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
+from app.core.cache import Cache, default_cache
 from app.core.settings import REPO_ROOT
 from app.core.timeutil import now_ist
-from app.push import digest
+from app.push import cards, digest
 from app.push.signals import compute_signals
-from app.sources import bse, nse, prices, symbols
+from app.sources import bse, documents, nse, prices, symbols
 from app.sources.models import Announcement, Listing, PriceHistory, QuarterFigures
 
 DEFAULT_OUT = REPO_ROOT / "frontend" / "public" / "data"
@@ -41,6 +42,8 @@ class Sources:
     nse_window: Callable[..., list[Announcement]] = nse.fetch_announcements
     history: Callable[[str], PriceHistory] = prices.fetch_history
     quarters: Callable[[str], list[QuarterFigures]] = prices.quarterly_financials
+    pdf: Callable[[str], bytes] = documents.fetch_pdf
+    cache: Cache | None = None  # what was read from each filing; None keeps nothing between runs (the CLI passes the on-disk one)
 
 
 @dataclass
@@ -123,6 +126,7 @@ def process_company(
             break
         except Exception as exc:
             failed("announcements" if name == attempts[-1][0] else f"announcements_{name}", exc)
+    announcements_fresh = ann_items is not None
     if ann_items is None:
         ann_items, ann_source = previous.get("announcements", []), previous.get("sources", {}).get("announcements")
         reuse("announcements")
@@ -149,6 +153,21 @@ def process_company(
         quarter_rows = previous.get("yahoo_quarters", [])
         reuse("quarters")
 
+    # The cards that look inside a filing: the figures of results, the people in a management change. Items kept from
+    # the last run (the source failed) already carry theirs.
+    card_counts: dict[str, dict[str, int]] = {}
+    if announcements_fresh:
+        earlier = {i["id"]: i["card"] for i in previous.get("announcements", []) if i.get("card")}
+        pdf = cards.PdfOnce(sources.pdf)  # one download per file, even when two announcements share it
+        for kind, attach, extra in (
+            ("results", cards.attach_results_cards, {"yahoo": quarter_rows}),
+            ("management", cards.attach_management_cards, {}),
+        ):
+            try:
+                card_counts[kind] = attach(ann_items, pdf=pdf, cache=sources.cache, previous=earlier, **extra)
+            except Exception as exc:  # a card is an extra: it must never take the company's other data down
+                failed(f"cards_{kind}", exc)
+
     return digest.company_record(
         company=company,
         listing=listing,
@@ -159,9 +178,19 @@ def process_company(
         price_symbol=price_symbol,
         signals=signal_rows,
         quarters=quarter_rows,
+        cards=card_counts,
         errors=errors,
         stale=stale,
     )
+
+
+def _cards_summary(counts: dict[str, dict[str, int]]) -> str:
+    parts = []
+    for kind, numbers in counts.items():
+        shown = ", ".join(f"{numbers[k]} {k}" for k in ("ok", "partial", "failed", "reused", "cached") if numbers.get(k))
+        if shown:
+            parts.append(f"{kind} {shown}")
+    return "; ".join(parts)
 
 
 def run(
@@ -195,6 +224,7 @@ def run(
         log(
             f"{symbol:11s} {record['sources']['announcements'] or '-':3s} {len(record['announcements']):3d} filings | "
             f"{record['sources']['prices'] or '-':14s} {len(record['prices']):3d} bars"
+            + (f" | cards: {_cards_summary(record['cards'])}" if _cards_summary(record["cards"]) else "")
             + (f" | PROBLEMS: {record['errors']}" if record["errors"] else "")
             + (f" | stale: {sorted(record['stale'])}" if record["stale"] else "")
         )
@@ -214,6 +244,10 @@ def run(
             "announcement_sources": {
                 s: sum(1 for r in records if r["sources"]["announcements"] == s) for s in ("bse", "nse")
             },
+            "cards": {
+                kind: {k: sum(r.get("cards", {}).get(kind, {}).get(k, 0) for r in records) for k in ("ok", "partial", "failed")}
+                for kind in ("results", "management")
+            },
             "with_problems": sorted(r["symbol"] for r in records if r["errors"]),
             "with_stale_data": sorted(r["symbol"] for r in records if r["stale"]),
         },
@@ -231,7 +265,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     portfolio, research = load_companies(args.research)
-    report = run(portfolio, research, only=args.symbols, out_dir=args.out, days=args.days)
+    report = run(portfolio, research, only=args.symbols, out_dir=args.out, days=args.days, sources=Sources(cache=default_cache()))
     print(f"\n{len(report.processed)} companies processed, {len(report.failures)} with problems -> {args.out}")
     return 0 if report.processed else 1
 

@@ -32,7 +32,87 @@ export type Item = {
   raw_subcategory: string;
   url: string | null;
   size_kb: number | null;
+  /** Present on results and management filings the pipeline could look into. Absent means no attempt was made. */
+  card?: Card;
 };
+
+/** One line of the results table. Changes are computed by the pipeline from the printed figures, never by a model. */
+export type CardMetric = {
+  key: "revenue" | "ebitda" | "pbt" | "pat" | "pat_owners";
+  label: string;
+  /** Rupees crore (converted by the pipeline from crore, lakh or million as printed). Null if it could not be read. */
+  current: number | null;
+  previous: number | null;
+  year_ago: number | null;
+  qoq_pct: number | null;
+  yoy_pct: number | null;
+  /** When a percentage means nothing (loss to profit or back), the change is named instead. */
+  qoq_swing: "turned profit" | "turned loss" | null;
+  yoy_swing: "turned profit" | "turned loss" | null;
+  /** Where in the filing the figures were read. Tokens are exactly as printed; null where none is printed. */
+  printed: { label: string; page: number; tokens: (string | null)[] };
+  /** Set when the figure is computed here and not printed, with how. */
+  derived?: string;
+};
+
+export type CardCheck = {
+  status: "ok" | "differs" | "unavailable";
+  against: string;
+  note: string;
+  /** What was compared, in rupees crore: present unless nothing could be compared. */
+  details?: { metric: "revenue" | "pbt" | "pat"; filing: number; yahoo: number; diff_pct: number; ok: boolean }[];
+};
+
+export type ResultsCard =
+  | { type: "results"; status: "failed"; reason: string; extractor: string }
+  | {
+      type: "results";
+      status: "ok" | "partial";
+      /** Set for scanned filings, whose figures are shown only where an independent source agrees. */
+      verification: string | null;
+      basis: "consolidated" | "standalone" | "not stated";
+      unit_printed: string | null;
+      period: { label: string; current: string | null; previous: string | null; year_ago: string | null };
+      source: { url: string | null; pages: number[] };
+      metrics: CardMetric[];
+      margins: Record<string, { current: number | null; year_ago: number | null }>;
+      warnings: string[];
+      check: CardCheck;
+      tone: "bad" | "watch" | "good" | "neutral";
+      tone_reason: string;
+      extractor: string;
+    };
+
+/** One person in a management-change filing. Every field is a literal piece of the filing, found by rules. */
+export type ManagementPerson = {
+  name: string;
+  din: string | null;
+  role: string;
+  /** appointment, re-appointment, redesignation, resignation, retirement, cessation, death, removal, or change. */
+  kind: string;
+  direction: "in" | "out" | "";
+  effective: { date: string; text: string } | null;
+  term: string | null;
+  /** The filing's own "profile" section, word for word. Null if it has none. */
+  profile: { text: string; page: number; source: "filing" } | null;
+  page: number | null;
+};
+
+export type ManagementCard =
+  | { type: "management"; status: "failed"; reason: string; extractor: string }
+  | {
+      type: "management";
+      status: "ok" | "partial";
+      kind: string;
+      direction: "in" | "out" | "";
+      /** Empty when the filing's text did not let anyone be named: the card then says so and claims nothing more. */
+      people: ManagementPerson[];
+      source: { url: string | null; pages: number[] };
+      warnings: string[];
+      extractor: string;
+    };
+
+export type Card = ResultsCard | ManagementCard;
 
 export type Session = {
   day: string;

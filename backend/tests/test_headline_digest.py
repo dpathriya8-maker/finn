@@ -184,3 +184,11 @@ def test_every_item_carries_what_the_app_needs_to_rank_filter_and_explain_it():
     }
     for row in ROWS:
         assert set(announcement_item(row, symbol="X", company="X Ltd")) == keys
+
+
+def test_a_bracket_glued_to_the_word_before_it_gets_its_space_but_legal_references_do_not():
+    # A real HDFC Bank headline: "Whole-time Director(designated as Executive Director)".
+    assert make_headline("Announcement under Regulation 30 (LODR)-Change in Directorate", "Re-appointment of Mr. V. Srinivasa Rangan as the Whole-time Director(designated as Executive Director) of HDFC Bank Limited.") == (
+        "Re-appointment of Mr. V. Srinivasa Rangan as the Whole-time Director (designated as Executive Director) of HDFC Bank Limited."
+    )
+    assert make_headline("Disclosure under Section 12A(b) and Regulation 30(a) of the SEBI Regulations", "") == "Disclosure under Section 12A(b) and Regulation 30(a) of the SEBI Regulations"

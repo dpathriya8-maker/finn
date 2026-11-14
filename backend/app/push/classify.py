@@ -310,7 +310,8 @@ TEXT_RULES: list[tuple[str, re.Pattern[str], Classification]] = [
 # ---------------------------------------------------------------------------------------------------
 _EXIT = r"resign\w*|cessation|ceases|ceased|demise|passed away|removal|terminat\w+|steps? down|relinquish\w*"
 _KEY_ROLE = r"chief financial officer|\bcfo\b|chief executive officer|\bceo\b|managing director|chairman|chairperson|statutory auditors?|chief operating officer|\bcoo\b"
-_MINOR_ROLE = r"company secretary|compliance officer|independent director|additional director|cost auditor|secretarial auditor|internal auditor"
+# "Non-Independent Director" is not an independent director: without the lookbehinds, Tata Steel's Vice-Chairman was "a minor role".
+_MINOR_ROLE = r"company secretary|compliance officer|(?<!non-)(?<!non )independent director|additional director|cost auditor|secretarial auditor|internal auditor"
 REFINERS: dict[str, list[tuple[re.Pattern[str], int, bool, str, str]]] = {
     "credit_rating": [
         (_t(r"downgrad\w*|negative outlook|outlook (?:to|revised to|changed to) negative|watch with negative|default|issuer not cooperating|suspended"), 14, False, "Downgrade or negative outlook", "bad"),
@@ -326,6 +327,7 @@ REFINERS: dict[str, list[tuple[re.Pattern[str], int, bool, str, str]]] = {
         (_t(rf"(?:{_EXIT}).{{0,120}}(?:{_KEY_ROLE})|(?:{_KEY_ROLE}).{{0,120}}(?:{_EXIT})"), 12, False, "A key person is leaving: exits rank above hires", "bad"),
         (_t(r"re-?appoint\w*"), -15, False, "Re-appointment of someone already in the role", "neutral"),
         (_t(rf"(?:{_MINOR_ROLE})"), -12, False, "Minor role", "neutral"),
+        (_t(r"retire\w*|superannuat\w*"), 2, False, "A planned exit: ranks just above an appointment", "watch"),
         (_t(_EXIT), 6, False, "An exit ranks above an appointment", "watch"),
     ],
     "fund_raise": [

@@ -116,6 +116,7 @@ def company_record(
     quarters: list[dict[str, Any]],
     errors: dict[str, str],
     stale: dict[str, str],
+    cards: dict[str, dict[str, int]] | None = None,
 ) -> dict[str, Any]:
     """Everything the app knows about one company. A part that failed this run keeps its last good data
     and says so in `stale` (part -> when that data was produced); `errors` says why it failed."""
@@ -130,6 +131,7 @@ def company_record(
         "sources": {"announcements": announcements_source, "prices": price_symbol, "quarters": "yahoo" if quarters else None},
         "errors": errors,
         "stale": stale,
+        "cards": cards or {},  # per kind of card (results, management): how many this run made as ok / partial / failed / reused / cached
         "prices": prices,
         "signals": signals,
         "announcements": announcements,
@@ -161,3 +163,20 @@ def brief(records: list[dict[str, Any]], *, now: datetime, item_days: int) -> di
         "items": items,
         "signals": [{"symbol": r["symbol"], "sessions": r["signals"]} for r in records],
     }
+
+
+def reclassify(item: dict[str, Any], extra_text: str) -> dict[str, Any] | None:
+    """The classification again with more words to go on, such as what a card read out of the filing. Returns the
+    fields that follow from it, or None if it would move the filing to another category: a card may sharpen how
+    a filing ranks, it has no business deciding what kind of filing it is."""
+    cls = classify(
+        source=item["source"],
+        category=item["raw_category"],
+        subcategory=item["raw_subcategory"],
+        subject=item["subject"],
+        body=f"{item['body']} {extra_text}",
+    )
+    scored = score(cls)
+    if scored.category != item["category"]:
+        return None
+    return {"priority": scored.priority, "routine": scored.routine, "why": scored.why, "tone": scored.tone, "rule": cls.rule}

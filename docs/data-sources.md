@@ -92,7 +92,29 @@ Feasible, but not trivially: Revenue from operations, Total income, finance cost
 - Reliance's table spans word groups that a simple row grouping splits; Kaynes' preceding quarter is "Restated".
 - Plain-text order is not column order, so pages must be read with word positions.
 
-So: pick candidate pages by keyword, give the page text to the cheap model for strict JSON, require every number to appear verbatim on that page, then compute QoQ, YoY and margins in code and cross-check against Yahoo.
+**Step 3's plan was a model reading the page text. Step 8 replaced it with no model at all** (decision S50): the figures are read from word positions with PyMuPDF, every kept number is a token printed in the filing, and QoQ, YoY, margins and EBITDA are computed in code and cross-checked against Yahoo. Seven very different real filings were the test set:
+
+| Company | What the filing is | What the extractor does |
+|---|---|---|
+| RELIANCE | clean text, consolidated page 10, Rs crore; a header typo ("Seo'25" for Sep'25) | month read by fuzzy match; full card; revenue, PBT, PAT match Yahoo |
+| KAYNES | **Rs million** | converted to crore; Yahoo has not published the quarter, so "not cross-checked" |
+| BAJFINANCE | a lender: revenue is interest income, no meaningful EBITDA | EBITDA and the revenue check are skipped; PBT matches Yahoo |
+| TATASTEEL | statements **rotated 270 degrees** in the PDF; Indian lakh grouping (`1,41,887.37`) | words are mapped through the page's rotation matrix; full card |
+| ITC | prints the **year-ago column second** (June 2026 third); revenue includes excise duty that Yahoo excludes; its profit row is damaged in the PDF's own text (`4229.33 51B6.55` stuck in the label) | column order read from the header dates; excise taken into account in the check; the damaged figures are recomputed as PBT less tax and labelled as computed |
+| BHARTIARTL | a **scan** (OCR text: digits swapped for letters, figures stuck in labels) | shows only the periods whose profit before tax Yahoo confirms; PBT only, with a stated reason |
+| APOLLOHOSP | a scan, **nothing Yahoo can confirm** | refuses: "Figures not shown", with the reason and a link to the filing |
+
+Findings worth remembering:
+
+- A results PDF is often one attachment shared by several announcements (a board-outcome letter holds the results *and* a director's retirement), so one file is downloaded once per company per run.
+- Attachments are 1 to 19 MB; the 25 MB cap was never hit by a results filing.
+- BSE moves attachments from `AttachLive` to `AttachHis` as they age; the downloader tries both.
+- Yahoo's quarterly figures lag a fresh filing by days (KAYNES, filed 14 Nov, was not there on 15 Nov), and its net income is the owners' share, not total profit.
+- Page text order is not column order, a misread digit still parses as a number, and an unreadable figure is dropped, never guessed.
+
+### Management-change filings
+
+Four real ones (HDFC Bank twice, Tata Steel, Apollo Hospitals) show the range: a one-page letter; a four-page letter with Schedule III annexures; one paragraph inside a 24-page board-outcome letter whose other 22 pages are the results statements; and a 32-page scan whose reading order is scrambled. SEBI's disclosure format asks for the reason, the date, the term and, **for an appointment, a brief profile of the person**, so the filing itself is a primary-source bio and no web search is needed to say who is joining. The card therefore shows only literal spans: the person and role (from the announcement's headline, completed by the filing's own sentence when the headline is cut short), the date after "effective" or "w.e.f.", the term, the DIN, and the filing's "Profile" section with its page. It names nothing it cannot find.
 
 ## 5. Concall transcripts and annual reports
 

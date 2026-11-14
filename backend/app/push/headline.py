@@ -85,6 +85,7 @@ def _clip(text: str) -> str:
 
 
 _ONLY_BOILERPLATE = re.compile(r"^(?:disclosure|announcement|intimation) under regulation\b", re.I)
+_GLUED_PAREN = re.compile(r"(?<=[a-z])\((?=[a-z]{3,})")  # "Director(designated as ...)" as an exchange sends it; not "Section 12A(b)" or "Rule 3(a)"
 
 
 def _is_generic(subject: str) -> bool:
@@ -105,7 +106,7 @@ def make_headline(subject: str, body: str) -> str:
         chosen = snippet
     else:
         chosen = subj
-    chosen = tidy_case(chosen).strip()
+    chosen = _GLUED_PAREN.sub(" (", tidy_case(chosen)).strip()
     if chosen and chosen[0].islower():
         chosen = chosen[0].upper() + chosen[1:]
     return _clip(chosen) or "Filing"

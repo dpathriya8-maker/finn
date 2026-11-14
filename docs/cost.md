@@ -1,6 +1,6 @@
 # LLM cost
 
-Status: no LLM calls yet. Once the router in `backend/app/core/llm.py` exists, every call is logged (provider, model, tokens in and out, estimated cost, cache hit) and the summary is written here for the README.
+Status: no LLM calls yet. The cards built so far (results figures, management changes) use no model at all, so they cost nothing per filing. Once the router in `backend/app/core/llm.py` exists, every call is logged (provider, model, tokens in and out, estimated cost, cache hit) and the summary is written here for the README.
 
 | Tier | Used for | Model |
 |---|---|---|

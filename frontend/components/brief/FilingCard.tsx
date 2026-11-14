@@ -2,6 +2,8 @@
 
 import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
+import { ManagementCardView } from "@/components/brief/ManagementCardView";
+import { ResultsCardView } from "@/components/brief/ResultsCardView";
 import { TONE } from "@/components/brief/tone";
 import { whenLabel } from "@/lib/brief";
 import { setMuted } from "@/lib/settings";
@@ -26,6 +28,8 @@ export function FilingCard({ item, referenceIso, size }: { item: Item; reference
   const panelId = useId();
   const tone = TONE[item.tone];
   const label = [item.raw_category, item.raw_subcategory].filter(Boolean).join(" / ");
+  // A card that read the filing says more than the exchange's one-line text; a card that failed leaves that text in place.
+  const cardReplacesBody = item.card?.status === "ok" || (item.card?.type === "results" && item.card.status === "partial");
 
   return (
     <article className={`rounded-2xl border border-l-4 border-line ${tone.border} bg-surface`}>
@@ -56,7 +60,17 @@ export function FilingCard({ item, referenceIso, size }: { item: Item; reference
           <p className="text-xs text-ink-faint">
             {item.company} · {item.category_label}
           </p>
-          {item.body && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-ink-soft">{item.body}</p>}
+          {item.card?.type === "results" && (
+            <div className="mt-3">
+              <ResultsCardView card={item.card} />
+            </div>
+          )}
+          {item.card?.type === "management" && (
+            <div className="mt-3">
+              <ManagementCardView card={item.card} />
+            </div>
+          )}
+          {item.body && !cardReplacesBody && <p className="mt-2 whitespace-pre-line text-sm leading-6 text-ink-soft">{item.body}</p>}
           {item.url && (
             <a
               href={item.url}
