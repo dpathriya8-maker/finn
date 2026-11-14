@@ -89,3 +89,13 @@ class DefaultsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_a_blank_line_copied_from_the_env_example_means_not_set(monkeypatch):
+    # .env.example lists these names with nothing after the "=". That must give the default, not an empty limit that breaks the limiter.
+    from app.core.settings import get_settings
+
+    for name in ("RATE_LIMIT_DEFAULT", "RATE_LIMIT_GLOBAL", "ADMIN_TOKEN"):
+        monkeypatch.setenv(name, "")
+    settings = get_settings()
+    assert (settings.rate_limit_default, settings.rate_limit_global, settings.admin_token) == ("30/minute", "150/minute", None)

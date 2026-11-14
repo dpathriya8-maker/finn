@@ -48,7 +48,7 @@ const ITEMS: Item[] = [
   },
   {
     label: "Research",
-    href: null, // built in a later step
+    href: "/research",
     icon: (
       <Icon>
         <circle cx="11" cy="11" r="6" />

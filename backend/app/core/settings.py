@@ -36,6 +36,7 @@ class Settings:
     version: str
     allowed_origins: list[str]
     rate_limit_default: str
+    rate_limit_global: str
     admin_token: str | None
 
 
@@ -44,6 +45,8 @@ def get_settings() -> Settings:
     return Settings(
         version=VERSION,
         allowed_origins=parse_origins(os.getenv("ALLOWED_ORIGINS")),
-        rate_limit_default=os.getenv("RATE_LIMIT_DEFAULT", "30/minute"),
+        # An empty value (a line copied from .env.example and left blank) means "not set", not "no limit".
+        rate_limit_default=os.getenv("RATE_LIMIT_DEFAULT") or "30/minute",
+        rate_limit_global=os.getenv("RATE_LIMIT_GLOBAL") or "150/minute",
         admin_token=os.getenv("ADMIN_TOKEN") or None,
     )

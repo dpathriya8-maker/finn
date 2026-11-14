@@ -196,3 +196,44 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Not built yet:** a web-search bio (needs search and model keys, and the filing's own profile already answers it); a model-written summary of the other categories. No model is used anywhere yet, so the cost log is still empty.
 
 **Limits:** the profile shown is the first sentences of what the company chose to file, so it is the company's own description, not an independent one. A filing whose reading order is scrambled (a scan) may yield only part of the facts, and says so. Yahoo's quarterly data lags a fresh filing by days.
+
+## Step 9: The Pull engine (2026-11-15)
+
+**Asked:** read a company's primary documents (concall transcripts and the annual report), build the Promise Tracker (what was promised on the last four calls and whether later calls show it was kept), answer questions only from those documents, and make it work for a ticker that was never prepared in advance.
+
+**Done:**
+- **Documents:** finds the last four concall transcripts (one per quarter) and the latest annual report on BSE, or on NSE for a company BSE does not list; downloads them through the safe fetch (allow-list, 25 MB cap); reads their text; keeps each file's pages in the cache so it is fetched once.
+- **Chunks and statements:** each chunk keeps its page; a speaker's label starts a new chunk; what management said about the future is found by rule (no model), word for word with its page.
+- **Retrieval:** BM25 in plain Python. It decides "Not found in the documents" before any model is asked.
+- **Promise Tracker and Ask:** the prompts, the checks and the scorecard are built and tested with a scripted model. Every quote must be word for word on its page, a verdict needs a later quote, the counts are computed in code, and an answer's figures must appear in its quotes.
+- **Model router:** Gemini and Groq over REST, three tiers, backoff and fallback, a cache, a usage log and a report command. **Not run against a live model: there are no API keys.**
+- **Serving:** `GET/POST /research/{ticker}` (a finished record, a job's stage, or a reason), `POST /ask`; background jobs; a daily cap on fresh work; per-endpoint rate limits with a global ceiling; the demo companies' documents ship with the backend.
+- **Precompute:** `python -m pipeline.research` for the four research companies.
+
+**Real data:** Bajaj Finance, Asian Paints, HAL and Info Edge read from the live exchanges in about three minutes: 16 transcripts and 3 annual reports (Asian Paints' is over the 25 MB limit and was skipped, with a warning), 4 to 24 rule-found statements each. **A ticker that was never prepared (Titan) was researched live through the local engine**: 4 transcripts and a 473-page annual report, 7 statements. It was then asked about: passages with their pages, "Not found in the documents" for an unrelated question, and a 409 for a company that had not been researched.
+
+**Verified:**
+- Backend 562 tests (was 389): the router against a fake transport (requests, backoff, fallback, cache, log, no key in any line), real transcripts through chunking, statements and retrieval (every statement is a verbatim span of its page), ingestion with every failure path, the Promise Tracker's checks, Ask's three outcomes, the engine and routes (jobs, the cap, rate limits, no stack traces), and the corpus store.
+
+**Issues found and fixed:**
+- Asian Paints' calls were mislabelled: a date in the filing's text (the call's) was read as a quarter-end, so the January call became "Q4", the May call "Q1 FY27", and the real Q4 call was lost in de-duplication. Labels now come from explicit text, else the quarter that ended before the call.
+- The annual report picked was a 2-page covering letter; it is now the biggest filing of the latest cycle, with a 20-page minimum.
+- The rate limit could be dodged by changing the ticker (slowapi counts per URL), and its middleware cannot see routes in a router. Every route now states its own limits.
+- A "passage" shown for a question joined sentences that were not adjacent on the page, so it was not word for word. It is now always a run of adjacent sentences.
+- Real transcripts leave management's answers unlabelled, so showing the last speaker's name would have misattributed them. Speakers are not shown.
+- Analysts' remarks ("my question is on...", "that you mentioned...") and agencies' forecasts were listed as management's promises; they are filtered.
+- An annual report's title said FY27 for the FY26 report.
+
+**Not built yet:** the promise verdicts and written answers need a model key (`GEMINI_API_KEY` and `LLM_CHEAP_MODEL` in `.env`, then `python -m pipeline.research`). A Tavily search is not used at all. HAL files only one transcript, so no tracker is possible for it.
+
+**Limits:** BSE and NSE are only proven reachable from a home connection, so an unseen ticker on a deployed server may fail with a stated reason, while the four prepared companies do not depend on it. The daily cap resets when a free instance restarts.
+
+## Step 10: The Research screen (2026-11-15)
+
+**Asked:** a screen for the scorecard, quotes with their document and page, and "Ask the documents"; every claim must lead to its source.
+
+**Done:** the Research tab: a ticker box (validated the way the engine validates it) and the companies ready to read. For a company, the verdict first (the scorecard, then the promises, bad news first, with evidence on demand), then what management said about the future, a box to ask the documents, the documents read (with links), and what could not be read. Every quote has "Open at that page" (the PDF opened at that page where the browser allows it). There is a state for each way a lookup can go: a record with no verdicts ("No verdict yet"), an engine that is waking up, work in progress with its stage, a failure, the day's allowance spent, an engine that is offline, and one that is not connected.
+
+**Verified:** 71 frontend unit tests (the flow that fetches, wakes, starts and polls, with a fake clock); lint, type-check and production build. 11 checks in a real phone-sized Chromium against the real local engine and the real data: the tab and the ticker form; a bad ticker refused where it is typed; a prepared company opening at once with 11 quotes and 11 page links; every quote on screen matching the engine's own record; Ask returning passages and "Not found in the documents"; a question that is too short refused without a request; a sleeping engine described as asleep; an unprepared company followed through its stages to its record; a record with verdicts (bad news first, evidence on demand, counts as calculated); no overflow at 390 px with 44 px tap targets, in light and dark; and an invalid ticker in the address. I looked at the screenshots.
+
+**Limits:** the verdict view was exercised with a hand-built record because no model has run; its own text says what each part is. The browser opens a PDF at the page only where its viewer honours `#page=`.

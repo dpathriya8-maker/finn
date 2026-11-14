@@ -1,5 +1,7 @@
 """Build results PDFs for tests: a statement laid out the way a company's filing is, so the extractor is
 exercised end to end without any real filing in the repository."""
+import textwrap
+
 import pymupdf
 
 DATES = ("30.09.2026", "30.06.2026", "30.09.2025")
@@ -54,4 +56,17 @@ def make_plain_pdf(text="Annual general meeting notice"):
     """A PDF with no results statement in it."""
     doc = pymupdf.open()
     doc.new_page().insert_text((72, 72), text)
+    return doc.tobytes()
+
+
+def make_transcript_pdf(pages, *, header="Acme Ltd - Earnings Call"):
+    """A transcript PDF from a list of page texts, each page with the repeated header and "Page n of N" a real one has."""
+    doc = pymupdf.open()
+    for number, text in enumerate(pages, start=1):
+        page = doc.new_page(width=595, height=842)
+        y = 40
+        for raw in [header, f"Page {number} of {len(pages)}", ""] + text.split("\n"):
+            for line in textwrap.wrap(raw, 95) or [""]:  # keep every line inside the page, so all of it is extracted
+                page.insert_text((50, y), line, fontsize=9)
+                y += 11
     return doc.tobytes()

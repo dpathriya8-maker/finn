@@ -108,3 +108,38 @@ def fetch(
     except requests.RequestException as exc:
         raise FetchError(f"{type(exc).__name__}: {str(exc)[:160]}") from exc
     raise FetchError("too many redirects")
+
+
+# The model and search providers FINN calls. Unlike document links, which come out of third-party filings and must
+# be checked against ALLOWED_DOMAINS, these are fixed in code, so there is no user-supplied URL to abuse; the check
+# is still made so a typo or a future change cannot send a key somewhere else. Exact hosts only, no subdomains.
+API_HOSTS = ("generativelanguage.googleapis.com", "api.groq.com", "api.tavily.com")
+
+
+def post_json(
+    url: str,
+    payload: dict[str, Any],
+    *,
+    headers: dict[str, str] | None = None,
+    session: requests.Session | None = None,
+    timeout: tuple[float, float] = (10, 120),
+    max_bytes: int = 8 * 1024 * 1024,
+) -> Fetched:
+    """POST a JSON body to one of API_HOSTS. A redirect is not followed (it would carry the key elsewhere): it comes
+    back as the non-2xx response it is. The reply is size-capped."""
+    parts = urlparse(url)
+    if parts.scheme != "https" or (parts.hostname or "").lower() not in API_HOSTS or parts.username or parts.password or parts.port not in (None, 443):
+        raise BlockedUrl(f"not an allowed API host: {parts.hostname}")
+    http = session or requests.Session()
+    try:
+        with http.post(url, json=payload, headers=headers, timeout=timeout, allow_redirects=False, stream=True) as resp:
+            chunks: list[bytes] = []
+            size = 0
+            for chunk in resp.iter_content(65536):
+                size += len(chunk)
+                if size > max_bytes:
+                    raise TooLarge(f"response is larger than the {max_bytes} byte cap")
+                chunks.append(chunk)
+            return Fetched(url, resp.status_code, b"".join(chunks), dict(resp.headers))
+    except requests.RequestException as exc:
+        raise FetchError(f"{type(exc).__name__}") from exc  # the message of a request error can include the URL; the type is enough

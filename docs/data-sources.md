@@ -124,6 +124,23 @@ Four real ones (HDFC Bank twice, Tata Steel, Apollo Hospitals) show the range: a
 - Annual reports: `Others / Reg. 34 (1) Annual Report`, one a year. RELIANCE 10.5 MB, KAYNES 14.7 MB, BAJFINANCE 22.0 MB. Large groups can exceed the 25 MB cap, so annual reports need a separate, larger cap, streaming to disk, and a section filter before any text reaches a model.
 - screener.in: `https://www.screener.in/company/<SYMBOL>/consolidated/` loads without login (190 to 250 KB) and lists transcript links (RELIANCE 20, KAYNES 18, BAJFINANCE 39, CDSL 29). Use it only when the exchange filing cannot be found.
 
+### What reading them for real showed (Step 9)
+
+Five companies read from the live exchanges (Bajaj Finance, Asian Paints, HAL, Info Edge, Titan), one request at a time:
+
+| Company | Transcripts found (last 14 months) | Annual report |
+|---|---|---|
+| BAJFINANCE, NAUKRI, TITAN | 4 each, one per quarter | 515, 235 and 473 pages (up to 11.6 MB), read |
+| ASIANPAINT | 4 (after the label fix below) | 26.3 MB, over the 25 MB limit, skipped and said so |
+| HAL | **1**: its other "Analyst / Investor Meet" filings are intimations and outcome notes, not transcripts | 414 pages, read |
+
+- **A transcript's only date is the day of the call**, usually in the announcement's text ("held on Tuesday, 27th January 2026") and filed two to seven days later. It is not a quarter-end. A filing can also carry a typo (Asian Paints: "held on 29th June" for a call held on 29 July), so the call date is trusted only when it is within ten days of the filing date.
+- **Transcripts are filed under three labels**: `Earnings Call Transcript`, `Analyst / Investor Meet` with the word "transcript" in the text, or `General`. Match on the words, not only the label.
+- **Layouts differ.** Reliance's is a series of presenters with timecodes; Kaynes and Bajaj use `Name:` labels; Kaynes **does not label management's answers at all**, so the last label seen is often an analyst. Every page repeats a header and "Page n of N", and words are broken across lines at hyphens ("year-on-\nyear"), so quote matching must join those.
+- **The annual-report cycle files several things on one day**: the report itself, the same file as an AGM notice, and a small covering letter. The biggest of the day is the report. Some "annual report" filings are two-page notices that point to a website.
+- **Transcripts are 18 to 38 pages**, so they are read whole; an annual report is 235 to 515 pages and is only ever searched, never sent to a model whole.
+- **Not tested:** Gemini, Groq and Tavily. No keys existed, so the requests are built to the providers' documented shapes and exercised with a fake.
+
 ## 6. NSE announcements API
 
 - Needs a session: `GET https://www.nseindia.com/` first (sets Akamai cookies), then `GET https://www.nseindia.com/api/corporate-announcements?index=equities&symbol=<SYMBOL>&from_date=DD-MM-YYYY&to_date=DD-MM-YYYY` with a browser User-Agent, `Accept: application/json` and a `Referer` of the corporate-filings page. No CAPTCHA appeared, and none was attempted to be bypassed.

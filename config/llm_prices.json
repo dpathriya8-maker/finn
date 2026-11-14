@@ -1,0 +1,5 @@
+{
+  "description": "List prices in US dollars per million tokens, used only to ESTIMATE what a call would cost on a paid plan. Free-tier use costs nothing. Empty by design: model names and prices change, so none is guessed. Add an entry per model name (the part after the provider, as in LLM_CHEAP_MODEL) to get an estimate in docs/cost.md.",
+  "as_of": null,
+  "models": {}
+}
