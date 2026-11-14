@@ -1,0 +1,58 @@
+[
+ {
+  "SCRIP_CD": "500180",
+  "Scrip_Name": "HDFC Bank Ltd",
+  "Status": "Active",
+  "GROUP": "A",
+  "FACE_VALUE": "1.00",
+  "ISIN_NUMBER": "INE040A01034",
+  "INDUSTRY": null,
+  "scrip_id": "HDFCBANK",
+  "Segment": "Equity",
+  "NSURL": "https://www.bseindia.com/stock-share-price/hdfc-bank-ltd/hdfcbank/500180/",
+  "Issuer_Name": "HDFC Bank Ltd.",
+  "Mktcap": "1239299.80"
+ },
+ {
+  "SCRIP_CD": "500325",
+  "Scrip_Name": "Reliance Industries Ltd",
+  "Status": "Active",
+  "GROUP": "A",
+  "FACE_VALUE": "10.00",
+  "ISIN_NUMBER": "INE002A01018",
+  "INDUSTRY": null,
+  "scrip_id": "RELIANCE",
+  "Segment": "Equity",
+  "NSURL": "https://www.bseindia.com/stock-share-price/reliance-industries-ltd/reliance/500325/",
+  "Issuer_Name": "Reliance Industries Ltd",
+  "Mktcap": "1812818.89"
+ },
+ {
+  "SCRIP_CD": "500520",
+  "Scrip_Name": "Mahindra & Mahindra Ltd",
+  "Status": "Active",
+  "GROUP": "A",
+  "FACE_VALUE": "5.00",
+  "ISIN_NUMBER": "INE101A01026",
+  "INDUSTRY": null,
+  "scrip_id": "M&M",
+  "Segment": "Equity",
+  "NSURL": "https://www.bseindia.com/stock-share-price/mahindra--mahindra-ltd/mm/500520/",
+  "Issuer_Name": "Mahindra & Mahindra Ltd.",
+  "Mktcap": "414853.65"
+ },
+ {
+  "SCRIP_CD": "511194",
+  "Scrip_Name": "ICDS Ltd",
+  "Status": "Active",
+  "GROUP": "T",
+  "FACE_VALUE": "10.00",
+  "ISIN_NUMBER": "INE613B01010",
+  "INDUSTRY": null,
+  "scrip_id": "ICDSLTD",
+  "Segment": "Equity",
+  "NSURL": "https://www.bseindia.com/stock-share-price/icds-ltd/icdsltd/511194/",
+  "Issuer_Name": "ICDS Ltd.",
+  "Mktcap": "57.04"
+ }
+]

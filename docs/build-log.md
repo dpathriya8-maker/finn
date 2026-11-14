@@ -48,3 +48,31 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 - The Retry button was taller than the pill and moved the page down 12 px when the pill went offline. Fixed with a fixed-height header row, and the browser test now asserts no shift.
 - Starlette now recommends `httpx2` for its test client, so the dev requirements use it.
 - npm marks ESLint 9.39.5 as out of support. It is kept as chosen by create-next-app; upgrading is deferred rather than done blind.
+
+## Step 3: Data-source spike (2026-11-15)
+
+**Asked:** test yfinance, the NSE-to-BSE symbol mapping, BSE announcements, results PDFs, concall transcripts, the NSE API, Gemini and Groq, and Tavily for RELIANCE, KAYNES and BAJFINANCE; record findings in `docs/data-sources.md` with a Source / Laptop / Render / GitHub Actions table; build a temporary admin-only `/debug/sources` route for Render.
+
+**Done:**
+- Probed every source that needs no key, from the laptop. Findings, numbers and a draft category mapping are in `docs/data-sources.md`.
+- Turned the probes into reusable code: a safe fetch layer (`app/core/http.py`: host allow-list, redirect re-checks, 25 MB cap), clients for BSE, NSE, Yahoo and the ISIN symbol join, and `probes/` with a runner (`python -m probes.run_probes`).
+- `GET /debug/sources` (admin token, hidden from the API docs) runs the same probes on whatever machine hosts it.
+- Pinned backend requirements built from a clean venv: runtime, plus dev tooling.
+
+**Verified:**
+- `python -m probes.run_probes` for RELIANCE, KAYNES, BAJFINANCE and CDSL: 29 of 32 probes pass. The 3 failures are the expected "CDSL has no BSE scrip" result; CDSL's NSE and screener.in probes pass.
+- A brand-new venv built only from `requirements-dev.txt`: `pip check` clean, 74 tests pass, and the installed set equals the pinned set.
+- Real PDFs: 3 results filings and 3 transcripts downloaded and text-extracted; results numbers cross-checked against Yahoo (Reliance and Bajaj PBT match exactly).
+
+**Not done:**
+- Render column: waits for the deploy (`docs/deploy.md` section E).
+- GitHub Actions column: needs the `workflow` scope on the GitHub login.
+- Gemini, Groq and Tavily: no API keys exist yet. Provider-documented limits are recorded, marked unverified.
+
+**Issues:**
+- BSE answers 403 unless User-Agent, Referer, Origin and Accept are all sent. A 15-month range returns 400 because the limit is 365 days.
+- CDSL is not in BSE's scrip master. The ISIN join leaves it unmapped rather than guessing.
+- A first pagination design counted raw rows and could have stopped early if a filing landed mid-read; a test caught it, and the client now counts unique IDs.
+- PyMuPDF 2.1 pulled in onnxruntime and networkx; pinned the light 1.28 line instead.
+- Two further probes (a parallel burst test, and a search for the minimal header set) were blocked by the environment's permission check and were not run. Rate behaviour is recorded as "not stress-tested", which is also the polite choice for a third party's API.
+- Two sample files landed in `backend/` by mistake and were moved out before committing.

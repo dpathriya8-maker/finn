@@ -7,7 +7,7 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-from app.api import health
+from app.api import debug, health
 from app.core.security import build_limiter
 from app.core.settings import get_settings
 
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(health.router)
+    app.include_router(debug.router)  # temporary, admin-token only (Step 3)
 
     @app.get("/")
     def root() -> dict[str, str]:

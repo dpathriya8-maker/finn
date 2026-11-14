@@ -30,6 +30,7 @@ htmlcov/
 *.db
 cache/
 .cache/
+probes/out/
 downloads/
 *.pdf
 
