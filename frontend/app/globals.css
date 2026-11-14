@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+/*
+  Design tokens. Colour carries meaning only (CLAUDE.md section 9):
+  green = good, red = bad, amber = watch. Everything else is neutral ink on paper.
+*/
+:root {
+  --ink: #111827;
+  --ink-soft: #4b5563;
+  --ink-faint: #6b7280;
+  --surface: #ffffff;
+  --backdrop: #eceef2;
+  --line: #e5e7eb;
+  --good: #15803d;
+  --good-bg: #dcfce7;
+  --bad: #b91c1c;
+  --bad-bg: #fee2e2;
+  --watch: #92400e;
+  --watch-bg: #fef3c7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f3f4f6;
+    --ink-soft: #c4c8d0;
+    --ink-faint: #9096a3;
+    --surface: #14161b;
+    --backdrop: #0b0c0f;
+    --line: #262a31;
+    --good: #4ade80;
+    --good-bg: rgba(74, 222, 128, 0.14);
+    --bad: #f87171;
+    --bad-bg: rgba(248, 113, 113, 0.14);
+    --watch: #fbbf24;
+    --watch-bg: rgba(251, 191, 36, 0.14);
+  }
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-surface: var(--surface);
+  --color-backdrop: var(--backdrop);
+  --color-line: var(--line);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-bad: var(--bad);
+  --color-bad-bg: var(--bad-bg);
+  --color-watch: var(--watch);
+  --color-watch-bg: var(--watch-bg);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html {
+  color-scheme: light dark;
+  background: var(--backdrop);
+}
+
+body {
+  background: var(--backdrop);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}

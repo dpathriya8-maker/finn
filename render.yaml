@@ -1,1 +1,39 @@
-# Render Blueprint for the FastAPI backend (free web service, Singapore). Filled in Step 2.
+# Render Blueprint for the FastAPI backend: one free web service in Singapore.
+# Create it from the Render dashboard: New > Blueprint > pick this repo (see docs/deploy.md).
+#
+# Render asks for the sync:false values once, when the Blueprint is first created, and ignores
+# them on later syncs. After that, change them in the service's Environment tab.
+services:
+  - type: web
+    name: finn-api
+    runtime: python
+    plan: free # must be explicit: the default plan is a paid one
+    region: singapore # cannot be changed after creation
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # Render's proxy sits in front of the app. --forwarded-allow-ips lets uvicorn read the real client IP
+    # from X-Forwarded-For, which the per-IP rate limit needs.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.14.10"
+      - key: ALLOWED_ORIGINS # the Vercel URL, e.g. https://finn-xxxx.vercel.app (localhost is always allowed)
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: LLM_CHEAP_MODEL
+        sync: false
+      - key: LLM_STRONG_MODEL
+        sync: false
+      - key: LLM_FALLBACK_MODEL
+        sync: false
+      - key: DAILY_FRESH_RESEARCH_CAP
+        sync: false
