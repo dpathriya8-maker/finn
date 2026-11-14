@@ -146,7 +146,7 @@ docs/                  decisions, data sources, architecture, cost, deploy, buil
 
 ## Decisions and history
 
-- [docs/decisions.md](docs/decisions.md): 24 decisions made up front and 81 made while building, each with its reason.
+- [docs/decisions.md](docs/decisions.md): 24 decisions made up front and 84 made while building, each with its reason.
 - [docs/data-sources.md](docs/data-sources.md): what was verified about every source before anything was built on it, including what failed.
 - [docs/build-log.md](docs/build-log.md): what each step asked, did, verified and got wrong.
 - [docs/write-up.md](docs/write-up.md): the approach in two pages.

@@ -42,4 +42,4 @@ A model is used for three things only, with a cheap model by default and a stron
 3. Move the pipeline to a schedule once a server can reach the exchanges.
 4. Add the consensus estimate for results, so a card can say "beat" or "missed" instead of only "up" or "down" against last year.
 
-The full record: [decisions](decisions.md) (24 up front, 81 while building), [data sources](data-sources.md) (what was verified, and what failed), and the [build log](build-log.md).
+The full record: [decisions](decisions.md) (24 up front, 84 while building), [data sources](data-sources.md) (what was verified, and what failed), and the [build log](build-log.md).
