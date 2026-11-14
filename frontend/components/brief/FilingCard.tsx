@@ -2,16 +2,10 @@
 
 import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
+import { TONE } from "@/components/brief/tone";
 import { whenLabel } from "@/lib/brief";
+import { setMuted } from "@/lib/settings";
 import type { Item } from "@/lib/types";
-
-// Full class names so Tailwind can see them. Colour carries meaning only: red bad, amber watch, green good.
-const TONE = {
-  bad: { border: "border-l-bad", chip: "bg-bad-bg text-bad", tag: "Risk" },
-  watch: { border: "border-l-watch", chip: "bg-watch-bg text-watch", tag: "Watch" },
-  good: { border: "border-l-good", chip: "bg-good-bg text-good", tag: "Good news" },
-  neutral: { border: "border-l-line", chip: "", tag: "" },
-} as const;
 
 // Size follows importance.
 const HEADLINE = {
@@ -77,6 +71,13 @@ export function FilingCard({ item, referenceIso, size }: { item: Item; reference
             Ranked {item.priority} out of 100. Filed on {item.source.toUpperCase()} as “{label || item.category_label}”.
             {item.merged ? " The board outcome for the same results was folded into this one." : ""}
           </p>
+          <button
+            type="button"
+            onClick={() => setMuted(item.symbol, true)}
+            className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-ink-soft underline underline-offset-2"
+          >
+            Mute {item.symbol}
+          </button>
         </div>
       )}
     </article>

@@ -142,3 +142,23 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 - vitest 5 needs `@types/node` 22 or newer and the project pinned 20, so npm refused to install it. I moved the types package to 22 (no runtime change) instead of forcing the install.
 
 **Not built yet:** the Alerts, Research and Settings tabs (Steps 7 and 10), so a company can be muted in storage but not yet from a screen.
+
+## Step 7: Alerts, thresholds and muting (2026-11-15)
+
+**Asked:** unusual end-of-day moves and chosen announcement categories as alerts, thresholds in Settings, a way to mute a company; changing a threshold must change the alerts instantly.
+
+**Done:**
+- Alerts tab: price and volume alerts (a move or volume more than the user's line), then the filings in the categories the user switched on. Each alert shows its reason in the user's own terms ("Moved more than ±3% in a day, your line") and the numbers behind it on tap (a table of recent sessions with the triggering day highlighted). Risks come first.
+- Settings tab: time window, a price-move slider (1 to 15%, default 5) and a volume slider (1.5 to 10 times, default 2) each showing its value, range and default, a live line ("With these lines, 1 price or volume alert and 2 filings in the last 24 hours"), 17 category switches (risks first, 8 on by default), the 18 companies with a mute switch, a reset button and a plain statement that nothing is stored on a server.
+- Muting also works from any card ("Mute RELIANCE"), and the Brief says when companies are muted and links to where to undo it.
+- The tab bar's Alerts icon shows the current alert count. The header, status pill and tab bar moved into the layout so they persist across tabs.
+- The app says plainly that there are no push notifications: it checks when opened.
+
+**Verified:**
+- 39 frontend unit tests (the alert rules, boundaries, window-to-session mapping, mutes, ordering, and that lowering a threshold raises the count), lint, type-check, production build with `/alerts` and `/settings` as static pages.
+- 9 real-browser checks, including the done-when: with the page open, a keyboard slider move from 5% to 3% changes the live preview, then tapping the Alerts tab (no reload) shows 3 alerts and the tab badge reads 3; raising the volume line lowers it again; the choice survives a reload. Also: tabs navigate and mark the current one with a single engine check across four screens, a category switch changes what Alerts lists, muting from a card removes the company everywhere and can be undone, reset restores every default, switches work from the keyboard, the empty state, real data in light and dark with no overflow or console errors.
+- The Step 6 Brief checks (11) still pass.
+
+**Real-data note:** at the default lines (5% and 2 times) the whole portfolio produced one alert on the latest session, a quiet market with a largest move of 3.8%. At 3% and 1.5 times it produces 15 over the stored sessions. The sliders are therefore meaningful, not decorative.
+
+**Limits:** price and volume come from five stored sessions per company, so a 7-day window looks at five sessions at most; Yahoo's volume figures are not exchange-official.

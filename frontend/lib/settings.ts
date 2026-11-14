@@ -104,6 +104,36 @@ export function updateSettings(change: Overrides): void {
   listeners.forEach((listener) => listener());
 }
 
+function overridesNow(): Overrides {
+  return parseOverrides(readRaw());
+}
+
+/** Mute or unmute one company everywhere (Brief and Alerts). */
+export function setMuted(symbol: string, muted: boolean): void {
+  const symbols = new Set(overridesNow().mutedSymbols ?? []);
+  if (muted) symbols.add(symbol);
+  else symbols.delete(symbol);
+  updateSettings({ mutedSymbols: [...symbols].sort() });
+}
+
+/** Turn alerts for a category on or off. Only a difference from the default is stored. */
+export function setAlertCategory(id: string, on: boolean, defaultOn: boolean): void {
+  const map = { ...(overridesNow().alertCategories ?? {}) };
+  if (on === defaultOn) delete map[id];
+  else map[id] = on;
+  updateSettings({ alertCategories: map });
+}
+
+/** Forget every choice and go back to the published defaults. */
+export function resetSettings(): void {
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch {
+    // nothing to remove if storage is unavailable
+  }
+  listeners.forEach((listener) => listener());
+}
+
 export function useSettings(config: AppConfig | null): Settings {
   const raw = useSyncExternalStore(subscribe, readRaw, () => EMPTY);
   return useMemo(() => resolveSettings(parseOverrides(raw), config), [raw, config]);

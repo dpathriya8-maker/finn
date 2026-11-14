@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
 import { GroupSection } from "@/components/brief/GroupSection";
 import { WindowPicker } from "@/components/brief/WindowPicker";
@@ -85,6 +86,15 @@ export function MorningBrief() {
         >
           Look back {wider.label}
         </button>
+      )}
+
+      {settings.mutedSymbols.length > 0 && (
+        <p className="mt-6 text-center text-xs text-ink-faint">
+          {settings.mutedSymbols.length} {settings.mutedSymbols.length === 1 ? "company is" : "companies are"} muted.{" "}
+          <Link href="/settings#muted" className="font-medium text-ink-soft underline underline-offset-2">
+            Manage
+          </Link>
+        </p>
       )}
 
       <p className="mt-10 pb-2 text-center text-sm text-ink-soft">
