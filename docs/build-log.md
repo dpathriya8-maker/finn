@@ -95,3 +95,27 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 - BSE answered one valid BAJFINANCE request with HTTP 400. The identical request then worked four times in a row, so it was transient. NSE covered it that run, and a short retry now handles it.
 - Yahoo's prices carry float noise (`1335.4000244140625`); values are rounded when stored.
 - The list is chronological and repetitive ("Announcement under Regulation 30 (LODR)-Newspaper Publication"). That is the problem Step 5 (classifier and priority) is for.
+
+## Step 5: Classifier and priority with a visible reason (2026-11-15)
+
+**Asked:** classify every filing (rules first, a cheap model only if needed), give each a priority score with a visible "why", for all 18 companies.
+
+**Done:**
+- `app/push/classify.py`: Tier 0 classifier, no model. Exact label tables for BSE (75 labels) and NSE (59), keyword rules for the vague labels, and refiners that move good and bad news apart (downgrade versus reaffirmation, key-person exit versus hire, pledge invoked versus released).
+- `app/push/priority.py`: score 0 to 100 plus a one-line `why`; `app/push/headline.py`: a readable one-line headline from the subject or the body; `app/push/categories.py` reads `config/categories.json`, which now has a short `why` per category.
+- Every item in `brief.json` and the company files now carries `category`, `priority`, `routine`, `why`, `headline` and the `rule` that decided it. A results filing posted twice is shown once.
+
+**Verified:**
+- 183 backend tests pass (86 new): every exchange label maps to a real category; the negativity-bias ordering (downgrade over upgrade over reaffirmation, CFO exit over CFO appointment, pledge invoked over created over released, litigation over results over dividend); routine collapsing; the headline cases below.
+- On real data, 3,570 filings (one BSE day of 1,920, one NSE day of 987, 18 months of three companies): 35 to 56% are routine, and 10 to 17% of non-routine filings stay unclassified, mostly board outcomes whose text is empty. Only 18 BSE filings (0.5%) carried a label not in the table, and no NSE filing did.
+- Live run: all 18 portfolio companies have classified filings (102 in 14 days; 63 routine; 15 high, 7 medium and 17 low priority among the rest).
+
+**Issues found by reading real output, and fixed:**
+- Maruti's "Reference to the Financial Results Issued by Suzuki Motor Corporation" was ranked as Maruti's own results (88); the results keyword rule is stricter now and skips results "issued by" someone else.
+- A subsidiary's "voluntary winding up" was flagged as litigation; "Withdrawal of Credit Rating" scored like a downgrade; "Appointment of Internal Auditor" scored like a key-person change.
+- Headlines were cut at "Mr." and "V."; "?10/-" should be "₹10/-"; "As per annexure enclosed" and "Please refer the enclosed file" are not headlines; BSE shouts "12TH" and "30Th".
+
+**Limits, stated plainly:**
+- Quality was judged by reading samples; there is no labelled test set, so accuracy is not measured.
+- Pledging has no real example in about 3,500 filings, so its rule is covered by written wording only.
+- About a sixth of non-routine filings stay `unclassified`; they are visible at low priority, not hidden.

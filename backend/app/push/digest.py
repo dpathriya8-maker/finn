@@ -1,9 +1,12 @@
 """Assemble the windowed digest JSON consumed by the frontend."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
+from app.push.classify import classify
+from app.push.headline import make_headline
+from app.push.priority import score
 from app.push.signals import Signal
 from app.sources.models import Announcement, Bar, Listing, QuarterFigures
 
@@ -12,12 +15,25 @@ BODY_LIMIT = 600  # characters of announcement text kept per item
 
 
 def announcement_item(a: Announcement, *, symbol: str, company: str) -> dict[str, Any]:
+    cls = classify(
+        source=a.source, category=a.category, subcategory=a.subcategory, subject=a.subject, body=a.body
+    )
+    scored = score(cls)
     return {
         "id": f"{a.source}:{a.id}",
         "symbol": symbol,
         "company": company,
         "source": a.source,
         "published_at": a.published_at.isoformat(timespec="seconds"),
+        "category": scored.category,
+        "category_label": scored.label,
+        "card_type": scored.card_type,
+        "priority": scored.priority,
+        "routine": scored.routine,
+        "default_alert": scored.default_alert,
+        "why": scored.why,
+        "headline": make_headline(a.subject, a.body),
+        "rule": cls.rule,  # which rule decided, so a classification can be audited
         "subject": a.subject,
         "body": a.body[:BODY_LIMIT],
         "raw_category": a.category,
@@ -25,6 +41,33 @@ def announcement_item(a: Announcement, *, symbol: str, company: str) -> dict[str
         "url": a.attachment_url,
         "size_kb": round(a.attachment_bytes / 1024) if a.attachment_bytes else None,
     }
+
+
+def dedupe_results(items: list[dict[str, Any]], *, within_hours: int = 24) -> list[dict[str, Any]]:
+    """A results announcement is usually filed twice on BSE: once as 'Result' and once as the board meeting's
+    outcome. Showing both would double-count the most important card, so keep one per company and day,
+    preferring the filing the exchange itself labels as results. The kept item records how many it absorbed."""
+    window = timedelta(hours=within_hours)
+    kept = [i for i in items if i["category"] != "results"]
+    by_company: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        if item["category"] == "results":
+            by_company.setdefault(item["symbol"], []).append(item)
+
+    for group in by_company.values():
+        group.sort(key=lambda i: i["published_at"])
+        cluster: list[dict[str, Any]] = []
+        for item in [*group, None]:
+            if item is not None and (
+                not cluster
+                or datetime.fromisoformat(item["published_at"]) - datetime.fromisoformat(cluster[-1]["published_at"]) <= window
+            ):
+                cluster.append(item)
+                continue
+            best = next((i for i in cluster if i["raw_category"] in ("Result", "Integrated Filing- Financial")), cluster[0])
+            kept.append({**best, "merged": len(cluster) - 1})
+            cluster = [item] if item is not None else []
+    return sorted(kept, key=lambda i: i["published_at"], reverse=True)
 
 
 def signal_dict(s: Signal) -> dict[str, Any]:

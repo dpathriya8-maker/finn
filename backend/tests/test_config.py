@@ -58,8 +58,9 @@ class CategoryTests(unittest.TestCase):
         for c in self.categories:
             self.assertEqual(
                 set(c),
-                {"id", "label", "weight", "is_routine", "default_alert", "card_type", "rationale"},
+                {"id", "label", "why", "weight", "is_routine", "default_alert", "card_type", "rationale"},
             )
+            self.assertTrue(c["why"].strip() and len(c["why"]) <= 70, f"{c['id']}: why must fit one short line")
             self.assertIsInstance(c["weight"], int)
             self.assertTrue(0 <= c["weight"] <= 100, c["id"])
             self.assertIsInstance(c["is_routine"], bool)

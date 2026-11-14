@@ -107,7 +107,9 @@ def process_company(
     for name, fetch in attempts:
         try:
             found = fetch()
-            ann_items = [digest.announcement_item(a, symbol=symbol, company=company["name"]) for a in found]
+            ann_items = digest.dedupe_results(
+                [digest.announcement_item(a, symbol=symbol, company=company["name"]) for a in found]
+            )
             ann_source = name
             break
         except Exception as exc:

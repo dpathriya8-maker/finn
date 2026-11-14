@@ -6,6 +6,24 @@ export type Item = {
   company: string;
   source: "bse" | "nse";
   published_at: string; // ISO, India time
+  /** One of the 17 category ids in config/categories.json, for example "results" or "litigation". */
+  category: string;
+  category_label: string;
+  card_type: "results" | "management" | "one_liner" | "surface_only";
+  /** 0-100, higher is shown first. Risks outrank good news. */
+  priority: number;
+  /** Collapsed into the "N routine filings" row. */
+  routine: boolean;
+  /** Whether this category pushes an alert unless the user turns it off. */
+  default_alert: boolean;
+  /** One line explaining the rank, for example "A key person is leaving: exits rank above hires". */
+  why: string;
+  /** One-line headline built by rules (not a model). */
+  headline: string;
+  /** Which classification rule decided, so it can be audited. */
+  rule: string;
+  /** How many duplicate filings of the same results were folded into this one. */
+  merged?: number;
   subject: string;
   body: string;
   raw_category: string;
