@@ -28,8 +28,9 @@ class Bar:
     open: float
     high: float
     low: float
-    close: float
+    close: float  # the real traded close
     volume: int
+    adj_close: float | None = None  # split- and dividend-adjusted; used for percent moves
 
 
 @dataclass(frozen=True)

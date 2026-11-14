@@ -24,6 +24,13 @@ npm install
 npm run dev     # http://localhost:3000, talks to http://localhost:8000 by default
 ```
 
+Refresh the data the app shows (writes `frontend/public/data/*.json`; commit and push the result to update the deployed app):
+
+```
+cd backend
+.venv/Scripts/python -m pipeline.run --research     # all companies; add --symbols RELIANCE for just one
+```
+
 Copy `.env.example` to `.env` for the keys the backend and pipeline need (never commit it), and run `bash scripts/install-hooks.sh` once in a fresh clone to enable the secret-scan pre-commit hook.
 
 More: [deploying](docs/deploy.md), [decisions](docs/decisions.md), [architecture](docs/architecture.md), [build log](docs/build-log.md).

@@ -76,3 +76,22 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 - PyMuPDF 2.1 pulled in onnxruntime and networkx; pinned the light 1.28 line instead.
 - Two further probes (a parallel burst test, and a search for the minimal header set) were blocked by the environment's permission check and were not run. Rate behaviour is recorded as "not stress-tested", which is also the polite choice for a third party's API.
 - Two sample files landed in `backend/` by mistake and were moved out before committing.
+
+## Step 4: Data layer, end to end (2026-11-15)
+
+**Asked:** prices, announcements and documents for one company through to a JSON file the app shows; the milestone is a real `RELIANCE.json` in the app.
+
+**Done:**
+- `python -m pipeline.run` builds, for each company: announcements (BSE, or NSE when BSE does not list it), 3 months of prices, the raw EOD signals (price move, volume against the 20-day average), and Yahoo's quarterly figures for later cross-checks. Output goes to `frontend/public/data/`: `<SYMBOL>.json` per company (22 files with the research companies), `brief.json` (all portfolio filings plus signals) and `meta.json`.
+- A failing source keeps the last good data and is flagged `stale` with the time of that data; files are written atomically.
+- The app reads `meta.json` and `brief.json` at run time through a typed hook and lists the latest filings. The "Sample data" tag is gone because the data is real.
+
+**Verified:**
+- A live run for all 22 companies took 26 s and had no problems (107 portfolio filings in 14 days, 73 KB). CDSL came from NSE, the other 17 portfolio companies from BSE.
+- 97 backend tests pass, 23 of them new: signal maths (including a split not counting as a move), source selection, BSE and NSE retries, graceful failure with stale data, and the files written.
+- Frontend lint, type-check and build pass; a phone-size screenshot shows real filings and no console errors.
+
+**Issues:**
+- BSE answered one valid BAJFINANCE request with HTTP 400. The identical request then worked four times in a row, so it was transient. NSE covered it that run, and a short retry now handles it.
+- Yahoo's prices carry float noise (`1335.4000244140625`); values are rounded when stored.
+- The list is chronological and repetitive ("Announcement under Regulation 30 (LODR)-Newspaper Publication"). That is the problem Step 5 (classifier and priority) is for.

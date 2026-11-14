@@ -7,7 +7,7 @@ from typing import Any
 
 import requests
 
-from app.core.http import FetchError, fetch
+from app.core.http import BlockedUrl, FetchError, fetch
 from app.core.security import TICKER_RE
 from app.core.timeutil import parse_ist
 from app.sources.models import Announcement
@@ -62,22 +62,28 @@ def fetch_announcements(
     home page first; without a date range it returns the company's whole history (megabytes)."""
     if not TICKER_RE.fullmatch(symbol):
         raise ValueError(f"invalid NSE symbol: {symbol!r}")
-    http = session or requests.Session()
-    fetch(HOME, session=http, headers=PAGE_HEADERS, timeout=(10, 20))
-    resp = fetch(
-        ANNOUNCEMENTS_URL,
-        session=http,
-        headers=API_HEADERS,
-        params={
-            "index": "equities",
-            "symbol": symbol,
-            "from_date": start.strftime("%d-%m-%Y"),
-            "to_date": end.strftime("%d-%m-%Y"),
-        },
-        timeout=(10, 30),
-    )
-    if not resp.ok:
-        raise FetchError(f"NSE announcements returned HTTP {resp.status}")
+    params = {
+        "index": "equities",
+        "symbol": symbol,
+        "from_date": start.strftime("%d-%m-%Y"),
+        "to_date": end.strftime("%d-%m-%Y"),
+    }
+    resp = None
+    for attempt in (1, 2):  # the second try starts a fresh session, because the cookies may have gone bad
+        http = session if (session and attempt == 1) else requests.Session()
+        try:
+            fetch(HOME, session=http, headers=PAGE_HEADERS, timeout=(10, 20))
+            resp = fetch(ANNOUNCEMENTS_URL, session=http, headers=API_HEADERS, params=params, timeout=(10, 30))
+        except BlockedUrl:
+            raise
+        except FetchError:
+            if attempt == 2:
+                raise
+            continue
+        if resp.ok or attempt == 2:
+            break
+    if resp is None or not resp.ok:
+        raise FetchError(f"NSE announcements returned HTTP {resp.status if resp else 'no response'}")
     body = resp.json()
     rows = body if isinstance(body, list) else body.get("data", [])
     unique = {a.id: a for a in (parse_row(r) for r in rows)}

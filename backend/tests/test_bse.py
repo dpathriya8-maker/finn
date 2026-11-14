@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from app.core.http import Fetched
+from app.core.http import Fetched, FetchError
 from app.sources import bse
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -68,6 +68,52 @@ def test_pagination_reads_every_page_and_removes_duplicates(monkeypatch):
 def test_an_empty_page_stops_the_loop(monkeypatch):
     monkeypatch.setattr(bse, "_get", lambda _s, p: _page([], 0))
     assert bse.fetch_window("500325", date(2026, 11, 1), date(2026, 11, 2), delay=0) == []
+
+
+@pytest.fixture
+def fake_fetch(monkeypatch):
+    """Feed bse._get a scripted list of responses (or exceptions) and record the pauses it takes."""
+    script, pauses = [], []
+
+    def fetch(*_args, **_kwargs):
+        item = script.pop(0)
+        if isinstance(item, Exception):
+            raise item
+        return item
+
+    monkeypatch.setattr(bse, "fetch", fetch)
+    monkeypatch.setattr(bse.time, "sleep", pauses.append)
+    return script, pauses
+
+
+def test_a_transient_400_is_retried_after_a_pause(fake_fetch):
+    script, pauses = fake_fetch
+    script += [Fetched("u", 400, b"bad request"), Fetched("u", 200, b'{"Table": []}')]
+    assert bse._get(object(), {}).ok
+    assert pauses == [1.0]
+
+
+def test_connection_errors_are_retried_too(fake_fetch):
+    script, pauses = fake_fetch
+    script += [FetchError("ConnectionResetError"), FetchError("ReadTimeout"), Fetched("u", 200, b"{}")]
+    assert bse._get(object(), {}).ok
+    assert pauses == [1.0, 3.0]
+
+
+def test_it_gives_up_after_three_attempts_and_says_why(fake_fetch):
+    script, pauses = fake_fetch
+    script += [Fetched("u", 400, b"")] * 3
+    with pytest.raises(FetchError, match="HTTP 400"):
+        bse._get(object(), {})
+    assert script == [] and pauses == [1.0, 3.0]
+
+
+def test_a_403_block_is_not_retried(fake_fetch):
+    script, pauses = fake_fetch
+    script += [Fetched("u", 403, b"Access Denied"), Fetched("u", 200, b"{}")]
+    with pytest.raises(FetchError, match="HTTP 403"):
+        bse._get(object(), {})
+    assert len(script) == 1 and pauses == []  # we did not hammer a server that said no
 
 
 def test_a_single_request_cannot_span_more_than_365_days():

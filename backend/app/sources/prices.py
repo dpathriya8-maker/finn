@@ -20,6 +20,7 @@ def _bars(frame: Any) -> list[Bar]:
     for ts, row in frame.iterrows():
         if any(math.isnan(float(row[c])) for c in ("Open", "High", "Low", "Close")):
             continue
+        adj = float(row["Adj Close"]) if "Adj Close" in row and not math.isnan(float(row["Adj Close"])) else None
         bars.append(
             Bar(
                 day=ts.date(),
@@ -28,6 +29,7 @@ def _bars(frame: Any) -> list[Bar]:
                 low=float(row["Low"]),
                 close=float(row["Close"]),
                 volume=int(row["Volume"]) if not math.isnan(float(row["Volume"])) else 0,
+                adj_close=adj,
             )
         )
     return bars

@@ -51,6 +51,29 @@ def test_nse_visits_the_home_page_first_and_formats_dates(monkeypatch):
     assert [a.published_at for a in got] == sorted((a.published_at for a in got), reverse=True)
 
 
+def test_nse_retries_once_with_a_fresh_session(monkeypatch):
+    calls = []
+    answers = iter([403, 200])  # the API answer for the first and second attempt
+
+    def fake_fetch(url, *, session=None, **kwargs):
+        calls.append((url, session))
+        if url == nse.HOME:
+            return Fetched(url, 200, b"<html>")
+        return Fetched(url, next(answers), json.dumps(NSE_ROWS).encode())
+
+    monkeypatch.setattr(nse, "fetch", fake_fetch)
+    got = nse.fetch_announcements("CDSL", date(2026, 8, 17), date(2026, 11, 15))
+    assert len(got) == 3 and len(calls) == 4
+    assert calls[0][1] is calls[1][1] and calls[2][1] is calls[3][1]  # one session per attempt
+    assert calls[0][1] is not calls[2][1]  # and a new one for the retry
+
+
+def test_nse_gives_up_after_the_second_failure(monkeypatch):
+    monkeypatch.setattr(nse, "fetch", lambda url, **kw: Fetched(url, 403 if url != nse.HOME else 200, b"denied"))
+    with pytest.raises(nse.FetchError, match="HTTP 403"):
+        nse.fetch_announcements("CDSL", date(2026, 8, 17), date(2026, 11, 15))
+
+
 # ---------- symbol mapping ----------
 @pytest.fixture
 def index():

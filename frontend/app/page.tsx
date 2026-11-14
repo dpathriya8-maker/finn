@@ -1,5 +1,6 @@
 import { BottomNav } from "@/components/BottomNav";
 import { DataAsOf } from "@/components/DataAsOf";
+import { FilingsList } from "@/components/FilingsList";
 import { StatusPill } from "@/components/StatusPill";
 
 export default function Home() {
@@ -23,13 +24,9 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="mt-6 rounded-2xl border border-line p-5">
-          <h2 className="text-base font-medium">Nothing to show yet</h2>
-          <p className="mt-1 text-sm leading-6 text-ink-soft">
-            The app, the research engine and the static data path are wired up. Real
-            announcements arrive in the next steps.
-          </p>
-        </section>
+        <div className="mt-6">
+          <FilingsList />
+        </div>
       </main>
 
       <BottomNav />

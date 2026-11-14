@@ -8,7 +8,7 @@ from typing import Any
 
 import requests
 
-from app.core.http import Fetched, FetchError, fetch
+from app.core.http import BlockedUrl, Fetched, FetchError, fetch
 from app.core.timeutil import parse_ist
 from app.sources.models import Announcement
 
@@ -67,11 +67,28 @@ def is_results(a: Announcement) -> bool:
     return a.category == "Result"
 
 
+RETRY_STATUSES = {400, 429, 500, 502, 503, 504}  # BSE answers a valid request with 400 now and then
+RETRY_DELAYS_S = (1.0, 3.0)  # so at most three attempts, with a pause. A 403 (blocked) is never retried.
+
+
 def _get(session: requests.Session, params: dict[str, Any]) -> Fetched:
-    resp = fetch(ANNOUNCEMENTS_URL, session=session, headers=HEADERS, params=params, timeout=(10, 30))
-    if not resp.ok:
-        raise FetchError(f"BSE announcements returned HTTP {resp.status}")
-    return resp
+    problem = "no attempt made"
+    for pause in (0.0, *RETRY_DELAYS_S):
+        if pause:
+            time.sleep(pause)
+        try:
+            resp = fetch(ANNOUNCEMENTS_URL, session=session, headers=HEADERS, params=params, timeout=(10, 30))
+        except BlockedUrl:
+            raise
+        except FetchError as exc:  # connection reset, timeout
+            problem = str(exc)
+            continue
+        if resp.ok:
+            return resp
+        problem = f"HTTP {resp.status}"
+        if resp.status not in RETRY_STATUSES:
+            break
+    raise FetchError(f"BSE announcements failed: {problem}")
 
 
 def fetch_window(

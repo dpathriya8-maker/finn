@@ -1,4 +1,12 @@
 {
-  "generated_at": "2026-11-15T01:50:00+05:30",
-  "note": "skeleton"
+  "schema": 1,
+  "generated_at": "2026-11-15T02:26:50+05:30",
+  "item_days": 14,
+  "companies": 18,
+  "announcement_sources": {
+    "bse": 17,
+    "nse": 1
+  },
+  "with_problems": [],
+  "with_stale_data": []
 }
