@@ -7,10 +7,12 @@ The project is built and pushed. What remains needs your accounts and your keys,
 - [ ] **Keys.** Create `finn/.env` from `.env.example` and fill in at least `GEMINI_API_KEY` and `LLM_CHEAP_MODEL` ([Google AI Studio](https://aistudio.google.com) shows which Flash and Flash-Lite names are free). Optional: `GROQ_API_KEY` and `LLM_FALLBACK_MODEL` as a backup. Do not paste any key into a chat; your chats go to ENAM as build history.
 - [ ] **Run the Promise Tracker once.** From `backend/`: `.venv/Scripts/python -m pipeline.research`. Open the four companies in the app (`npm run dev`) and **read the verdicts against the transcripts**. Every card has its quote and "Open at that page". If a verdict looks wrong, the two prompts are in `backend/app/pull/promises.py`. Then `python -m app.core.llm` gives the call and token table for the README's cost section.
 - [ ] **Commit and push** the changed `frontend/public/data/research/*.json`.
+- [ ] **Refresh the portfolio data on the day you send.** From `backend/`: `.venv/Scripts/python -m pipeline.run` (about 30 seconds), then commit and push `frontend/public/data/`. The Brief counts its windows from the data's own timestamp, so old data still shows something and says how old it is, but fresh filings are better.
 - [ ] **Deploy** following [deploy.md](deploy.md): A (Render), B (Vercel), C (CORS), then **E** (it tells you whether BSE and NSE accept Render's address, which decides whether an unprepared ticker works on the live site), then F and G.
 - [ ] **Update the README** "What is verified" table with what you saw: the live URL, and whether the model path and the Render check worked.
 - [ ] **Remove the temporary debug route** once section E is done: delete `backend/app/api/debug.py`, `backend/probes/`, `backend/tests/test_debug_route.py` and their lines in `backend/app/main.py`. It is admin-token protected and closed without a token, so it is safe to leave if you are short of time.
 - [ ] Run `git status` (nothing should be untracked that matters) and push.
+- [ ] *Optional:* run `gh auth refresh -h github.com -s workflow` once and approve it in the browser. GitHub refuses a push that touches `.github/workflows/` without that scope, which is why the project has no CI workflow yet; once it is granted, the coding agent can add one.
 
 ## The email
 
