@@ -386,15 +386,37 @@ def _lead_in(p: Promise) -> str:
     return " ".join(_SENTENCES.split(p.context[:at].strip())[-LEAD_IN_SENTENCES:])
 
 
+# A name in the lead-in that says what a bare commitment is about: "99acres", "B2B", "VAE", "3MOB". Period words
+# (Q4, FY27, H2), plain numbers with a unit ("10lakh") and common acronyms are not subjects.
+_SUBJECT = re.compile(r"\b(?:[A-Za-z]*\d+[A-Za-z]+\w*|[A-Z]{3,}[A-Z0-9]*)\b")
+_NOT_SUBJECT = re.compile(r"^(?:\d+(?:st|nd|rd|th|lakh|crore|cr|mn|bn|mw|gw|bps|x|k|m|b)?|[qh]\d|\d[qh]|fy\d*|cy\d+|inr\d*|rs\d*|ceo|cfo|cmd|nse|bse|sebi|lodr|agm|egm|llp|gst|rbi|usd|ebitda|pbt|pat|yoy|qoq|ai)$", re.I)
+
+
+def _subjects(p: Promise) -> list[str]:
+    """Names (brands, units, projects) in the sentences said just before the commitment and in the commitment itself."""
+    text = f"{_lead_in(p)} {p.quote}"
+    return list(dict.fromkeys(w for w in _SUBJECT.findall(text) if not _NOT_SUBJECT.match(w)))
+
+
 def _later_candidates(p: Promise, later: Index, later_docs: list[str]) -> list[Chunk]:
     """The excerpts of EACH later call that may bear on a promise: BM25 on its key words, per call, so no call crowds out
-    another; and once more with the sentences it was introduced by, so a call that names the subject is found even when the
-    commitment itself does not."""
+    another; once more with the sentences it was introduced by; and, when those name a subject (a business unit, a
+    project), among the chunks of the call that name it, the ones closest to what was promised. That last search finds
+    "99acres billings recovered" even though the promise itself only says "billings growth", which a dozen other
+    segments' passages match as well."""
     queries = [f"{p.what} {p.quote}"]
     lead_in = _lead_in(p)
     if lead_in:
         queries.append(f"{p.what} {lead_in}")
     found: list[Chunk] = []
+    subjects = [w.lower() for w in _subjects(p)]
+    if subjects:
+        topic = f"{p.what} {p.quote}"
+        for doc in later_docs:
+            named = [h for h in later.search(topic, k=200, docs={doc}) if any(w in h.chunk.text.lower() for w in subjects)]
+            for hit in named[:LATER_PER_CALL]:
+                if hit.chunk not in found:
+                    found.append(hit.chunk)
     for query in queries:
         key_words = len(set(tokens(query)))
         needed = min(MIN_SHARED_WORDS, key_words)

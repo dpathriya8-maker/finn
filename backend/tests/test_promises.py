@@ -535,3 +535,18 @@ def test_a_later_call_that_names_the_subject_only_in_the_lead_in_sentences_is_fo
     router = FakeRouter({"promises.judge": cites_the_99acres_excerpt})
     pr.judge(router, company="Acme", promises=[p], later=Index(chunks), quarter_of={"d3": "Q1 FY27"}, latest_call=LATEST)
     assert p.status == "Kept" and p.evidence[0].page == 9  # offered to the judge only because of the lead-in sentences
+
+
+def test_the_business_unit_named_before_a_bare_commitment_is_searched_among_the_chunks_that_name_it():
+    # The real Naukri case: dozens of other segments' passages match "billings growth" as well as the 99acres one does.
+    context = ("During Q4, we undertook changes in the 99acres sales organization. This had a one-time impact on Q4 billings. "
+               "We expect billings growth to recover in Q1 once again.")
+    p = made(quote="We expect billings growth to recover in Q1 once again.", what="Expect billings growth to recover in Q1.", due=date(2026, 6, 30))
+    p.context = context
+    assert pr._subjects(p) == ["99acres"]
+    assert pr._subjects(made(quote="We will launch B2B and the VAE plant in Q2 FY27 for 10 lakh people at INR2,400", what="x")) == ["B2B", "VAE"]
+    crowd = [call("d3", n, f"Recruitment billings growth was strong and the recruitment billings growth outlook for the quarter on page {n} is that billings growth recovers across recruitment billings.") for n in range(1, 12)]
+    target = call("d3", 20, "On 99acres, billings were flat last quarter and have now recovered to double digit growth.")
+    found = pr._later_candidates(p, Index(crowd + [target]), ["d3"])
+    assert target in found  # not crowded out by eleven stronger matches that are about something else
+    assert pr._subjects(made(quote="We will grow in FY27 and Q1 with H2 focus", what="x")) == []  # periods are not subjects
