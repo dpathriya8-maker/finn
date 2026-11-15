@@ -56,7 +56,7 @@ If the build fails, open the service's **Logs** tab. The two things worth checki
 
 ## E. Check which data sources work from Render (Step 3)
 
-Done on 15 Nov 2026, and the temporary `/debug/sources` route has been removed. Result: Yahoo, NSE announcements and screener.in work from Render; **BSE answers HTTP 403** on every endpoint. The table is in [data-sources.md](data-sources.md). Because of that, an unprepared ticker fails on Render at "finding the company" with a stated reason, while the four prepared companies do not depend on it.
+Done on 15 Nov 2026, and the temporary `/debug/sources` route has been removed. Result: Yahoo, NSE announcements and screener.in work from Render; **BSE answers HTTP 403** on every endpoint. The table is in [data-sources.md](data-sources.md). Because of that the live engine builds an NSE-only company index and reads each company through NSE's feed: an unprepared ticker works on Render (TITAN, 32 seconds), while the four prepared companies do not depend on it. Neither platform deploys on push: trigger a Render deploy through its API (or "Manual Deploy"), and deploy Vercel with `npx vercel --prod` from `frontend/`.
 
 ## F. Turn on the Promise Tracker (needs your API keys)
 

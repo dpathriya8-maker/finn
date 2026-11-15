@@ -87,6 +87,8 @@ def shoot(url: str, out: Path, *, dark: bool, width: int, height: int, wait: flo
             page.evaluate(script)
             time.sleep(0.8)
         full_height = int(page.evaluate("Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)") or height)
+        if full_height > height:  # a tall capture: the fixed bottom bar would be pasted into the middle of the picture
+            page.evaluate("document.querySelectorAll('nav').forEach(n => { n.style.visibility = 'hidden' })")
         shown = max(full_height, height)
         if max_height:
             shown = min(shown, max_height)  # a long page (a company with many promises) is cut here

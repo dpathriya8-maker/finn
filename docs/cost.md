@@ -29,21 +29,21 @@ HAL has one transcript in the window, so it has statements and no verdicts (noth
 - Cost on the free tier: **$0**. No list price is set in `config/llm_prices.json` (prices change, none is guessed), so there is no dollar estimate.
 - "Ask the documents" was not part of this run, so its per-question cost is not measured yet.
 
-## Measured: the whole session, 15 Nov 2026 (two live runs and their re-runs)
+## Measured: the whole session, 15 Nov 2026 (the live runs and their re-runs)
 
-Everything the project called a model for, from the log: **210 successful calls, 75 of them answered from the cache (no tokens), and 31 failed** (almost all HTTP 429: a free-tier limit, then the router fell back to the cheap model).
+Everything the project called a model for on this laptop, from the log: **222 successful calls, 81 of them answered from the cache (no tokens), and 32 failed** (almost all HTTP 429: a free-tier limit, then the router fell back to the cheap model). Research the deployed engine did on its own (the live TITAN run, about 10 calls) is not in this log.
 
 | Model | Used for | Fresh calls | Tokens in | Tokens out |
 |---|---|---|---|---|
 | `gemini-3.5-flash-lite` | promise extraction, one call per transcript | 28 | 78,377 | 11,214 |
-| `gemini-3.5-flash-lite` | judging one commitment against later calls (also the fallback for the strong model) | 79 | 219,931 | 15,367 |
-| `gemini-3.5-flash-lite` | second reading of each decided verdict | 7 | 4,886 | 597 |
+| `gemini-3.5-flash-lite` | judging one commitment against later calls (also the fallback for the strong model) | 83 | 234,304 | 15,917 |
+| `gemini-3.5-flash-lite` | second reading of each decided verdict | 8 | 5,452 | 639 |
 | `gemini-3.5-flash-lite` | "Ask the documents", 5 questions | 5 | 5,569 | 1,037 |
-| `gemini-3.5-flash` | judging (strong tier), before its free daily quota ran out | 16 | 58,607 | 7,076 |
-| | **Total fresh** | **135** | **367,370** | **35,291** |
+| `gemini-3.5-flash` | judging (strong tier), while its free daily quota lasted | 17 | 61,730 | 7,469 |
+| | **Total fresh** | **141** | **385,432** | **36,276** |
 
 - Cost on the free tier: **$0**. No list price is set in `config/llm_prices.json` (prices change, none is guessed), so there is no dollar estimate.
-- **The strong model's free quota is 20 requests a day** (`gemini-3.5-flash`), and it was used up by re-runs on the same day. After that every judging call fell to `gemini-3.5-flash-lite`, so the verdicts in the shipped records were made by the lite model. The records say which model answered. The router now stops retrying a model that has said its daily quota is gone (it is skipped for an hour), and waits for the time Gemini's own `retryDelay` gives.
+- **The strong model's free quota is 20 requests a day** (`gemini-3.5-flash`), and it was used up by re-runs on the same day. After that most judging calls fell to `gemini-3.5-flash-lite`, so most verdicts in the shipped records were made by the lite model. The records say which model answered. The router now stops retrying a model that has said its daily quota is gone (it is skipped for an hour), and waits for the time Gemini's own `retryDelay` gives.
 - The re-runs cost far more than the first run because the prompt changed several times (each prompt version is a new cache key): 5 versions of the judging prompt. A re-run with an unchanged prompt costs nothing (the first run: 17 of 17 calls from the cache).
 - A "Not due yet" promise costs no model call unless a later excerpt has a word of a slip, and a promise nothing later mentions costs none either.
 

@@ -30,16 +30,17 @@ A model is used for three things only, with a cheap model by default and a stron
 
 ## Honest limits
 
-- The Promise Tracker is more honest than its first run (24 of 54 Kept became 5 of 40) but not audited line by line. One verdict I know is wrong: Naukri's "billings growth to recover in Q1" (about 99acres) shows Not followed up although the Q1 call discusses 99acres billings; the search did not surface that passage. Most promises are "Too early" because most are about FY27, which has not ended.
-- The strong model's free quota is 20 requests a day and ran out during re-runs, so the shipped verdicts were made by the cheap model (`gemini-3.5-flash-lite`); each record says which model answered. Re-running after the quota resets would use the strong one.
-- Deployed, but **BSE answers HTTP 403 from Render**, so research on an unprepared ticker (TITAN) fails there with a stated reason; Yahoo, NSE and screener.in do work from the server, so a fallback that resolves a company from NSE alone is the obvious next step. The four prepared companies do not depend on it.
+- The Promise Tracker is more honest than its first run (24 of 54 Kept became 6 of 40) but not audited line by line. I read the decided verdicts against the transcripts and fixed what I found (a number reader that missed "INR2,400", a retrieval that missed "99acres"), but a few others may be wrong in the same ways. Most promises are "Too early", because most are about FY27, which has not ended.
+- The strong model's free quota is 20 requests a day and ran out during re-runs, so most shipped verdicts were made by the cheap model (`gemini-3.5-flash-lite`); each record says which model answered. Re-running after the quota resets would use the strong one.
+- Deployed, and research on a ticker that was never prepared works live because the engine falls back to NSE when BSE refuses Render (HTTP 403). It reads transcripts from NSE's filings; an annual report is not always among them (TITAN's was not), and the record says so.
+- Neither Vercel nor Render deploys on `git push` (no GitHub link on either); deploys are triggered by hand.
 - HAL files one transcript in 14 months, so no tracker is possible for it; Asian Paints' annual report is over the 25 MB limit and is skipped, and the record says so.
-- No push notifications: they need accounts. The Alerts screen says so.
+- The Interested tab, following people and Invest are a concept preview (marked Preview in the app). No push notifications: they need accounts. The Alerts screen says so.
 
 ## What I would do next
 
-1. Re-run the Promise Tracker once the strong model's daily quota resets, and read the verdicts against the transcripts again; fix the retrieval gap behind the Naukri case (search with the subject named earlier in the passage).
-2. Let the live engine resolve a company from NSE alone when BSE refuses the server, so an unprepared ticker works from Render.
+1. Re-run the Promise Tracker once the strong model's daily quota resets, and read every verdict against the transcripts again.
+2. Add a second source for the annual report when NSE's feed has none (the filing lists on the company's own site).
 3. Move the pipeline to a schedule once a server can reach the exchanges.
 4. Add the consensus estimate for results, so a card can say "beat" or "missed" instead of only "up" or "down" against last year.
 
@@ -49,4 +50,4 @@ A model is used for three things only, with a cheap model by default and a stron
 2. **Follow people, from primary sources.** The preview lists people named in real management-change filings. The real version tracks a followed person through exchange filings: insider trades (SEBI PIT disclosures), substantial acquisitions (SAST), and management changes. Investor-alert tools such as Trendlyne sell this; FINN would build it from the filings themselves and show the filing as the source.
 3. **Invest through a broker partner.** The "Invest" button is a placeholder. The model I'd test is a SEBI-registered broker partner that opens its own order screen from a company's page; FINN would earn a referral fee and never hold money or give advice. That is the revenue model.
 
-The full record: [decisions](decisions.md) (24 up front, 84 while building), [data sources](data-sources.md) (what was verified, and what failed), and the [build log](build-log.md).
+The full record: [decisions](decisions.md) (24 up front, 97 while building), [data sources](data-sources.md) (what was verified, and what failed), and the [build log](build-log.md).

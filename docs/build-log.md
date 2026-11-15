@@ -300,3 +300,19 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Not done, and why:**
 - Neither platform deploys on `git push`. Render: a service created through the API from a public repo has no GitHub webhook, so I trigger deploys through the API. Vercel: `vercel git connect` fails because the Vercel account has no GitHub login linked (needs a click in the browser).
 - An unprepared ticker does not work from Render (BSE 403). The next step is to let the engine resolve a company from NSE alone.
+
+## Evening polish (15 Nov 2026): look and feel, a concept preview, two fixes
+
+**Asked:** four phases, each its own commit and deploy: (1) visual clarity, (2) a concept preview of personalisation, (3) the wrong Naukri verdict, (4) live research on Render.
+
+**Done:**
+- **Phase 1** (`998a37f`): the pipeline keeps 30 price sessions per company (data refreshed for 22 companies). A price chip (latest complete session, coloured move, day of the close) and a 30-day sparkline on every card in the Brief, Alerts and the Research header; initials avatars with a colour fixed by the symbol; one line icon per category; revenue and profit bar groups on results cards; a stacked verdict bar on Research with a legend; the time window moved into a bottom sheet behind a sliders button, with "Today's Highlights" / "Highlights: last N days"; headlines lead with the company's short name. Everything is inline SVG. The Brief's priority groups, risk-first order, collapsed routine row and "You're all caught up" are unchanged. `scripts/shoot.py` takes phone-width screenshots (real mobile emulation, light and dark).
+- **Phase 2** (`26d4ea6`): the Brief has two swipeable tabs, Invested (unchanged) and Interested (the research companies with real prices and verdict bars, a Follow star, an Invest button that opens a "coming soon" sheet) and "People to follow" from real management-change filings. All frontend, all marked Preview; following is stored in the browser only. Decisions S85-S95 and the notes on where to take it in `docs/write-up.md`.
+- **Phase 3** (`3eee32f`): Naukri's "billings growth to recover in Q1" is about 99acres, named two sentences before the quote. Retrieval now also searches the names found in those sentences among the chunks of each later call that name them. Re-run for Naukri only: the verdict changed from the wrong "Not followed up" to Kept, with "Billings grew by 21% YoY in Q2, up from 17% in Q1" (99acres, Q2 call, p5).
+- **Phase 4** (`0bc518d`): BSE answers 403 to Render, and the company index needed BSE's scrip master, so an unprepared ticker died at "Finding the company". The index is now NSE-only when BSE refuses. TITAN on the deployed backend: four transcripts read from NSE's archives, 6 promises, 32 seconds; Ask answered with two quotes. No annual report was in NSE's feed, and the record says so.
+
+**Verified:** 678 backend tests, 89 frontend tests, type-check, lint, secret check; each phase deployed and looked at on the live site at 390 px (light and dark); the live page shows "Engine online". README screenshots retaken from the live site (`scripts/readme_shots.sh`).
+
+**Issues found on the way:** the headless browser's minimum window width made the first captures a false 390 px (fixed with real device emulation); a tab swipe could flip the selected tab mid-animation (it now settles on the tapped tab); the first Naukri re-run still said "Not followed up" until the lead-in search was added (it needed a name search, not more excerpts).
+
+**Not working / known:** most shipped verdicts were made by the cheap model because the strong model's free daily quota ran out. Neither Vercel nor Render deploys on push. A few verdicts may be wrong in the ways described above; they are not audited line by line.
