@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { shortCategory, shortWhy } from "@/lib/labels";
-// Every category id in config/categories.json, so a new category cannot silently fall to "Other".
-import categories from "../../config/categories.json";
+// Every category the pipeline ships (a copy of config/categories.json, inside frontend/ so a deploy of this folder alone can see it),
+// so a new category cannot silently fall to "Other".
+import config from "../public/data/config.json";
 
 describe("shortCategory", () => {
   it("uses the short labels the Brief shows", () => {
@@ -25,7 +26,7 @@ describe("shortCategory", () => {
   });
 
   it("is short enough for a phone for every configured category", () => {
-    for (const c of categories.categories) {
+    for (const c of config.categories) {
       const text = shortCategory({ category: c.id, routine: c.is_routine });
       expect(text.length).toBeGreaterThan(0);
       expect(text.length).toBeLessThanOrEqual(10);
