@@ -161,7 +161,7 @@ def judge(router: Router, *, company: str, promises: list[Promise], later: Index
         'For any status other than "Too early" you MUST give evidence: the id of a later excerpt and a quote copied EXACTLY from it.\n'
         'Return {"verdicts": [{"promise": "P1", "status": "...", "reason": "at most 25 words", "evidence": [{"excerpt": "L2", "quote": "..."}]}]}'
     )
-    result = router.complete_json("strong", JUDGE_SYSTEM, prompt, prompt_version=JUDGE_VERSION, purpose="promises.judge", max_tokens=3000)
+    result = router.complete_json("strong", JUDGE_SYSTEM, prompt, prompt_version=JUDGE_VERSION, purpose="promises.judge", max_tokens=6000)
     by_id = {p.id: p for p in promises}
     for raw in result.data.get("verdicts", []) if isinstance(result.data, dict) else []:
         promise = by_id.get(str(raw.get("promise", "")).strip()) if isinstance(raw, dict) else None

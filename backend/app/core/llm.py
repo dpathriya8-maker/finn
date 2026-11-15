@@ -104,7 +104,8 @@ def _request(spec: ModelSpec, system: str, prompt: str, max_tokens: int) -> tupl
         body = {
             "systemInstruction": {"parts": [{"text": system}]},
             "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "application/json", "temperature": 0, "maxOutputTokens": max_tokens},
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0, "maxOutputTokens": max_tokens,
+                                "thinkingConfig": {"thinkingLevel": "low"}},  # thinking tokens count against the cap; unbounded, they cut the JSON off
         }
         return GEMINI_URL.format(model=spec.name), body, {"x-goog-api-key": key, "Content-Type": "application/json"}
     body = {
@@ -131,7 +132,7 @@ def _read(spec: ModelSpec, payload: dict[str, Any]) -> tuple[str, int, int]:
         parts = (candidates[0].get("content") or {}).get("parts") or []
         text = "".join(p.get("text", "") for p in parts)
         usage = payload.get("usageMetadata") or {}
-        return text, int(usage.get("promptTokenCount", 0)), int(usage.get("candidatesTokenCount", 0))
+        return text, int(usage.get("promptTokenCount", 0)), int(usage.get("candidatesTokenCount", 0)) + int(usage.get("thoughtsTokenCount", 0))
     choices = payload.get("choices") or []
     if not choices:
         raise ValueError("no choices in the reply")

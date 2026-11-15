@@ -93,7 +93,7 @@ def test_gemini_gets_the_documented_request_with_the_key_in_a_header_and_never_i
     url, body, headers = t.sent[0]
     assert url == "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-lite-test:generateContent"
     assert SENTINEL not in url and headers["x-goog-api-key"] == SENTINEL
-    assert body["generationConfig"] == {"responseMimeType": "application/json", "temperature": 0, "maxOutputTokens": 777}
+    assert body["generationConfig"] == {"responseMimeType": "application/json", "temperature": 0, "maxOutputTokens": 777, "thinkingConfig": {"thinkingLevel": "low"}}
     assert body["systemInstruction"]["parts"][0]["text"] == "Reply with a JSON object." and body["contents"][0]["parts"][0]["text"] == "p"
     assert (result.data, result.provider, result.model, result.tokens_in, result.tokens_out, result.cached) == ({"ok": True}, "gemini", "gemini-flash-lite-test", 120, 30, False)
 

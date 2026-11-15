@@ -260,3 +260,11 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 - The deploy guide still described the skeleton's "Sample data" tag.
 
 **Not done, and why:** deployment to Vercel and Render, the API keys and the first real run of the model path need the owner's accounts; the checklist is in `docs/submission.md`.
+
+## First live run of the model path (15 Nov 2026)
+
+**Asked:** put the Gemini key in use, pick the free Flash-Lite and Flash models, build the Promise Tracker for the four research companies, refresh the Brief data, measure cost.
+
+**Done:** `LLM_CHEAP_MODEL=gemini-3.5-flash-lite`, `LLM_STRONG_MODEL=gemini-3.5-flash` (both answered a test call; `gemini-2.5-*` return 404 "no longer available to new users"; `gemini-3.8-flash` listed but timed out twice). Promise Tracker built for Bajaj Finance, Asian Paints, Naukri (54 verdicts: 24 Kept, 3 Partly, 0 Missed, 27 Too early); HAL has one call in the window, so statements only. Portfolio data refreshed for 18 companies. Measured cost in [cost.md](cost.md).
+
+**Issues:** (1) the key had been pasted into the tracked `.env.example` instead of `.env`; moved it to the gitignored `.env` and restored the example before any commit. (2) 4 strong-model verdict calls were cut off at the token limit because Gemini 3.x thinking tokens count against the output cap; fixed with `thinkingLevel: low` and a higher cap, thinking tokens now counted. No prompt was changed. (3) No verdict is Missed: the spot check found them reasonable but at times generous (for example "more than 9 lakh trained" against a goal of "almost 10 lakh" is Kept).

@@ -35,13 +35,13 @@ The project is built and pushed. What remains needs your accounts and your keys,
 >
 > **How it avoids making things up:** a quote is shown only if it is word for word on the page it cites; a verdict needs a quote from a later call; every number, change and margin is computed in code. A source that disagrees is shown, not hidden.
 >
-> **Cost and efficiency:** most of the app uses no model (classification, the cards, retrieval). A model is used for three things only, with a cheap model by default, every answer cached by its input and prompt version, and every call logged. `<measured calls and tokens, from python -m app.core.llm>`
+> **Cost and efficiency:** most of the app uses no model (classification, the cards, retrieval). A model is used for three things only, with a cheap model by default, every answer cached by its input and prompt version, and every call logged. Measured on the first live run: the Promise Tracker for 3 companies took 25 model calls and about 71,000 tokens in, 11,000 out, on the free tier ($0); a second run was answered from the cache.
 >
 > **Decisions and history:** [24 decisions made up front and 84 while building](https://github.com/dpathriya8-maker/finn/blob/main/docs/decisions.md), [what was verified about each data source, including what failed](https://github.com/dpathriya8-maker/finn/blob/main/docs/data-sources.md), and the [build log](https://github.com/dpathriya8-maker/finn/blob/main/docs/build-log.md).
 >
 > **AI build history** (required by the brief): `<share link of the planning chat on claude.ai>` · `<Claude Code session exports or links>` · `<share link of the chat where I studied the brief>`. The step prompts the planning chat wrote are also kept in [STEPS.md](https://github.com/dpathriya8-maker/finn/blob/main/STEPS.md), and every step's outcome is in the build log.
 >
-> **Known limits, stated plainly:** `<edit after your check: for example, the model path ran on N companies; BSE/NSE were/were not reachable from Render; no push notifications>`.
+> **Known limits, stated plainly:** `<edit after your check: the model path ran live on 4 companies (3 with verdicts, 54 in total; HAL has only one call in the window); no verdict is marked Missed in this data, so the tracker may be generous; "Ask the documents" has not yet been run against a live model; BSE/NSE reachability from Render is `<edit after deploy.md section E>`; no push notifications>`.
 >
 > Thank you,
 > DP

@@ -44,12 +44,13 @@ I would rather you hear this from me than find it.
 | Morning Brief, Alerts, Settings, classification of every filing | Real data for 18 companies from BSE, NSE and Yahoo; verified in a phone-sized browser, light and dark |
 | Results card, management card | Real filings: 7 results PDFs (including a scan, a sideways page and a lender) and 4 management filings; **no model is used**; scans are refused unless an independent source confirms them |
 | Documents, statements, retrieval, Ask (passages) | Run on real transcripts and annual reports for Bajaj Finance, Asian Paints, HAL, Info Edge, and Titan, which was never prepared and was researched on demand |
-| **Promise verdicts, written answers, the model router** | **Built and tested against a scripted model. Not run against a live model: there were no API keys.** Until a key is added, Research says "No verdict yet" and shows the statements instead |
+| Promise verdicts and the model router | **Run live on 15 Nov 2026** (Gemini free tier, `gemini-3.5-flash-lite` and `gemini-3.5-flash`) on 4 companies: 3 got verdicts (54: 24 Kept, 3 Partly, 0 Missed, 27 Too early); HAL has one call in the window, so it shows statements and no verdicts. Every verdict carries a quote that is verified word for word; whether each verdict is *right* has not been audited transcript by transcript |
+| Written answers ("Ask the documents") | Built and tested against a scripted model; **not yet run against a live model** |
 | Deployment (Vercel, Render) | Not done yet; click-by-click steps are in [docs/deploy.md](docs/deploy.md). BSE and NSE are only proven reachable from a home connection, so on a server an unprepared ticker may fail, with a stated reason |
 | Push notifications | Not built, and the Alerts screen says so. They need a server holding subscriptions, which means accounts |
 | Web search for management bios | Not built; the filing's own profile answers the question without a key |
 
-To turn on the Promise Tracker: put `GEMINI_API_KEY`, `LLM_CHEAP_MODEL` (and optionally `LLM_STRONG_MODEL`, `GROQ_API_KEY`, `LLM_FALLBACK_MODEL`) in `.env`, then run `python -m pipeline.research` from `backend/`.
+To rebuild the Promise Tracker: put `GEMINI_API_KEY`, `LLM_CHEAP_MODEL` (and optionally `LLM_STRONG_MODEL`, `GROQ_API_KEY`, `LLM_FALLBACK_MODEL`) in `.env`, then run `python -m pipeline.research` from `backend/`.
 
 ## How it avoids making things up
 
@@ -104,7 +105,7 @@ Push data is precomputed into static JSON, so it loads instantly and the browser
 
 Most of FINN uses **no model at all**: classification of every filing (exchange labels plus rules), the results and management cards, the statements found by rule, retrieval ("Not found" is decided by word overlap before any model is asked). A model is used for three things only: extracting promises (a cheap model, about 14 short excerpts per call), judging them against later calls (a strong model), and writing an answer to a question (a cheap model, six short excerpts). That is roughly seven calls per company for the whole tracker, every answer is cached by its input, the prompt version and the model, and no whole document is ever sent. Every call is logged without the prompt or the key.
 
-**Measured so far: 0 model calls**, because there are no API keys. `python -m app.core.llm` prints the measured table once there are. Details in [docs/cost.md](docs/cost.md).
+**Measured on the first live run: 25 successful calls (12 cheap extraction, 9 strong verdict, 4 cheap-fallback verdict), about 71,000 tokens in and 11,000 out for 3 companies, $0 on the free tier.** `python -m app.core.llm` prints the table. Details in [docs/cost.md](docs/cost.md).
 
 ## Run it
 
