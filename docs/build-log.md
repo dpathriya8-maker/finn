@@ -285,3 +285,18 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Issues found and fixed on the way:** the number reader rejected "INR2,400" (so the Bajaj miss was Kept on the model's word); the retrieval needed two shared words, which hid the one passage that said "we started our VAE facility", and "VAM-VAE" never matched "VAM and VAE"; a judge asked about several commitments at once cited a B2C quote for a B2B promise and a quote about EXPANDING to 18 cities as proof of a postponement.
 
 **Not working:** Naukri "billings growth to recover in Q1" (about 99acres) is shown as Not followed up, which is wrong: the Q1 call discusses 99acres billings and the search did not surface that passage. The strong model's free quota is 20 requests a day and was used up by re-runs, so every verdict in these records was made by `gemini-3.5-flash-lite` (the record says so). Re-running after the quota resets would use the strong model.
+
+## Deploy (15 Nov 2026)
+
+**Asked:** deploy on free tiers, wire CORS, check from the command line, fill the Render column of the data-source table, remove the debug route, finish the docs and the email.
+
+**Done:**
+- **Render** (free plan, Singapore), created through Render's API from `render.yaml`'s settings: https://finn-api-v8fm.onrender.com. Env vars set from `.env` (Gemini key, model names, `ADMIN_TOKEN` generated, daily cap 20, `ALLOWED_ORIGINS` = the Vercel origin). Empty keys (Groq, Tavily, fallback model) were left unset.
+- **Vercel** (Hobby): https://finn-mocha.vercel.app, project `finn`, `NEXT_PUBLIC_API_URL` = the Render URL for production, deployed with the CLI from `frontend/`. A `.vercelignore` keeps `.env*` and a stray untracked `public/pub.env.local` out of the upload (the file is not served: 404).
+- **Checks from the command line:** the Vercel URL answers 200 and its JavaScript contains the Render URL; `/health` on Render answers; a CORS preflight and a GET from the Vercel origin return `access-control-allow-origin: https://finn-mocha.vercel.app`, and a foreign origin gets no such header; `/debug/sources` answers 404 (removed); "Ask the documents" answered from the deployed backend with four quotes.
+- **Section E (what the exchanges allow from Render):** Yahoo, NSE announcements and screener.in work; **BSE answers HTTP 403** on every endpoint. Result in `docs/data-sources.md`. The debug route and `backend/probes/` were then removed.
+- **TITAN (never prepared) on Render:** fails in 8 seconds with "The research could not be completed (FetchError)", because the BSE scrip list is refused. A stated reason, not a crash. The four prepared companies do not depend on it.
+
+**Not done, and why:**
+- Neither platform deploys on `git push`. Render: a service created through the API from a public repo has no GitHub webhook, so I trigger deploys through the API. Vercel: `vercel git connect` fails because the Vercel account has no GitHub login linked (needs a click in the browser).
+- An unprepared ticker does not work from Render (BSE 403). The next step is to let the engine resolve a company from NSE alone.

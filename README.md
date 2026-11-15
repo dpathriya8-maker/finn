@@ -130,7 +130,7 @@ cd backend
 .venv/Scripts/python -m pipeline.research           # the research companies; add --symbols HAL for one
 ```
 
-Tests: `cd backend && .venv/Scripts/python -m pytest` (564 tests) and `cd frontend && npm test` (71 unit tests), plus type-check, lint and a production build. Copy `.env.example` to `.env` for keys (never commit it), and run `bash scripts/install-hooks.sh` once in a fresh clone to enable the secret-scan pre-commit hook.
+Tests: `cd backend && .venv/Scripts/python -m pytest` (675 tests) and `cd frontend && npm test` (73 unit tests), plus type-check, lint and a production build. Copy `.env.example` to `.env` for keys (never commit it), and run `bash scripts/install-hooks.sh` once in a fresh clone to enable the secret-scan pre-commit hook.
 
 ## Where things are
 
