@@ -66,14 +66,25 @@ _index: dict[str, Listing] | None = None
 
 
 def load_index(*, refresh: bool = False) -> dict[str, Listing]:
+    """Every NSE symbol with its BSE scrip code where BSE has one. BSE refuses some servers (Render gets HTTP 403 from it),
+    and then the index is NSE-only: no company has a scrip code, so each is read through NSE's own filings feed."""
     global _index
     if _index is None or refresh:
         nse = _cached_text("nse_equity.csv", NSE_EQUITIES_URL, {"User-Agent": BSE_HEADERS["User-Agent"]}, refresh=refresh)
-        bse = json.loads(_cached_text("bse_scrips.json", BSE_SCRIPS_URL, BSE_HEADERS, refresh=refresh))
+        try:
+            bse = json.loads(_cached_text("bse_scrips.json", BSE_SCRIPS_URL, BSE_HEADERS, refresh=refresh))
+        except (FetchError, ValueError):
+            bse = []
         _index = build_index(nse, bse)
     return _index
 
 
 def resolve(symbol: str, *, refresh: bool = False) -> Listing | None:
-    """The listing for an NSE symbol, or None if NSE has no such symbol."""
-    return load_index(refresh=refresh).get(symbol.strip().upper())
+    """The listing for an NSE symbol, or None if NSE has no such symbol. If NSE's list itself cannot be fetched, the symbol is
+    taken as typed (it was validated as a ticker already) and NSE's filings feed decides: a symbol it does not know has no
+    filings, which the research then says."""
+    name = symbol.strip().upper()
+    try:
+        return load_index(refresh=refresh).get(name)
+    except (FetchError, ValueError):
+        return Listing(symbol=name, name=name, isin="", bse_code=None, bse_id=None)

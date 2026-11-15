@@ -9,6 +9,7 @@ import pandas as pd
 import pytest
 
 from app.core.http import Fetched
+from app.core.http import FetchError
 from app.sources import nse, prices, symbols
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -121,3 +122,31 @@ def test_quarterly_figures_are_converted_to_crore_and_missing_rows_become_none(m
     assert [q.period_end for q in quarters] == [date(2026, 9, 30), date(2026, 6, 30)]  # newest first
     assert quarters[0].revenue_cr == 1200.0 and quarters[0].pbt_cr == 250.0
     assert quarters[0].ebitda_cr is None  # lenders have no EBITDA row
+
+
+
+# ---------------------------------------------------------------------------------------------- a server BSE refuses (Render)
+def test_when_bse_refuses_the_server_the_index_is_nse_only_so_every_company_is_read_through_nse(monkeypatch):
+    csv_text = "SYMBOL,NAME OF COMPANY, SERIES, ISIN NUMBER\nTITAN,Titan Company Limited,EQ,INE280A01028\nRELIANCE,Reliance Industries Limited,EQ,INE002A01018\n"
+
+    def fake(name, url, headers, *, refresh=False):
+        if name == "bse_scrips.json":
+            raise FetchError("HTTP 403")
+        return csv_text
+
+    monkeypatch.setattr(symbols, "_cached_text", fake)
+    monkeypatch.setattr(symbols, "_index", None)
+    found = symbols.resolve("titan")
+    assert found.symbol == "TITAN" and found.bse_code is None and found.isin == "INE280A01028"
+    assert symbols.resolve("NOSUCHCO") is None  # NSE's list is still the judge of what exists
+    monkeypatch.setattr(symbols, "_index", None)
+
+
+def test_when_nses_own_list_cannot_be_fetched_the_symbol_is_taken_as_typed_and_the_filings_feed_decides(monkeypatch):
+    def fake(name, url, headers, *, refresh=False):
+        raise FetchError("HTTP 403")
+
+    monkeypatch.setattr(symbols, "_cached_text", fake)
+    monkeypatch.setattr(symbols, "_index", None)
+    listing = symbols.resolve(" titan ")
+    assert (listing.symbol, listing.name, listing.bse_code) == ("TITAN", "TITAN", None)
