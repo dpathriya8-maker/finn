@@ -387,7 +387,7 @@ export function YouScreen() {
         <Watching />
       </Section>
 
-      <Section id="preferences" title="Preferences" hint="You decide what counts as news. Changes apply at once.">
+      <Section id="preferences" title="Preferences" hint="You decide what is worth your attention. Changes apply at once.">
         <h3 className="mt-4 text-sm font-semibold">Time window</h3>
         <p className="mt-0.5 text-xs text-ink-faint">How far back the Brief and Alerts look. The same window on both.</p>
         <div className="mt-3">

@@ -12,6 +12,8 @@
   --page: #f7f4ee;
   --surface: #ffffff;
   --backdrop: #ece8df;
+  /* The soft box a section of cards sits in: one step deeper than the page, so the white cards stay the lightest thing. */
+  --section: #efebe3;
   --line: #e4dfd3;
   /* Accent: deep indigo for tabs, buttons, links and focus rings. Never for good or bad. */
   --accent: #3730a3;
@@ -34,6 +36,7 @@
     --page: #1c1f2e;
     --surface: #272b3d;
     --backdrop: #151724;
+    --section: #181b2b;
     --line: #3a3f57;
     --accent: #a5b4fc;
     --accent-bg: #818cf8;
@@ -57,6 +60,7 @@
   --color-accent-bg: var(--accent-bg);
   --color-on-accent: var(--on-accent);
   --color-backdrop: var(--backdrop);
+  --color-section: var(--section);
   --color-line: var(--line);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);

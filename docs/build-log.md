@@ -403,3 +403,13 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 199 frontend unit tests and 683 backend tests, types, lint, build; 47 browser checks for this part (empty and starter state, topic, company plus topic with no duplicates, person by exact name, nothing-found lines, search by typing, an order win found by keywords, the x to unfollow), then the whole sweep at 360 and 390 px, light and dark.
 
 **Not done / known:** a person is followed by exact name only, so "Mr. V. S. Rangan" in a filing will not match "V. Srinivasa Rangan"; a keyword rule can miss an unusual wording; the people list is the few names in the 14 days of filings, plus any full name typed in.
+
+## Night plan, Part C: polish (16 Nov 2026)
+
+**Asked:** soft boxes for the Brief and Interested sections (skip if it breaks the layout), fix the stale You-tab section check, plain-word copy.
+
+**Done:** `SectionBox` wraps Needs attention, Worth a look, Following, Companies you are researching and People in the filings. It did not break the layout: no sideways scroll and no text below 4.5:1 at 360 and 390 px, light and dark. Six category reasons and one settings line reworded, and the data re-generated so cards carry them (S129). The You-tab check is by section id (S130). Screenshots now come from a window made as tall as the page and not from "capture beyond the viewport", which had made the swipeable tabs snap back to Invested in a picture (the page itself was never wrong; measured).
+
+**Verified:** 199 unit tests, 683 backend tests, types, lint, build; the whole browser sweep (360 and 390 px, light and dark) on the production build.
+
+**Not done:** the You tab's own sections are not boxed (not asked).

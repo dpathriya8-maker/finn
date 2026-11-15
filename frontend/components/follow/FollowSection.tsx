@@ -6,6 +6,7 @@ import { GroupSection } from "@/components/brief/GroupSection";
 import { PricesProvider } from "@/components/brief/PricesContext";
 import { BecauseProvider } from "@/components/follow/BecauseContext";
 import { BuildingIcon, CloseIcon, PersonIcon } from "@/components/ui/Icons";
+import { SectionBox } from "@/components/ui/SectionBox";
 import { companySections, groupItems, selectItems, whenLabel, windowLabel, WINDOWS } from "@/lib/brief";
 import { toggleFollow, useFollow, type Follow } from "@/lib/follow";
 import { becauseLine, isFollowed, nothingLine, namedPeople, reasonsFor, suggest, topicById, TOPICS, type Reason, type Suggestion } from "@/lib/followMatch";
@@ -174,43 +175,38 @@ function Feed({ brief, follow, hours, chips }: { brief: Brief; follow: Follow; h
   const SHOWN_QUIET = 5;
 
   return (
-    <section aria-label="Following" className="mt-6" data-testid="following-feed">
-      <h2 className="flex items-baseline gap-2 text-sm font-semibold">
-        Following
-        <span className="text-xs font-normal text-ink-faint">
-          {matched.length} {matched.length === 1 ? "filing" : "filings"} · last {windowText}
-        </span>
-      </h2>
+    <div className="mt-5" data-testid="following-feed">
+      <SectionBox title="Following" count={`${matched.length} ${matched.length === 1 ? "filing" : "filings"} · last ${windowText}`}>
+        {matched.length > 0 && (
+          <PricesProvider brief={brief}>
+            <BecauseProvider value={because}>
+              <div>
+                <GroupSection title="Needs attention" hint="Risks and the biggest filings first" groups={sections.needs} size="lg" referenceIso={brief.generated_at} boxed={false} />
+                <GroupSection title="Worth a look" hint="Material, but not urgent" groups={sections.worth} size="md" referenceIso={brief.generated_at} boxed={false} />
+                <CollapsedRow label={groups.low.length === 1 ? "lower-priority filing" : "lower-priority filings"} hint="Tap to see them" items={groups.low} referenceIso={brief.generated_at} />
+                <CollapsedRow label={groups.routine.length === 1 ? "routine filing" : "routine filings"} hint="Meeting notices, trading windows and similar" items={groups.routine} referenceIso={brief.generated_at} />
+              </div>
+            </BecauseProvider>
+          </PricesProvider>
+        )}
 
-      {matched.length > 0 && (
-        <PricesProvider brief={brief}>
-          <BecauseProvider value={because}>
-            <div className="mt-3">
-              <GroupSection title="Needs attention" hint="Risks and the biggest filings first" groups={sections.needs} size="lg" referenceIso={brief.generated_at} />
-              <GroupSection title="Worth a look" hint="Material, but not urgent" groups={sections.worth} size="md" referenceIso={brief.generated_at} />
-              <CollapsedRow label={groups.low.length === 1 ? "lower-priority filing" : "lower-priority filings"} hint="Tap to see them" items={groups.low} referenceIso={brief.generated_at} />
-              <CollapsedRow label={groups.routine.length === 1 ? "routine filing" : "routine filings"} hint="Meeting notices, trading windows and similar" items={groups.routine} referenceIso={brief.generated_at} />
-            </div>
-          </BecauseProvider>
-        </PricesProvider>
-      )}
+        {quiet.length > 0 && (
+          <ul className="space-y-1.5 px-1.5" data-testid="nothing-lines">
+            {quiet.slice(0, SHOWN_QUIET).map((c) => (
+              <li key={`${c.kind}:${c.id}`} className="text-sm leading-6 text-ink-soft">
+                {nothingLine(c.label, windowText)}
+              </li>
+            ))}
+            {quiet.length > SHOWN_QUIET && <li className="text-xs text-ink-faint">and {quiet.length - SHOWN_QUIET} more with nothing in this window.</li>}
+          </ul>
+        )}
 
-      {quiet.length > 0 && (
-        <ul className="mt-4 space-y-1.5" data-testid="nothing-lines">
-          {quiet.slice(0, SHOWN_QUIET).map((c) => (
-            <li key={`${c.kind}:${c.id}`} className="text-sm leading-6 text-ink-soft">
-              {nothingLine(c.label, windowText)}
-            </li>
-          ))}
-          {quiet.length > SHOWN_QUIET && <li className="text-xs text-ink-faint">and {quiet.length - SHOWN_QUIET} more with nothing in this window.</li>}
-        </ul>
-      )}
-
-      {matched.length === 0 && wider && (
-        <button type="button" onClick={() => updateSettings({ windowHours: wider.hours })} className="mt-3 min-h-11 w-full rounded-full border border-line text-sm font-medium">
-          Look back {wider.label}
-        </button>
-      )}
+        {matched.length === 0 && wider && (
+          <button type="button" onClick={() => updateSettings({ windowHours: wider.hours })} className="min-h-11 w-full rounded-full border border-line bg-surface text-sm font-medium">
+            Look back {wider.label}
+          </button>
+        )}
+      </SectionBox>
 
       {matched.length > 0 && (
         <p className="mt-8 text-center text-sm text-ink-soft">
@@ -221,7 +217,7 @@ function Feed({ brief, follow, hours, chips }: { brief: Brief; follow: Follow; h
           <span className="mt-1 block text-xs text-ink-faint">Filings checked {whenLabel(brief.generated_at, brief.generated_at)}</span>
         </p>
       )}
-    </section>
+    </div>
   );
 }
 

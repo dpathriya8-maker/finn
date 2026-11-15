@@ -227,11 +227,21 @@ def sweep(run: Run, tab: Tab, label: str, *, width: int, dark: bool, contrast: b
 
 
 def shot(tab: Tab, path: Path, width: int, max_height: int = 2600) -> None:
+    """A tall picture of the page as the reader sees it. The window is made as tall as the page for a moment (not captured "beyond
+    the viewport", which makes the swipeable tabs snap back to the first one) and every sideways-scrolled box is put back."""
     height = int(tab.js("Math.max(document.documentElement.scrollHeight, document.body.scrollHeight)") or 844)
-    tab.js("document.querySelectorAll('nav').forEach(n => { n.style.visibility = 'hidden' }); true") if height > 844 else None
-    data = tab.call("Page.captureScreenshot", format="png", captureBeyondViewport=True, clip={"x": 0, "y": 0, "width": width, "height": min(max(height, 844), max_height), "scale": 1})
+    shown = min(max(height, 844), max_height)
+    tab.js("window.__scrolled = [...document.querySelectorAll('*')].filter(e => e.scrollLeft > 0).map(e => [e, e.scrollLeft]); true")
+    if height > 844:
+        tab.js("document.querySelectorAll('nav').forEach(n => { n.style.visibility = 'hidden' }); true")
+    tab.call("Emulation.setDeviceMetricsOverride", width=width, height=shown, deviceScaleFactor=2, mobile=True)
+    time.sleep(0.5)
+    tab.js("window.__scrolled.forEach(([e, left]) => { e.scrollLeft = left }); true")
+    time.sleep(0.3)
+    data = tab.call("Page.captureScreenshot", format="png", clip={"x": 0, "y": 0, "width": width, "height": shown, "scale": 1})
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(base64.b64decode(data["data"]))
+    tab.call("Emulation.setDeviceMetricsOverride", width=width, height=844, deviceScaleFactor=2, mobile=True)
     tab.js("document.querySelectorAll('nav').forEach(n => { n.style.visibility = '' }); true")
 
 

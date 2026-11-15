@@ -65,7 +65,7 @@
     {
       "id": "fund_raise",
       "label": "Fund raise",
-      "why": "Raising money can dilute shareholders or add debt",
+      "why": "New money means more shares or more debt",
       "weight": 70,
       "is_routine": false,
       "default_alert": true,
@@ -75,7 +75,7 @@
     {
       "id": "bonus_split",
       "label": "Bonus & split",
-      "why": "Corporate action with a record date",
+      "why": "Changes how many shares you hold",
       "weight": 60,
       "is_routine": false,
       "default_alert": true,
@@ -85,7 +85,7 @@
     {
       "id": "capex",
       "label": "Capex & expansion",
-      "why": "Expansion plan: forward-looking",
+      "why": "Plans to spend on growth",
       "weight": 55,
       "is_routine": false,
       "default_alert": false,
@@ -105,7 +105,7 @@
     {
       "id": "press_release",
       "label": "Press release",
-      "why": "Company news",
+      "why": "Company update",
       "weight": 40,
       "is_routine": false,
       "default_alert": false,
@@ -135,7 +135,7 @@
     {
       "id": "agm_egm",
       "label": "AGM / EGM",
-      "why": "Routine governance notice",
+      "why": "Routine shareholder meeting notice",
       "weight": 25,
       "is_routine": true,
       "default_alert": false,
@@ -145,7 +145,7 @@
     {
       "id": "earnings_call",
       "label": "Earnings call",
-      "why": "Earnings call logistics or transcript",
+      "why": "Call timing or the call transcript",
       "weight": 25,
       "is_routine": true,
       "default_alert": false,

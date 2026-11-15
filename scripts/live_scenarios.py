@@ -30,7 +30,17 @@ def define(scenario) -> None:
     scenario("alerts", "/alerts")
     scenario("research", "/research")
     scenario("research-bajaj", "/research?symbol=BAJFINANCE", wait=7, expand=True)
-    scenario("you", "/settings")
+    scenario(
+        "you",
+        "/settings",
+        checks=[
+            (
+                "the You tab has its four sections (not a fixed count of three)",
+                "['muted', 'investments', 'preferences', 'how'].every(id => !!document.getElementById(id)) && document.querySelectorAll('main section[id]').length >= 4",
+            ),
+            ("no copy says 'counts as news'", "!document.body.textContent.includes('counts as news')"),
+        ],
+    )
 
     # ---- Part A: profit and loss
     scenario(

@@ -6,6 +6,7 @@ import { Chevron } from "@/components/brief/Chevron";
 import { TONE } from "@/components/brief/tone";
 import { FollowSection } from "@/components/follow/FollowSection";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { SectionBox } from "@/components/ui/SectionBox";
 import { VerdictBar } from "@/components/ui/Charts";
 import { BarChartIcon, StarIcon } from "@/components/ui/Icons";
 import { PreviewBadge } from "@/components/ui/Preview";
@@ -156,24 +157,22 @@ function People({ brief }: { brief: Brief }) {
   const shown = all ? people : people.slice(0, PEOPLE_SHOWN);
   const isOn = (p: PersonEntry) => follow.people.some((name) => name.toLowerCase() === p.followName.toLowerCase());
   return (
-    <section aria-labelledby="people-title" className="mt-8">
-      <h2 id="people-title" className="text-sm font-semibold">
-        People in the filings
-      </h2>
-      <p className="mt-1 text-xs leading-5 text-ink-soft">
-        Named in real management-change filings. Follow one and any filing that names them shows up in your feed. FINN does not send push notifications yet.
-      </p>
-      <ul className="mt-3 space-y-2">
+    <SectionBox
+      title="People in the filings"
+      hint="Named in real management-change filings. Follow one and any filing that names them shows up in your feed. FINN does not send push notifications yet."
+      className="mt-4"
+    >
+      <ul className="flex flex-col gap-2.5">
         {shown.map((p) => (
           <PersonRow key={p.id} person={p} on={isOn(p)} />
         ))}
       </ul>
       {people.length > PEOPLE_SHOWN && !all && (
-        <button type="button" onClick={() => setAll(true)} className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-ink-soft underline underline-offset-2">
+        <button type="button" onClick={() => setAll(true)} className="min-h-11 w-full rounded-full border border-line bg-surface text-sm font-medium">
           Show all {people.length}
         </button>
       )}
-    </section>
+    </SectionBox>
   );
 }
 
@@ -208,17 +207,11 @@ export function InterestedTab() {
     <div>
       <FollowSection brief={merged} hours={settings.windowHours} researchMissing={research.kind === "error"} />
 
-      <section aria-labelledby="researching-title" className="mt-8">
-        <h2 id="researching-title" className="text-sm font-semibold">
-          Companies you are researching
-        </h2>
-        <p className="mt-1 text-xs leading-5 text-ink-soft">Tap one to open it. Follow it to see its filings in your feed.</p>
-        <div className="mt-3 space-y-3">
-          {companies.map((entry) => (
-            <CompanyRow key={entry.symbol} entry={entry} onInvest={setInvestIn} />
-          ))}
-        </div>
-      </section>
+      <SectionBox title="Companies you are researching" hint="Tap one to open it. Follow it to see its filings in your feed." className="mt-4">
+        {companies.map((entry) => (
+          <CompanyRow key={entry.symbol} entry={entry} onInvest={setInvestIn} />
+        ))}
+      </SectionBox>
 
       <People brief={merged} />
 
