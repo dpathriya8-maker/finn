@@ -29,6 +29,7 @@ PRICES_PATH = REPO_ROOT / "config" / "llm_prices.json"
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 BACKOFF_S = (1.0, 4.0)  # so three tries per model; a Retry-After header, up to MAX_WAIT_S, wins
 MAX_WAIT_S = 20.0
+DAILY_QUOTA_PAUSE_S = 3600.0  # a model whose free DAILY quota is gone is left alone this long before one more try
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
@@ -160,8 +161,11 @@ class Router:
         post: Callable[..., Fetched] = post_json,
         sleep: Callable[[float], None] = time.sleep,
         prices: dict[str, Any] | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ):
         self.cache, self.log_path, self.post, self.sleep = cache, log_path, post, sleep
+        self.clock = clock
+        self._spent: dict[str, float] = {}  # model -> when to try it again, after a "requests per day" 429
         if prices is None:
             try:
                 prices = json.loads(PRICES_PATH.read_text(encoding="utf-8"))
@@ -196,6 +200,9 @@ class Router:
             if isinstance(stored, dict):
                 self._log(provider=spec.provider, model=spec.name, tier=tier, purpose=purpose, tokens_in=0, tokens_out=0, cost_usd=0.0, cached=True, ok=True)
                 return LLMResult(stored, spec.name, spec.provider, True, 0, 0, 0.0)
+            if self._spent.get(str(spec), 0.0) > self.clock():
+                failures.append(f"{spec}: its daily quota is used up")
+                continue  # no point waiting through retries for a model that has said it is out for the day
             outcome = self._ask(spec, system, prompt, max_tokens)
             if isinstance(outcome, str):
                 failures.append(f"{spec}: {outcome}")
@@ -226,6 +233,9 @@ class Router:
                     except (ValueError, KeyError, TypeError) as exc:
                         return f"unusable reply ({str(exc)[:120]})"  # a malformed answer will not improve on a retry
                 reason = f"HTTP {reply.status}"
+                if reply.status == 429 and _is_daily_quota(reply):
+                    self._spent[str(spec)] = self.clock() + DAILY_QUOTA_PAUSE_S
+                    return f"{reason} (daily quota used up)"
                 if reply.status not in RETRY_STATUSES:
                     return reason
                 wait = _retry_after(reply)
@@ -237,8 +247,17 @@ class Router:
         return reason
 
 
+def _is_daily_quota(reply: Fetched) -> bool:
+    """Gemini says so in the error body ("GenerateRequestsPerDay..."): waiting a few seconds cannot help."""
+    return bool(re.search(r"per\s?day", reply.text(), re.I))
+
+
 def _retry_after(reply: Fetched) -> float | None:
+    """How long the provider says to wait: the Retry-After header, else Gemini's own "retryDelay" in the error body."""
     value = next((v for k, v in reply.headers.items() if k.lower() == "retry-after"), None)
+    if value is None:
+        match = re.search(r'"retryDelay"\s*:\s*"(\d+(?:\.\d+)?)s"', reply.text())
+        value = match.group(1) if match else None
     try:
         return min(float(value), MAX_WAIT_S) if value is not None else None
     except ValueError:

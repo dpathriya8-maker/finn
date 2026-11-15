@@ -239,3 +239,34 @@ def test_the_usage_report_is_a_table_a_reader_can_paste_into_the_cost_doc(tmp_pa
     ask(r, prompt="x")
     text = llm.report(log)
     assert "2 calls (1 answered from the cache, 0 failed)" in text and "| gemini:gemini-flash-lite-test | 2 | 1 | 500 | 60 | free tier / no price set |" in text
+
+
+def test_a_model_that_is_out_of_requests_for_the_day_is_not_retried_and_is_skipped_until_later(tmp_path):
+    out_for_the_day = Fetched("u", 429, b'{"error": {"details": [{"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}}', {})
+    t = Transport(out_for_the_day, gemini_reply('{"from": "cheap"}'), gemini_reply('{"again": "cheap"}'))
+    now = [0.0]
+    sleeps = []
+    r = llm.Router(cache=None, log_path=tmp_path / "calls.jsonl", post=t, sleep=sleeps.append, prices={}, clock=lambda: now[0])
+    first = r.complete_json("strong", "s", "p1", prompt_version="t1", purpose="test")
+    assert first.data == {"from": "cheap"} and first.model == "gemini-flash-lite-test"
+    assert sleeps == [] and len(t.sent) == 2  # one try on the strong model, no waiting, then the cheap one
+    second = r.complete_json("strong", "s", "p2", prompt_version="t1", purpose="test")
+    assert second.data == {"again": "cheap"} and len(t.sent) == 3  # the strong model was not even asked this time
+    assert "gemini-flash-test" in t.sent[0][0] and "gemini-flash-lite-test" in t.sent[2][0]
+    now[0] += llm.DAILY_QUOTA_PAUSE_S + 1  # later, it is tried again
+    t.replies = [gemini_reply('{"back": true}')]
+    third = r.complete_json("strong", "s", "p3", prompt_version="t1", purpose="test")
+    assert third.data == {"back": True} and "gemini-flash-test" in t.sent[3][0]
+
+
+def test_a_429_that_is_not_about_the_daily_quota_is_still_retried(tmp_path):
+    sleeps = []
+    result = ask(router(Transport(status(429), gemini_reply()), tmp_path, sleeps=sleeps), tier="strong")
+    assert result.data == {"ok": True} and sleeps == [llm.BACKOFF_S[0]]
+
+
+def test_a_429_with_the_wait_in_its_body_waits_that_long_not_the_default_backoff(tmp_path):
+    per_minute = Fetched("u", 429, b'{"error": {"details": [{"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "13s"}]}}', {})
+    sleeps = []
+    result = ask(router(Transport(per_minute, gemini_reply()), tmp_path, sleeps=sleeps))
+    assert result.data == {"ok": True} and sleeps == [13.0]

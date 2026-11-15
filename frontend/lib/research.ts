@@ -15,7 +15,10 @@ export type ResearchDocument = {
 
 export type Evidence = { doc: string; page: number; quote: string };
 
-export type PromiseStatus = "Kept" | "Partly" | "Missed" | "Too early";
+export type PromiseStatus = "Kept" | "Partly" | "Missed" | "Not followed up" | "Too early";
+
+/** The promised and the reported number, present only when both were found in the quotes; the share is computed by the engine. */
+export type VerdictNumbers = { target: number; actual: number; unit: string; lower_is_better: boolean; attainment_pct: number };
 
 export type TrackedPromise = {
   id: string;
@@ -26,17 +29,27 @@ export type TrackedPromise = {
   what: string;
   by_when: string | null;
   kind: string;
-  verdict: { status: PromiseStatus; reason: string; downgraded: boolean; evidence: Evidence[] };
+  /** When it is due, as management said it ("Q3 FY27"), and the last day of that period as the engine read it. Absent in older records. */
+  target_period?: string | null;
+  due?: string | null;
+  verdict: { status: PromiseStatus; reason: string; downgraded: boolean; delayed?: boolean; numbers?: VerdictNumbers | null; evidence: Evidence[] };
 };
 
 export type Scorecard = {
   kept: number;
   partly: number;
   missed: number;
+  /** Absent in records made before the verdict existed. */
+  not_followed_up?: number;
   too_early: number;
   total: number;
   decided: number;
   delivery_rate_pct: number | null;
+  /** Commitments with no stated time frame, which cannot be checked and are not tracked. */
+  no_deadline?: number;
+  /** The latest call on record (its date and quarter): "too early" is measured against it. */
+  as_of?: string;
+  as_of_call?: string;
 };
 
 export type Statement = { doc: string; quarter: string | null; page: number; text: string };
@@ -79,15 +92,33 @@ export function isValidTicker(symbol: string): boolean {
   return TICKER.test(symbol);
 }
 
-/** Bad news first (design rule 4): what was missed, then what was partly kept, then kept, then not yet due. */
-export const STATUS_ORDER: PromiseStatus[] = ["Missed", "Partly", "Kept", "Too early"];
+/** Bad news first (design rule 4): what was missed, what went quiet, what was partly kept, then kept, then not yet due. */
+export const STATUS_ORDER: PromiseStatus[] = ["Missed", "Not followed up", "Partly", "Kept", "Too early"];
 
 export const STATUS_LOOK: Record<PromiseStatus, { tone: "bad" | "watch" | "good" | "neutral"; meaning: string }> = {
-  Missed: { tone: "bad", meaning: "Later calls show it did not happen" },
-  Partly: { tone: "watch", meaning: "Delivered in part, late, or smaller" },
-  Kept: { tone: "good", meaning: "Later calls show it happened" },
-  "Too early": { tone: "neutral", meaning: "Not due yet, or later calls do not settle it" },
+  Missed: { tone: "bad", meaning: "Its date has passed and later calls show it did not happen, or management has pushed it back or dropped it" },
+  "Not followed up": { tone: "watch", meaning: "Its date has passed and no later call mentions it" },
+  Partly: { tone: "watch", meaning: "Delivered in part, or 75 to 99% of the number promised" },
+  Kept: { tone: "good", meaning: "Its date has passed and later calls show it was delivered" },
+  "Too early": { tone: "neutral", meaning: "Its date has not come yet, as of the latest call" },
 };
+
+/** The status as shown: a promise management itself pushed back reads "Missed — delayed". */
+export function statusLabel(verdict: Pick<TrackedPromise["verdict"], "status" | "delayed">): string {
+  return verdict.status === "Missed" && verdict.delayed ? "Missed — delayed" : verdict.status;
+}
+
+/** "Promised 10 lakh, reported 9 lakh: 90% of the promise", from the numbers the engine checked against the quotes. */
+export function numbersText(n: VerdictNumbers): string {
+  const show = (v: number) => (n.unit === "%" ? `${v}%` : n.unit ? `${v} ${n.unit}` : `${v}`);
+  return `Promised ${show(n.target)}, reported ${show(n.actual)}: ${n.attainment_pct}% of the promise`;
+}
+
+/** When it is due: the date the engine worked out from the speaker's own words, with those words; older records had only the words. */
+export function dueText(p: Pick<TrackedPromise, "due" | "by_when" | "target_period">): string | null {
+  if (p.due) return p.by_when ? `${dateLabel(p.due)} (“${p.by_when}”)` : dateLabel(p.due);
+  return p.by_when || p.target_period || null;
+}
 
 export function orderPromises(promises: readonly TrackedPromise[]): TrackedPromise[] {
   const rank = (p: TrackedPromise) => STATUS_ORDER.indexOf(p.verdict.status);

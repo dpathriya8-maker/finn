@@ -1,14 +1,20 @@
 import { describe, expect, it } from "vitest";
 import {
   byId,
+  dateLabel,
   deliveryText,
+  dueText,
   fileSize,
   isValidTicker,
   normaliseTicker,
+  numbersText,
   orderPromises,
   pageLink,
   runResearchFlow,
   sourceLabel,
+  STATUS_LOOK,
+  STATUS_ORDER,
+  statusLabel,
   type FlowDeps,
   type ResearchDocument,
   type ResearchRecord,
@@ -34,9 +40,30 @@ describe("tickers", () => {
 });
 
 describe("the promise list", () => {
-  it("puts what was missed first, then partly, kept, and not yet due; within a status, by document and page", () => {
-    const ordered = orderPromises([promise("a", "Kept"), promise("b", "Too early"), promise("c", "Missed", "d2", 9), promise("d", "Partly"), promise("e", "Missed", "d1", 4)]);
-    expect(ordered.map((p) => p.id)).toEqual(["e", "c", "d", "a", "b"]);
+  it("puts what was missed first, then what went quiet, partly, kept, and not yet due; within a status, by document and page", () => {
+    const ordered = orderPromises([promise("a", "Kept"), promise("b", "Too early"), promise("c", "Missed", "d2", 9), promise("d", "Partly"), promise("e", "Missed", "d1", 4), promise("f", "Not followed up")]);
+    expect(ordered.map((p) => p.id)).toEqual(["e", "c", "f", "d", "a", "b"]);
+  });
+  it("shows every status in amber, red, green or neutral, and a postponement as 'Missed — delayed'", () => {
+    expect(STATUS_ORDER).toHaveLength(5);
+    expect(STATUS_LOOK["Not followed up"].tone).toBe("watch");
+    expect(STATUS_LOOK.Missed.tone).toBe("bad");
+    expect(STATUS_LOOK.Kept.tone).toBe("good");
+    expect(STATUS_LOOK["Too early"].tone).toBe("neutral");
+    expect(statusLabel({ status: "Missed", delayed: true })).toBe("Missed — delayed");
+    expect(statusLabel({ status: "Missed", delayed: false })).toBe("Missed");
+    expect(statusLabel({ status: "Missed" })).toBe("Missed");
+    expect(statusLabel({ status: "Not followed up", delayed: true })).toBe("Not followed up");
+    expect(statusLabel({ status: "Kept" })).toBe("Kept");
+  });
+  it("says when a promise is due and the numbers behind a verdict", () => {
+    expect(dueText({ due: "2026-03-31", target_period: "FY27", by_when: "this year" })).toBe(`${dateLabel("2026-03-31")} (“this year”)`);
+    expect(dueText({ due: "2026-03-31", target_period: null, by_when: null })).toBe(dateLabel("2026-03-31"));
+    expect(dueText({ target_period: "Q3 FY27", by_when: "by the festive season" })).toBe("by the festive season"); // an older record, no date
+    expect(dueText({ target_period: "Q3 FY27", by_when: null })).toBe("Q3 FY27");
+    expect(dueText({ by_when: null })).toBeNull();
+    expect(numbersText({ target: 10, actual: 9, unit: "lakh", lower_is_better: false, attainment_pct: 90 })).toBe("Promised 10 lakh, reported 9 lakh: 90% of the promise");
+    expect(numbersText({ target: 22, actual: 22, unit: "%", lower_is_better: false, attainment_pct: 100 })).toBe("Promised 22%, reported 22%: 100% of the promise");
   });
   it("does not change the list it is given", () => {
     const input = [promise("a", "Kept"), promise("b", "Missed")];

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import threading
 from collections import OrderedDict
+from datetime import date
 from typing import Any, Callable
 
 from app.core import llm
@@ -89,12 +90,21 @@ def build_record(
     recorder = Recorder(router)
     try:
         progress("Extracting promises and checking them against later calls")
-        promises = pr.build_tracker(recorder, company=corpus.name or name, calls=[(d.id, d.period or "", chunks[d.id]) for d in transcripts])
+        tracker = pr.build_tracker(
+            recorder, company=corpus.name or name,
+            calls=[pr.Call(d.id, d.period or "", date.fromisoformat(d.date), chunks[d.id]) for d in transcripts],
+        )
     except llm.LLMUnavailable as exc:
         record["model"] = {"ran": False, "reason": exc.reason, **recorder.summary()}
         return record
+    latest = tracker.latest_call
     record.update(
-        status="ready", promises=[pr.to_dict(p) for p in promises], scorecard=pr.scorecard(promises),
+        status="ready", promises=[pr.to_dict(p) for p in tracker.promises],
+        scorecard={
+            **pr.scorecard(tracker.promises),
+            "no_deadline": tracker.no_deadline,  # commitments with no time frame: not tracked, and counted so the reader knows
+            "as_of": latest.date.isoformat(), "as_of_call": latest.period,  # the latest call on record: what "too early" is measured against
+        },
         model={"ran": True, "reason": None, **recorder.summary()},
     )
     return record

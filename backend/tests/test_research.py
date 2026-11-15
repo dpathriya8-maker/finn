@@ -9,6 +9,8 @@ from pathlib import Path
 from app.core.cache import Cache
 from app.core.timeutil import IST
 from app.pull import ingest as ig
+from app.pull import periods
+from app.pull import promises as pr
 from app.pull import research as rs
 from app.pull.text import normalise, quote_is_in, strip_repeated_lines
 from app.sources.models import Announcement, Listing
@@ -58,14 +60,20 @@ def first_excerpt_quote(prompt, prefix="E"):
 
 
 def obedient_router():
+    due = {"Call: Q3 FY26": "Q4 FY26", "Call: Q4 FY26": "Q1 FY27", "Call: Q1 FY27": "FY28"}  # the two older promises are due by the latest call; the newest is not
+
     def extract(prompt):
-        return {"promises": [{"excerpt": "E1", "quote": first_excerpt_quote(prompt), "what": "a commitment", "by_when": None, "kind": "other"}]}
+        period = next(target for marker, target in due.items() if marker in prompt)
+        return {"promises": [{"excerpt": "E1", "quote": first_excerpt_quote(prompt), "what": "a commitment", "by_when": None, "target_period": period, "kind": "other"}]}
 
     def judge(prompt):
         ids = re.findall(r"^\[(P\d+)\]", prompt, re.M)
-        return {"verdicts": [{"promise": pid, "status": "Kept", "reason": "As said.", "evidence": [{"excerpt": "L1", "quote": first_excerpt_quote(prompt, "L")}]} for pid in ids]}
+        return {"verdicts": [{"promise": pid, "outcome": "met", "reason": "As said.", "evidence": [{"excerpt": "L1", "quote": first_excerpt_quote(prompt, "L")}]} for pid in ids]}
 
-    return FakeRouter({"promises.extract": extract, "promises.judge": judge})
+    def verify(prompt):
+        return {"checks": [{"promise": pid, "same_subject": True, "supports": True} for pid in re.findall(r"^\[(P\d+)\]", prompt, re.M)]}
+
+    return FakeRouter({"promises.extract": extract, "promises.judge": judge, "promises.verify": verify})
 
 
 # ---------------------------------------------------------------------------------------------- no model
@@ -90,7 +98,9 @@ def test_the_record_carries_what_a_reader_needs_to_find_each_document():
 
 
 # ---------------------------------------------------------------------------------------------- with a model
-def test_with_a_model_the_promises_are_verified_judged_and_counted():
+def test_with_a_model_the_promises_are_verified_judged_and_counted(monkeypatch):
+    # The fake model quotes the first words of real transcripts, which carry their own time words; pin the due date to the model's period.
+    monkeypatch.setattr(pr, "resolve_due", lambda quote, by_when, target, call_date: periods.period_end(target, call_date))
     router = obedient_router()
     record = rs.research("ACME", "Acme Ltd", sources=sources(), router=router)
     assert record["status"] == "ready" and record["model"]["ran"] and record["model"]["models"] == ["fake:fake-model"]
@@ -102,13 +112,18 @@ def test_with_a_model_the_promises_are_verified_judged_and_counted():
         for e in p["verdict"]["evidence"]:
             assert quote_is_in(e["quote"], read_back(NAMES[e["doc"]])[e["page"] - 1])  # and so is the evidence
             assert e["doc"] > p["doc"]  # evidence comes from a LATER call
-    assert record["scorecard"] == {"kept": 2, "partly": 0, "missed": 0, "too_early": 1, "total": 3, "decided": 2, "delivery_rate_pct": None}
-    assert router.purposes().count("promises.extract") == 3 and router.purposes().count("promises.judge") == 2
+    assert record["scorecard"] == {
+        "kept": 2, "partly": 0, "missed": 0, "not_followed_up": 0, "too_early": 1, "total": 3, "decided": 2, "delivery_rate_pct": None,
+        "no_deadline": 0, "as_of": "2026-08-08", "as_of_call": "Q1 FY27",
+    }
+    assert [p["due"] for p in record["promises"]] == ["2026-03-31", "2026-06-30", "2028-03-31"]
+    assert router.purposes().count("promises.extract") == 3 and router.purposes().count("promises.judge") == 2 and router.purposes().count("promises.verify") == 1
 
 
-def test_the_record_says_how_much_the_model_did_and_how_much_the_cache_saved():
+def test_the_record_says_how_much_the_model_did_and_how_much_the_cache_saved(monkeypatch):
+    monkeypatch.setattr(pr, "resolve_due", lambda quote, by_when, target, call_date: periods.period_end(target, call_date))
     record = rs.research("ACME", "Acme Ltd", sources=sources(), router=obedient_router())
-    assert record["model"]["calls"] == 5 and record["model"]["cache_hits"] == 0 and record["model"]["tokens_in"] == 500
+    assert record["model"]["calls"] == 6 and record["model"]["cache_hits"] == 0 and record["model"]["tokens_in"] == 600
 
 
 def test_a_model_that_goes_down_leaves_a_statements_record_with_the_reason():
