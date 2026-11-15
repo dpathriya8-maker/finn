@@ -20,3 +20,8 @@ export function useBriefPrices(symbol: string): { sessions: Session[] | undefine
   const { sessions, generatedAt } = useContext(Ctx);
   return { sessions: sessions.get(symbol), generatedAt };
 }
+
+/** Every company's stored sessions in the brief, for a screen that adds them up (the portfolio summary). */
+export function useAllBriefPrices(): { sessions: Map<string, Session[]>; generatedAt: string | undefined } {
+  return useContext(Ctx);
+}

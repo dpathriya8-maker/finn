@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
 import { GroupSection } from "@/components/brief/GroupSection";
+import { PortfolioSummary } from "@/components/brief/PortfolioSummary";
 import { PricesProvider } from "@/components/brief/PricesContext";
 import { companySections, groupItems, selectItems, staleNotes, summaryParts, whenLabel, WINDOWS } from "@/lib/brief";
 import { updateSettings, useSettings } from "@/lib/settings";
@@ -38,6 +39,7 @@ export function MorningBrief() {
 
   return (
     <PricesProvider brief={brief}>
+      <PortfolioSummary companies={brief.companies} />
       <p className="text-base font-semibold leading-snug tracking-tight" data-testid="summary">
         {summary.map((part, i) => (
           <span key={part.text}>

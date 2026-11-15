@@ -8,7 +8,26 @@ import { PersonIcon } from "@/components/ui/Icons";
 import { filingAlerts, signalAlerts } from "@/lib/alerts";
 import { windowLabel } from "@/lib/brief";
 import { hueFor, shortName } from "@/lib/headline";
-import { formatInr, parseAmountInput, setInvested, totalInvested, useInvested } from "@/lib/invested";
+import {
+  applySample,
+  arrowInrPct,
+  clearSample,
+  directionOf,
+  formatInputNumber,
+  formatInr,
+  hasOwnEntries,
+  hasSample,
+  parseAmountInput,
+  parsePriceInput,
+  position,
+  sampleHoldings,
+  setHolding,
+  totalInvested,
+  useInvested,
+  type Holding,
+  type ParsedInput,
+} from "@/lib/invested";
+import { priceView } from "@/lib/prices";
 import type { ResearchIndex } from "@/lib/research";
 import { nameInitials, setProfileName, useProfileName } from "@/lib/profile";
 import { resetSettings, setAlertCategory, setMuted, updateSettings, useSettings } from "@/lib/settings";
@@ -79,34 +98,121 @@ function Profile() {
   );
 }
 
-/** One company's invested amount: validated as you type (a number of rupees, 0 or more), kept on this phone. */
-function AmountRow({ symbol, name, saved }: { symbol: string; name: string; saved: number | undefined }) {
+/** One number box: shows Indian grouping at rest, plain digits while you type, and says so when what you typed is not a number. */
+function NumberField({
+  id,
+  label,
+  saved,
+  parse,
+  onSave,
+  error,
+  placeholder,
+}: {
+  id: string;
+  label: string;
+  saved: number | undefined;
+  parse: (text: string) => ParsedInput;
+  onSave: (value: number | null) => void;
+  error: string;
+  placeholder: string;
+}) {
   const [draft, setDraft] = useState<string | null>(null);
-  const shown = draft ?? (saved ? String(saved) : "");
-  const invalid = !parseAmountInput(shown).valid;
-  const id = `amount-${symbol}`;
+  const shown = draft ?? (saved !== undefined ? formatInputNumber(saved) : "");
+  const invalid = !parse(shown).valid;
   return (
-    <div className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
-      <label htmlFor={id} className="min-w-0 text-sm font-medium">
-        <span className="block truncate">{name}</span>
-        <span className={`block text-xs font-normal ${invalid ? "text-bad" : "text-ink-faint"}`}>{invalid ? "Enter a number of rupees, 0 or more" : "Amount invested (₹)"}</span>
+    <div className="min-w-0">
+      <label htmlFor={id} className="block text-xs font-medium text-ink-soft">
+        {label}
       </label>
       <input
         id={id}
         type="text"
         inputMode="decimal"
+        enterKeyHint="done"
         autoComplete="off"
         value={shown}
-        placeholder="Optional"
+        placeholder={placeholder}
         aria-invalid={invalid}
+        aria-describedby={invalid ? `${id}-error` : undefined}
+        onFocus={() => setDraft(saved !== undefined ? String(saved) : "")}
         onChange={(event) => {
           setDraft(event.target.value);
-          const parsed = parseAmountInput(event.target.value);
-          if (parsed.valid) setInvested(symbol, parsed.value);
+          const parsed = parse(event.target.value);
+          if (parsed.valid) onSave(parsed.value);
         }}
         onBlur={() => setDraft(null)}
-        className={`min-h-11 w-32 shrink-0 rounded-xl border bg-page px-3 text-right text-base tabular-nums placeholder:text-ink-faint ${invalid ? "border-bad" : "border-line"}`}
+        className={`mt-1 min-h-11 w-full min-w-0 rounded-xl border bg-page px-3 text-right text-base tabular-nums placeholder:text-ink-faint ${invalid ? "border-bad" : "border-line"}`}
       />
+      {invalid && (
+        <p id={`${id}-error`} role="alert" className="mt-1 text-xs text-bad">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** One company's money: how much was put in, and optionally what was paid per share. Validated as you type, kept on this phone. */
+function HoldingRow({
+  symbol,
+  name,
+  saved,
+  close,
+  prevClose,
+  changePct,
+}: {
+  symbol: string;
+  name: string;
+  saved: Holding | undefined;
+  close: number | null;
+  prevClose: number | null;
+  changePct: number;
+}) {
+  const mine = position(symbol, saved, close === null ? null : { close, prevClose, changePct });
+  const tone = mine?.pnl == null ? "flat" : directionOf(mine.pnl);
+  return (
+    <div className="min-w-0 px-4 py-3">
+      <p className="flex min-w-0 items-center gap-2 text-sm font-medium">
+        <span className="min-w-0 truncate">{name}</span>
+        {saved?.sample && <span className="shrink-0 rounded bg-backdrop px-1.5 text-xs font-medium text-ink-soft">Sample</span>}
+      </p>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        <NumberField
+          id={`amount-${symbol}`}
+          label="Amount invested (₹)"
+          saved={saved?.amount}
+          parse={parseAmountInput}
+          onSave={(amount) => setHolding(symbol, { amount })}
+          error="Enter a number of rupees"
+          placeholder="Optional"
+        />
+        <NumberField
+          id={`buy-${symbol}`}
+          label="Average buy price (₹)"
+          saved={saved?.buyPrice}
+          parse={parsePriceInput}
+          onSave={(buyPrice) => setHolding(symbol, { buyPrice })}
+          error="Enter a price above 0"
+          placeholder="Optional"
+        />
+      </div>
+      {mine && (
+        <p className="mt-2 text-xs leading-5 text-ink-faint" data-testid={`holding-hint-${symbol}`}>
+          {mine.value !== null && mine.pnl !== null && mine.pnlPct !== null ? (
+            <>
+              Worth {formatInr(mine.value)} now ·{" "}
+              <span className={`font-medium ${tone === "good" ? "text-good" : tone === "bad" ? "text-bad" : ""}`}>
+                {tone === "flat" ? "no profit or loss" : arrowInrPct(mine.pnl, mine.pnlPct)}
+              </span>
+            </>
+          ) : saved?.buyPrice !== undefined ? (
+            "No price yet for this company, so no profit or loss."
+          ) : (
+            "Add a buy price to see profit or loss. Without it, FINN shows only today's move."
+          )}
+        </p>
+      )}
+      {!mine && saved?.buyPrice !== undefined && <p className="mt-2 text-xs leading-5 text-ink-faint">Add the amount invested to use this buy price.</p>}
     </div>
   );
 }
@@ -153,7 +259,8 @@ export function YouScreen() {
   const configState = useJson<AppConfig>("/data/config.json");
   const config = configState.kind === "ready" ? configState.data : null;
   const settings = useSettings(config);
-  const invested = useInvested();
+  const holdings = useInvested();
+  const [confirmSample, setConfirmSample] = useState(false);
 
   if (configState.kind === "loading" || briefState.kind === "loading") {
     return <div className="h-64 animate-pulse rounded-2xl bg-line" aria-label="Loading your settings" />;
@@ -176,7 +283,12 @@ export function YouScreen() {
   const categories = [...config.categories].sort((a, b) => b.weight - a.weight);
   const companies = [...brief.companies].sort((a, b) => a.name.localeCompare(b.name));
   const muted = new Set(settings.mutedSymbols);
-  const total = totalInvested(invested, companies.map((c) => c.symbol));
+  const total = totalInvested(holdings, companies.map((c) => c.symbol));
+  const sampleOn = hasSample(holdings);
+  const sessionsBySymbol = new Map(brief.signals.map((s) => [s.symbol, s.sessions]));
+  const samples = sampleHoldings(
+    companies.map((c) => ({ symbol: c.symbol, close: priceView(sessionsBySymbol.get(c.symbol), brief.generated_at)?.close ?? null })),
+  );
 
   return (
     <div>
@@ -209,12 +321,68 @@ export function YouScreen() {
         id="investments"
         title="My investments"
         count={total > 0 ? `Total invested ${formatInr(total)}` : undefined}
-        hint="Optional. How much you have put into each company, kept on this phone only. The Brief uses it to show what a day's move means in rupees."
+        hint="Optional. What you put into each company and, if you know it, the average price you paid. Kept on this phone only. With a buy price FINN shows profit and loss; without one, only today's move. For understanding only, not advice."
       >
+        <div className="mt-3 rounded-2xl border border-line bg-surface p-3">
+          {sampleOn && (
+            <p className="mb-2 flex flex-wrap items-center gap-2 text-xs leading-5 text-ink-soft">
+              <span className="rounded bg-backdrop px-1.5 py-0.5 font-medium">Sample holdings</span>
+              Made-up numbers, not yours. Type over one to use your own.
+            </p>
+          )}
+          {confirmSample ? (
+            <div role="alertdialog" aria-label="Replace your entries with sample holdings?" className="space-y-2">
+              <p className="text-sm font-medium">Replace what you entered with sample holdings?</p>
+              <p className="text-xs leading-5 text-ink-soft">Your own amounts and buy prices will be removed. This cannot be undone.</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    applySample(samples);
+                    setConfirmSample(false);
+                  }}
+                  className="min-h-11 flex-1 rounded-full bg-accent-bg text-sm font-medium text-on-accent"
+                >
+                  Replace with sample
+                </button>
+                <button type="button" onClick={() => setConfirmSample(false)} className="min-h-11 flex-1 rounded-full border border-line text-sm font-medium">
+                  Keep mine
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => (hasOwnEntries(holdings) ? setConfirmSample(true) : applySample(samples))}
+                disabled={Object.keys(samples).length === 0}
+                className="min-h-11 flex-1 rounded-full border border-accent text-sm font-medium text-accent disabled:opacity-50"
+              >
+                Try with sample holdings
+              </button>
+              {sampleOn && (
+                <button type="button" onClick={clearSample} className="min-h-11 flex-1 rounded-full border border-line text-sm font-medium">
+                  Clear sample
+                </button>
+              )}
+            </div>
+          )}
+        </div>
         <Card>
-          {companies.map((c) => (
-            <AmountRow key={c.symbol} symbol={c.symbol} name={shortName(c.name)} saved={invested[c.symbol]} />
-          ))}
+          {companies.map((c) => {
+            const view = priceView(sessionsBySymbol.get(c.symbol), brief.generated_at);
+            return (
+              <HoldingRow
+                key={c.symbol}
+                symbol={c.symbol}
+                name={shortName(c.name)}
+                saved={holdings[c.symbol]}
+                close={view?.close ?? null}
+                prevClose={view?.prevClose ?? null}
+                changePct={view?.changePct ?? 0}
+              />
+            );
+          })}
         </Card>
         <Watching />
       </Section>

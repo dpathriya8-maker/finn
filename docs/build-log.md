@@ -381,3 +381,15 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 
 **Not done:** the soft section boxes from P3. The calculator restates the past; it forecasts nothing.
 
+
+## Night plan, Part A: My portfolio with profit and loss (16 Nov 2026)
+
+**Asked:** an optional average buy price per company, the portfolio summary card (invested, worth now, overall, today) with a breakdown biggest loss first, the buy-price-aware header on Brief cards, "Try with sample holdings", and unit tests. Part 0 (the calculator) was already on `main` (`6817142`).
+
+**Done:** `lib/invested.ts` now holds the holdings store (v2, with the old key still read), the position and summary maths and the sample builder; `PortfolioSummary` sits at the top of the Invested tab only when an amount is set; the You tab has two boxes per company (Indian grouping at rest, numeric keyboard, validation as you type, a live "Worth ₹X now" line) and the sample button with a confirm step and a Clear button; Sample badges wherever sample numbers appear. 26 new unit tests (profit, loss, zero, no buy price, no price, huge numbers up to ₹1 lakh crore, half-rupee rounding, summary ordering, the store with a stand-in for localStorage). Decisions S116 to S121.
+
+**Also:** `scripts/check_live.py` and `scripts/live_scenarios.py`, a real-browser check (360 and 390 px, light and dark: console and network errors, sideways scroll, text contrast below 4.5:1, and per-feature assertions). It found a real contrast bug (amber "Preview" on the indigo Invest button, 1.4:1), fixed.
+
+**Verified:** 174 frontend unit tests, types, lint, build; 219 browser checks locally, all but that bug passing before the fix.
+
+**Not done / known:** a holding for a research (Interested) company cannot be entered; My investments lists the 18 portfolio companies only.

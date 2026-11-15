@@ -4,6 +4,8 @@ import type { Session } from "@/lib/types";
 export type PriceView = {
   close: number;
   changePct: number;
+  /** The close before it, for rupee maths; null if the data has none. */
+  prevClose: number | null;
   /** Trading day of the latest complete session, YYYY-MM-DD. */
   day: string;
   closes: number[];
@@ -38,7 +40,7 @@ export function priceView(sessions: readonly Session[] | undefined | null, gener
   const closes = done.map((s) => s.close).filter((c) => Number.isFinite(c));
   const first = closes[0];
   const trendPct = closes.length >= 2 && first > 0 ? (last.close / first - 1) * 100 : null;
-  return { close: last.close, changePct: last.change_pct, day: last.day, closes, trendPct };
+  return { close: last.close, changePct: last.change_pct, prevClose: Number.isFinite(last.prev_close) && last.prev_close > 0 ? last.prev_close : null, day: last.day, closes, trendPct };
 }
 
 export type MoveLook = { text: string; tone: "good" | "bad" | "flat" };

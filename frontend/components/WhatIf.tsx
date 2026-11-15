@@ -37,7 +37,8 @@ function Row({ row }: { row: WhatIfRow }) {
  * and gives no advice, and says so. The same component sits in an open Brief card and at the top of a Research page.
  */
 export function WhatIf({ symbol, sessions, generatedAt }: { symbol: string; sessions: readonly Session[] | undefined | null; generatedAt: string | undefined }) {
-  const saved = useInvested()[symbol];
+  const holding = useInvested()[symbol];
+  const saved = holding?.amount;
   const [draft, setDraft] = useState<string | null>(null); // what is typed; null until the reader edits
   const [editing, setEditing] = useState(false);
   const [pct, setPct] = useState(0);
@@ -56,7 +57,10 @@ export function WhatIf({ symbol, sessions, generatedAt }: { symbol: string; sess
 
   return (
     <section aria-label="What if" className="min-w-0 rounded-2xl border border-line bg-surface p-3.5">
-      <h3 className="text-sm font-semibold">What if</h3>
+      <h3 className="flex items-center gap-2 text-sm font-semibold">
+        What if
+        {holding?.sample && draft === null && <span className="rounded bg-backdrop px-1.5 text-xs font-medium text-ink-soft">Sample holdings</span>}
+      </h3>
       <p className="mt-0.5 text-xs text-ink-faint">What these moves mean in rupees.</p>
 
       <div className="mt-3 flex items-center justify-between gap-3">

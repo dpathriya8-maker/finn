@@ -108,7 +108,7 @@ function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: s
             onClick={() => onInvest(name)}
             className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-accent-bg text-sm font-medium text-on-accent"
           >
-            Invest <PreviewBadge className="border-on-accent/60 text-on-accent" />
+            Invest <PreviewBadge onAccent />
           </button>
         </div>
       )}
