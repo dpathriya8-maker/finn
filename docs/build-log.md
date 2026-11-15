@@ -355,3 +355,18 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 129 unit tests, types, lint, build. In a phone-sized Chromium: 36 behaviour checks on the real shipped records (the summary numbers recomputed from the raw record, group order, at most five per group, every excerpt on screen is the unchanged start of a real quote, three lines per collapsed card, page links of the form `.pdf#page=N`, collapsed rows, HAL's explanation, the Interested-tab link into Research); 360 and 390 px, light and dark, no sideways scroll and no text below 4.5:1.
 
 **Not working / known:** the topic is cut by rules, so a few are clumsy ("Run off the specific"). The excerpt is the start of the quote, not the most telling part. The HAL card says "found", not "in the last 12 months", because the engine looked back 14 months. Verdicts on shipped companies were made by the cheap model (the strong model's free quota ran out earlier). Ask needs the live engine; with it asleep it says so.
+
+## Final docs and live checks (15 Nov 2026, "Chat 4")
+
+**Asked:** the research references, the README and write-up sections the email needs, one live TITAN run, a Naukri re-check, fresh README screenshots, and the email text.
+
+**Done:**
+- **References checked before use.** Each number was searched: 9.5% fewer logins after a market decline (Sicherman et al., RFS 29(4)) and 93% of 2,455 alerts overridden in four days (Bryant, Fletcher & Payne, 2014) are right. **The 73.3% (Nanji et al., JAMIA 2018) is an inpatient study at a 793-bed hospital, not outpatient**, so it is cited as that. The Groww claim is press commentary and is labelled so. Only the references in the brief are used.
+- **TITAN on the deployed engine:** it woke at once, researched TITAN in 34 seconds (four transcripts of 18 to 19 pages; 8 promises, 1 Not followed up and 7 Too early; 7 statements; the cheap model, 9 calls, about 21,000 tokens in), answered "What did management say about margins?" with four quotes, and answered an unrelated question with "Not found in the documents". No annual report was in NSE's feed ("No annual report was found among the filings of the last 14 months"), and the record says so.
+- **Naukri, re-read from the live site:** the 99acres billings promise is **Kept**, with "Billings grew by 21% YoY in Q2, up from 17% in Q1" from the Q2 FY27 call, page 5. It was the wrong "Not followed up".
+- **Tests:** 680 backend tests pass; 129 frontend unit tests, types, lint and build pass.
+
+**Not working / known:** see the Known limits in `docs/submission.md`.
+
+
+**Late addition, found by looking at the TITAN page:** "Delivered 0 of 1 promises that came due" followed by a so-what line reads as a verdict on a record of one. When fewer than three promises have come due the line now says "Only 1 promise has come due, too few to judge" (decision S107). Deployed and checked on the live site: 36 of 36 Research checks, 29 of 29 earlier checks, no sideways scroll and no text below 4.5:1 on the TITAN page. The README screenshots were retaken from the live site at 390 px.

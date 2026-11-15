@@ -329,12 +329,13 @@ export function deliveredShort(card: Scorecard | null): string | null {
 
 /**
  * One plain line on what the counts say, from fixed rules (never a model), bad news first:
- * nothing due, "Missed more than it kept", mostly too early, "Mostly delivers, but went quiet on 2 promises", and so on.
+ * nothing due, fewer than three due (too few to judge), "Missed more than it kept", mostly too early, "Mostly delivers, but went quiet on 2 promises", and so on.
  */
 export function soWhat(card: Scorecard): string {
   const { delivered, due } = decidedCounts(card);
   const quiet = card.not_followed_up ?? 0;
   if (due === 0) return card.too_early > 0 ? "Too early to judge: nothing has come due yet" : "Nothing to judge yet";
+  if (due < 3) return `Only ${due} ${due === 1 ? "promise has" : "promises have"} come due, too few to judge`;
   if (card.missed > delivered) return "Missed more than it kept";
   if (card.too_early > due) return "Too early to judge most promises";
   const rate = delivered / due;

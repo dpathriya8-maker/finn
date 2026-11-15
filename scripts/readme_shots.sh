@@ -13,12 +13,12 @@ OPEN_CARD="(()=>{const a=[...document.querySelectorAll('article button')].find(b
 shot() { "$PY" scripts/shoot.py "$@"; }
 
 shot "$BASE/" "$OUT/01-brief-light.png" --wait 6 --max-height 1500
-shot "$BASE/" "$OUT/02-results-card-light.png" --wait 5 --js "$SEVEN" --js "$WAIT" --js "${OPEN_CARD/__WORD__/results}" --js "$WAIT" --max-height 2300
-shot "$BASE/" "$OUT/03-management-card-light.png" --wait 5 --js "$SEVEN" --js "$WAIT" --js "${OPEN_CARD/__WORD__/Management change}" --js "$WAIT" --max-height 2300
+shot "$BASE/" "$OUT/02-results-card-light.png" --wait 5 --js "$SEVEN" --js "$WAIT" --js "${OPEN_CARD/__WORD__/Results}" --js "$WAIT" --max-height 2300
+shot "$BASE/" "$OUT/03-management-card-light.png" --wait 5 --js "$SEVEN" --js "$WAIT" --js "${OPEN_CARD/__WORD__/People}" --js "$WAIT" --max-height 2300
 shot "$BASE/alerts" "$OUT/04-alerts-light.png" --wait 6 --max-height 1800
 shot "$BASE/research" "$OUT/05-research-light.png" --wait 6 --max-height 1500
 shot "$BASE/research?symbol=BAJFINANCE" "$OUT/06-research-company-light.png" --wait 8 --max-height 2300
-shot "$BASE/settings" "$OUT/07-settings-light.png" --wait 5 --max-height 1800
+shot "$BASE/settings" "$OUT/07-settings-light.png" --wait 5 --max-height 1800   # the You tab (it was called Settings)
 shot "$BASE/" "$OUT/08-interested-light.png" --wait 6 --js "document.getElementById('tab-interested').click()" --js "$WAIT" --max-height 2300
 shot "$BASE/" "$OUT/09-window-sheet-dark.png" --dark --wait 6 --js "document.querySelector('button[aria-label=\"Change the time window\"]').click()" --js "$WAIT" --max-height 1200
 # A company that was never prepared, researched live through the deployed engine (waits for the research to finish)

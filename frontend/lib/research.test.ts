@@ -282,7 +282,9 @@ describe("the verdict summary", () => {
 
   it("says what the counts mean, by rule", () => {
     expect(soWhat(card({ kept: 1, missed: 3 }))).toBe("Missed more than it kept");
-    expect(soWhat(card({ kept: 1, missed: 1, too_early: 9 }))).toBe("Too early to judge most promises");
+    expect(soWhat(card({ kept: 2, missed: 1, too_early: 9 }))).toBe("Too early to judge most promises");
+    expect(soWhat(card({ kept: 1, missed: 1, too_early: 9 }))).toBe("Only 2 promises have come due, too few to judge");
+    expect(soWhat(card({ not_followed_up: 1, too_early: 7 }))).toBe("Only 1 promise has come due, too few to judge");
     expect(soWhat(card({ kept: 3, partly: 1, not_followed_up: 1, too_early: 5 }))).toBe("Mostly delivers, but went quiet on 1 promise");
     expect(soWhat(card({ kept: 3, not_followed_up: 2, too_early: 1 }))).toBe("Mostly delivers, but went quiet on 2 promises");
     expect(soWhat(card({ kept: 2, not_followed_up: 2, too_early: 1 }))).toBe("Mixed record: 0 missed, 2 gone quiet");

@@ -24,15 +24,15 @@ More screens: [Interested tab (preview)](docs/screens/08-interested-light.png) �
 ## What it does
 
 **Push**
-- **Morning Brief.** "N things that matter" for the last 24 hours, 3 or 7 days: the filings of 18 portfolio companies, ranked so risks come before good news, in groups of at most five cards, with routine filings collapsed into one row and a finite end ("You're all caught up"). Every card says why it ranked where it did.
+- **Morning Brief.** One line under the heading, counted in code for the window ("1 risk to review", "Busy day: 6 of your companies filed", or "Quiet day: nothing needs action across your 18 companies"). Then the filings of 18 portfolio companies, **grouped by company** and ranked so risks come before good news: each company once (badge, name, price), each of its filings in three lines (a bold headline; a grey line with an icon, a short label such as Results, M&A, People, Legal or Fund raise, a reason of about eight words, and a Risk, Watch or Good tag). The date, price trend, numbers, PDF and the full reason are one tap away. At most five companies a group, routine filings collapsed into one row, a finite end ("You're all caught up"), a greeting, and one time-window control (a sliders button and a bottom sheet) shared with Alerts.
 - **Results card.** Revenue, EBITDA, PBT and PAT, quarter on quarter and year on year, read from the results PDF itself. Changes and margins are computed in code, EBITDA is labelled as computed, and every figure is checked against Yahoo Finance and marked as matching, differing or not checked.
 - **Management card.** Who, in what role, from when, and the filing's own profile of them (Schedule III asks companies to include one).
-- **Alerts.** Unusual end-of-day moves and the filing types the user chooses, against thresholds the user sets (default: more than ±5% or more than 2× the 20-day average volume). Moving a slider changes the alerts instantly. Any company can be muted.
-
+- **Alerts.** Unusual end-of-day moves and the filing types the user chooses, against thresholds the user sets (default: more than ±5% or more than 2× the 20-day average volume). Moving a slider changes the alerts instantly. A calm dot on the tab, never a count. Every alert states its reason against the reader's own limit ("Price −6.1% · your limit ±5%") and whether a filing from the same day explains the move, or "No filing explains this move". Any company can be muted.
+- **You.** A profile without an account: an initials circle and an optional name (kept in this browser only, used for the greeting), the 18 portfolio companies with mute switches, preferences (time window, price and volume lines, which filings alert), three principles (bad news first, every claim has a source, no gamification) and the data sources.
 **Pull**
 - **Research any NSE ticker.** The last four concall transcripts and the latest annual report are found on the exchange, read, and kept. Four companies are prepared in advance; any other ticker is researched on demand in the background while the screen shows its stage.
 - **What management said about the future,** found by rule, word for word, with its page and a link that opens the PDF there.
-- **Promise Tracker** (Kept / Partly / Missed / Not followed up / Too early, each with the quote, the document and the page). A promise is only called Kept, Partly or Missed once its date has passed; the date and the arithmetic are decided in code, not by the model.
+- **Promise Tracker.** Starts with one line counted in code: "Delivered 2 of 5 promises that came due" (Kept and Partly, out of Kept, Partly, Missed and Not followed up; promises not yet due are left out), a stacked bar led by Missed, one plain line on what it means, and which model judged. Then the promises, **bad news first** (Missed, Not followed up, Partly, Kept), each in three lines: the verdict and a topic, a short word-for-word excerpt, and "Said in Q3 FY26 call → checked in Q2 FY27 call". Tap for the full quote with a link that opens the PDF at its page, what a later call says, and the reason. Promises not due yet are one collapsed row. A promise is only called Kept, Partly or Missed once its date has passed; the date and the arithmetic are decided in code, not by the model.
 - **Ask the documents.** Answers only from the filings, or says "Not found in the documents".
 
 ## What is verified, and what is not
@@ -46,6 +46,8 @@ I would rather you hear this from me than find it.
 | Documents, statements, retrieval, Ask (passages) | Run on real transcripts and annual reports for Bajaj Finance, Asian Paints, HAL, Info Edge, and on Titan, which was never prepared and was researched on demand, on a home connection and again on Render (through NSE) |
 | Promise verdicts and the model router | **Run live on 15 Nov 2026** (Gemini free tier) on 4 companies: 3 got verdicts (40 promises: 6 Kept, 1 Partly, 1 Missed, 3 Not followed up, 29 Too early); HAL has one call in the window, so it shows statements and no verdicts. The first run was too generous (24 of 54 Kept), so due dates, number checks and a second reading of every decided verdict were added; I then read each decided verdict against the transcript. Right: Asian Paints "almost 10 lakh" vs "more than 9 lakh" is Partly (90%); Bajaj "book below INR 1,500 crore by Sept '26" vs "now INR 2,400 crore" is Missed (62.5%); the VAE facility "started in September" is Kept; Naukri's "billings growth to recover in Q1" (about 99acres) was wrongly "Not followed up" until retrieval learned to search the business unit named before the promise, and is now Kept with the Q2 call's "Billings grew by 21% YoY in Q2, up from 17% in Q1". Not audited line by line: a few verdicts (for example Bajaj's "Not followed up" on a balance-sheet run-off) may be wrong in the same way. The strong model's free quota is 20 requests a day and ran out during re-runs, so most of these verdicts were made by `gemini-3.5-flash-lite` (each record says which model answered). Every quote is verified word for word |
 | Written answers ("Ask the documents") | **Run live on 15 Nov 2026** on all four companies: answered with quotes and pages (Bajaj, Asian Paints, HAL); a question the documents cannot answer returned "Not found in the documents"; Naukri's answer was cut back to bare quotes because it contained a figure its quotes did not support |
+| Live checks on the evening of 15 Nov 2026 | **TITAN, never prepared, researched live on the deployed engine (through NSE):** four transcripts read, 8 promises (1 Not followed up, 7 Too early), a question answered with four quotes and an unrelated one answered "Not found", in 34 seconds; no annual report was in NSE's feed, and the record says so. **Naukri's 99acres verdict is fixed:** Kept, with "Billings grew by 21% YoY in Q2, up from 17% in Q1" (Q2 FY27 call, page 5); it had been "Not followed up" |
+| The look and the screens (Brief, Alerts, You, Research) | Checked on the live site in a phone-sized Chromium at 360 and 390 px, light and dark: no sideways scroll, every text colour at 4.5:1 contrast or better, 65 scripted checks (grouping and order, the window setting shared by Brief and Alerts, the name and greeting, every Research excerpt compared with the real quote, page links). **Not tested on a real phone** |
 | Deployment (Vercel, Render) | **Live.** Backend on Render's free plan (Singapore): https://finn-api-v8fm.onrender.com. Frontend on Vercel: https://finn-mocha.vercel.app ("Engine online" confirmed from the live page). Neither deploys on push: Render deploys are triggered through its API, Vercel's from the command line. BSE answers HTTP 403 to Render, so the engine falls back to NSE (see [docs/data-sources.md](docs/data-sources.md)): **research on a ticker that was never prepared works live**: TITAN, in 32 seconds, read four transcripts from NSE's archives and answered a question with quotes. Its annual report was not found, and the record says so |
 | Price chips, sparklines, charts, window sheet | Real prices for 22 companies (Yahoo), 30 sessions each; the chip uses the latest complete session. Checked at 390 px in light and dark on the live site |
 | Invested / Interested tabs, Follow, People to follow, Invest | **A concept preview on real data**, not a product: the companies, prices, verdicts and people are real; following is stored in this browser only and triggers no alert; "Invest" opens a "coming soon" sheet with no order flow. Each is marked Preview in the app |
@@ -63,6 +65,21 @@ To rebuild the Promise Tracker: put `GEMINI_API_KEY`, `LLM_CHEAP_MODEL` (and opt
 - **A source that disagrees is shown, not hidden:** the Yahoo check says "differs", a scan nothing can confirm says "figures not shown", an unreadable filing says so.
 - **Data is labelled with its age.** The Brief counts windows from the data's own timestamp and says when the data was produced.
 - Document text is treated as data, never as instructions.
+
+## Research behind the design
+
+These are the findings the design leans on, and what FINN does about each. FINN does not test them; they are reasons, not results. The references, and what each does and does not show, are in [docs/write-up.md](docs/write-up.md#research-behind-the-design).
+
+| Finding | What FINN does |
+|---|---|
+| When many companies report on the same day, investors react less to each one (Hirshleifer, Lim & Teoh, 2009) | A short, ranked Brief, and a "Busy day: N of your companies filed" line that says when attention is stretched |
+| Investors who check their portfolios often feel losses more and hold less equity (Benartzi & Thaler, 1995; Lee & Veld-Merkoulova, 2016) | One calm Brief that ends ("You're all caught up"), not a feed |
+| Investors look at their accounts less when they expect bad news; logins fell 9.5% after a market decline (Karlsson, Loewenstein & Seppi, 2009; Sicherman, Loewenstein, Seppi & Utkus, 2016) | Risks first, and "N risks to review", so bad news is put in front of the reader, not left to be avoided |
+| Individual investors buy attention-grabbing stocks (Barber & Odean, 2008) | Spike alerts are calm and give their reason; there is no buy button anywhere near an alert |
+| Alerts get overridden: 93% of 2,455 medication alerts in four days (Bryant et al., 2014); 73.3% in a hospital study (Nanji et al., 2018) | A dot on the Alerts tab, not a count; a reason on every alert; routine filings collapsed into one row |
+| Robinhood removed its confetti animation in March 2021 amid criticism of gamification (CNBC, 31 Mar 2021) | No confetti, streaks, scores or reward animations |
+| Groww's minimal, jargon-free design for first-time investors (design inspiration, from press coverage) | Three-line cards in plain words |
+| Sparklines (Tufte); calm technology (Weiser & Brown, 1995) | The price trend is a small line behind a tap; the interface stays at the edge of attention and speaks when something needs it |
 
 ## Architecture
 
@@ -132,7 +149,7 @@ cd backend
 .venv/Scripts/python -m pipeline.research           # the research companies; add --symbols HAL for one
 ```
 
-Tests: `cd backend && .venv/Scripts/python -m pytest` (675 tests) and `cd frontend && npm test` (73 unit tests), plus type-check, lint and a production build. Copy `.env.example` to `.env` for keys (never commit it), and run `bash scripts/install-hooks.sh` once in a fresh clone to enable the secret-scan pre-commit hook.
+Tests: `cd backend && .venv/Scripts/python -m pytest` (680 tests) and `cd frontend && npm test` (129 unit tests), plus type-check, lint and a production build. Copy `.env.example` to `.env` for keys (never commit it), and run `bash scripts/install-hooks.sh` once in a fresh clone to enable the secret-scan pre-commit hook.
 
 ## Where things are
 
@@ -149,7 +166,7 @@ docs/                  decisions, data sources, architecture, cost, deploy, buil
 
 ## Decisions and history
 
-- [docs/decisions.md](docs/decisions.md): 24 decisions made up front and 84 made while building, each with its reason.
+- [docs/decisions.md](docs/decisions.md): 24 decisions made up front and 110 made while building, each with its reason.
 - [docs/data-sources.md](docs/data-sources.md): what was verified about every source before anything was built on it, including what failed.
 - [docs/build-log.md](docs/build-log.md): what each step asked, did, verified and got wrong.
 - [docs/write-up.md](docs/write-up.md): the approach in two pages.
