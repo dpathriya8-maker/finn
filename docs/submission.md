@@ -16,7 +16,10 @@ The project is built and pushed. What remains needs your accounts and your keys,
 
 ## The email
 
-**Subject:** FINN: AI Engineer Build Challenge submission (DP)
+**To:** assessment@enam.com
+**Subject:** IIT Delhi – AI Engineer - 2027
+
+(The brief requires exactly this subject line, with en dashes as written.)
 
 > Hello,
 >
@@ -35,6 +38,8 @@ The project is built and pushed. What remains needs your accounts and your keys,
 > **Cost and efficiency:** most of the app uses no model (classification, the cards, retrieval). A model is used for three things only, with a cheap model by default, every answer cached by its input and prompt version, and every call logged. `<measured calls and tokens, from python -m app.core.llm>`
 >
 > **Decisions and history:** [24 decisions made up front and 84 while building](https://github.com/dpathriya8-maker/finn/blob/main/docs/decisions.md), [what was verified about each data source, including what failed](https://github.com/dpathriya8-maker/finn/blob/main/docs/data-sources.md), and the [build log](https://github.com/dpathriya8-maker/finn/blob/main/docs/build-log.md).
+>
+> **AI build history** (required by the brief): `<share link of the planning chat on claude.ai>` · `<Claude Code session exports or links>` · `<share link of the chat where I studied the brief>`. The step prompts the planning chat wrote are also kept in [STEPS.md](https://github.com/dpathriya8-maker/finn/blob/main/STEPS.md), and every step's outcome is in the build log.
 >
 > **Known limits, stated plainly:** `<edit after your check: for example, the model path ran on N companies; BSE/NSE were/were not reachable from Render; no push notifications>`.
 >
