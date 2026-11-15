@@ -43,4 +43,10 @@ A model is used for three things only, with a cheap model by default and a stron
 3. Move the pipeline to a schedule once a server can reach the exchanges.
 4. Add the consensus estimate for results, so a card can say "beat" or "missed" instead of only "up" or "down" against last year.
 
+### Where I'd take the product
+
+1. **Watchlist tabs.** The Brief already has Invested and Interested tabs (the second is a preview on real data). Next: let a reader add any NSE ticker to Interested, keep the list on a server once there are accounts, and give each company its own alert rules.
+2. **Follow people, from primary sources.** The preview lists people named in real management-change filings. The real version tracks a followed person through exchange filings: insider trades (SEBI PIT disclosures), substantial acquisitions (SAST), and management changes. Investor-alert tools such as Trendlyne sell this; FINN would build it from the filings themselves and show the filing as the source.
+3. **Invest through a broker partner.** The "Invest" button is a placeholder. The model I'd test is a SEBI-registered broker partner that opens its own order screen from a company's page; FINN would earn a referral fee and never hold money or give advice. That is the revenue model.
+
 The full record: [decisions](decisions.md) (24 up front, 84 while building), [data sources](data-sources.md) (what was verified, and what failed), and the [build log](build-log.md).

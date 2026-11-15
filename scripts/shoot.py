@@ -60,7 +60,7 @@ class Page:
         return self.call("Runtime.evaluate", expression=expression, returnByValue=True, awaitPromise=True).get("result", {}).get("value")
 
 
-def shoot(url: str, out: Path, *, dark: bool, width: int, height: int, wait: float, js: list[str], max_height: int = 0, port: int = 9333) -> None:
+def shoot(url: str, out: Path, *, dark: bool, width: int, height: int, wait: float, js: list[str], max_height: int = 0, reduced_motion: bool = False, port: int = 9333) -> None:
     profile = tempfile.mkdtemp(prefix="finn-shoot-")
     proc = subprocess.Popen(
         [find_browser(), "--headless=new", "--disable-gpu", f"--remote-debugging-port={port}", f"--user-data-dir={profile}", "--no-first-run", "--hide-scrollbars", "about:blank"],
@@ -80,7 +80,7 @@ def shoot(url: str, out: Path, *, dark: bool, width: int, height: int, wait: flo
         page = Page(ws_url)
         page.call("Page.enable")
         page.call("Emulation.setDeviceMetricsOverride", width=width, height=height, deviceScaleFactor=2, mobile=True)
-        page.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": "dark" if dark else "light"}])
+        page.call("Emulation.setEmulatedMedia", features=[{"name": "prefers-color-scheme", "value": "dark" if dark else "light"}, {"name": "prefers-reduced-motion", "value": "reduce" if reduced_motion else "no-preference"}])
         page.call("Page.navigate", url=url)
         time.sleep(wait)
         for script in js:
@@ -111,10 +111,11 @@ def main() -> None:
     parser.add_argument("--width", type=int, default=390)
     parser.add_argument("--height", type=int, default=844)
     parser.add_argument("--wait", type=float, default=4.0)
+    parser.add_argument("--reduced-motion", action="store_true", help="emulate prefers-reduced-motion (animations and smooth scrolling off)")
     parser.add_argument("--max-height", type=int, default=0, help="cut a long page at this many pixels")
     parser.add_argument("--js", action="append", default=[])
     args = parser.parse_args()
-    shoot(args.url, args.out, dark=args.dark, width=args.width, height=args.height, wait=args.wait, js=args.js, max_height=args.max_height)
+    shoot(args.url, args.out, dark=args.dark, width=args.width, height=args.height, wait=args.wait, js=args.js, max_height=args.max_height, reduced_motion=args.reduced_motion)
 
 
 if __name__ == "__main__":

@@ -1,13 +1,5 @@
-import { BriefHeader } from "@/components/brief/BriefHeader";
-import { MorningBrief } from "@/components/brief/MorningBrief";
+import { BriefHome } from "@/components/brief/BriefHome";
 
 export default function Home() {
-  return (
-    <>
-      <BriefHeader />
-      <div className="mt-5">
-        <MorningBrief />
-      </div>
-    </>
-  );
+  return <BriefHome />;
 }
