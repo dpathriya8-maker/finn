@@ -65,12 +65,42 @@ export function companySections(groups: Groups): { needs: CompanyGroup[]; worth:
   return { needs: all.filter((g) => g.top >= HIGH_MIN), worth: all.filter((g) => g.top < HIGH_MIN) };
 }
 
-/** The "N things that matter" in the headline: what needs attention plus what is worth a look. */
+export type SummaryPart = { text: string; tone?: "bad" };
+
+/**
+ * The one line under the Brief's heading, worked out in code from the filings in the window (never by a model). What applies is
+ * joined with " · ": "2 risks to review", and "Busy day: 6 of your companies filed" when five or more companies have a material
+ * filing. With nothing material it says so: "Quiet day: nothing needs action across your 18 companies". A risk is a material filing
+ * the Brief tags Risk. If something material is there but it is neither a risk nor a busy day, it says how many are worth a look.
+ */
+export function summaryParts(groups: Groups, companyCount: number): SummaryPart[] {
+  const material = [...groups.high, ...groups.medium];
+  if (material.length === 0) {
+    return [{ text: `Quiet day: nothing needs action across your ${companyCount} ${companyCount === 1 ? "company" : "companies"}` }];
+  }
+  const risks = material.filter((item) => item.tone === "bad").length;
+  const filed = new Set(material.map((item) => item.symbol)).size;
+  const parts: SummaryPart[] = [];
+  if (risks > 0) parts.push({ text: `${risks} ${risks === 1 ? "risk" : "risks"} to review`, tone: "bad" });
+  if (filed >= BUSY_COMPANIES) parts.push({ text: `Busy day: ${filed} of your companies filed` });
+  if (parts.length === 0) parts.push({ text: `${material.length} ${material.length === 1 ? "filing" : "filings"} worth a look` });
+  return parts;
+}
+
+export function summaryLine(groups: Groups, companyCount: number): string {
+  return summaryParts(groups, companyCount).map((part) => part.text).join(" · ");
+}
+
+/** A day is busy when this many of the reader's companies have something material. */
+export const BUSY_COMPANIES = 5;
+
+/** The count of material filings: what needs attention plus what is worth a look. */
 export function thingsThatMatter(groups: Groups): number {
   return groups.high.length + groups.medium.length;
 }
 
-function istDate(ms: number): string {
+/** The India calendar day of a moment, "2026-11-15". */
+export function istDate(ms: number): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: IST, year: "numeric", month: "2-digit", day: "2-digit" }).format(ms);
 }
 

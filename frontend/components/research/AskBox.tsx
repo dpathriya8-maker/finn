@@ -99,7 +99,7 @@ export function AskBox({ symbol, suggestions }: { symbol: string; suggestions: s
             {question.length}/{MAX}
           </span>
         </div>
-        <button type="submit" disabled={view.kind === "asking"} className="mt-2 min-h-12 w-full rounded-full bg-ink text-base font-semibold text-surface disabled:opacity-60">
+        <button type="submit" disabled={view.kind === "asking"} className="mt-2 min-h-12 w-full rounded-full bg-accent-bg text-base font-semibold text-on-accent disabled:opacity-60">
           {view.kind === "asking" ? "Searching the filings…" : "Ask"}
         </button>
       </form>

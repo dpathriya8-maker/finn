@@ -61,10 +61,14 @@ export function WindowHeader({ title, above, children }: { title?: string; above
                   updateSettings({ windowHours: option.hours });
                   setOpen(false);
                 }}
-                className={`flex min-h-12 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm font-medium ${selected ? "border-ink bg-backdrop" : "border-line"}`}
+                className={`flex min-h-12 w-full items-center justify-between rounded-2xl border px-4 text-left text-sm font-medium ${selected ? "border-accent bg-backdrop" : "border-line"}`}
               >
                 {option.text}
-                {selected && <span aria-hidden="true">✓</span>}
+                {selected && (
+                  <span aria-hidden="true" className="text-accent">
+                    ✓
+                  </span>
+                )}
               </button>
             );
           })}

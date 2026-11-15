@@ -71,7 +71,7 @@ export function BriefHome() {
             aria-selected={active === i}
             aria-controls={`panel-${tab.id}`}
             onClick={() => go(i)}
-            className={`-mb-px min-h-11 border-b-2 text-sm font-semibold ${active === i ? "border-ink text-ink" : "border-transparent text-ink-faint"}`}
+            className={`-mb-px min-h-11 border-b-2 text-sm font-semibold ${active === i ? "border-accent text-accent" : "border-transparent text-ink-faint"}`}
           >
             {tab.label}
           </button>

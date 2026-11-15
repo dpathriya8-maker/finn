@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
 import { GroupSection } from "@/components/brief/GroupSection";
 import { PricesProvider } from "@/components/brief/PricesContext";
-import { companySections, groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel, WINDOWS } from "@/lib/brief";
+import { companySections, groupItems, selectItems, staleNotes, summaryParts, whenLabel, WINDOWS } from "@/lib/brief";
 import { updateSettings, useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
@@ -30,15 +30,21 @@ export function MorningBrief() {
   const hours = settings.windowHours;
   const groups = groupItems(selectItems(brief, hours, settings.mutedSymbols));
   const sections = companySections(groups);
-  const matter = thingsThatMatter(groups);
+  const companyCount = brief.companies.filter((c) => !settings.mutedSymbols.includes(c.symbol)).length;
+  const summary = summaryParts(groups, companyCount);
   const stale = staleNotes(brief);
   const empty = groups.high.length + groups.medium.length + groups.low.length + groups.routine.length === 0;
   const wider = WINDOWS.find((w) => w.hours > hours);
 
   return (
     <PricesProvider brief={brief}>
-      <p className="text-lg font-semibold tracking-tight">
-        {matter === 0 ? "Nothing needs your attention" : `${matter} ${matter === 1 ? "thing" : "things"} that matter`}
+      <p className="text-base font-semibold leading-snug tracking-tight" data-testid="summary">
+        {summary.map((part, i) => (
+          <span key={part.text}>
+            {i > 0 && <span className="text-ink-faint"> · </span>}
+            <span className={part.tone === "bad" ? "text-bad" : undefined}>{part.text}</span>
+          </span>
+        ))}
       </p>
 
       {stale.length > 0 && (

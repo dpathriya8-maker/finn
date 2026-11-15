@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { alertCount } from "@/lib/alerts";
 import { useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
+import { useAlertsUnseen } from "@/lib/alertsSeen";
 import { useJson } from "@/lib/useJson";
 
 type Item = { label: string; href: string | null; icon: ReactNode };
@@ -75,6 +76,7 @@ export function BottomNav() {
   const config = useJson<AppConfig>("/data/config.json");
   const settings = useSettings(config.kind === "ready" ? config.data : null);
   const alerts = brief.kind === "ready" ? alertCount(brief.data, settings) : 0;
+  const unseen = useAlertsUnseen(brief.kind === "ready" ? brief.data.generated_at : undefined);
 
   return (
     <nav
@@ -95,24 +97,19 @@ export function BottomNav() {
             );
           }
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          const showBadge = item.label === "Alerts" && alerts > 0;
+          const showDot = item.label === "Alerts" && alerts > 0 && unseen;
           return (
             <li key={item.label}>
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                aria-label={showBadge ? `Alerts, ${alerts} now` : undefined}
-                className={`${base} ${active ? "font-semibold text-ink" : "font-medium text-ink-faint"}`}
+                aria-label={showDot ? "Alerts, something new" : undefined}
+                className={`${base} ${active ? "font-semibold text-accent" : "font-medium text-ink-faint"}`}
               >
                 <span className="relative">
                   {item.icon}
-                  {showBadge && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute -right-2.5 -top-1 min-w-4 rounded-full bg-ink px-1 text-center text-[10px] font-semibold leading-4 text-surface"
-                    >
-                      {alerts > 9 ? "9+" : alerts}
-                    </span>
+                  {showDot && (
+                    <span aria-hidden="true" className="absolute -right-1.5 -top-0.5 size-2.5 rounded-full bg-accent-bg ring-2 ring-surface" />
                   )}
                 </span>
                 {item.label}

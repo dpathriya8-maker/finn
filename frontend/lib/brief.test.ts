@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { companySections, GROUP_LIMIT, groupByCompany, groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel } from "@/lib/brief";
+import { companySections, GROUP_LIMIT, groupByCompany, groupItems, selectItems, staleNotes, summaryLine, thingsThatMatter, whenLabel } from "@/lib/brief";
 import type { Brief, Item } from "@/lib/types";
 
 const REF = "2026-11-15T09:00:00+05:30";
@@ -112,6 +112,32 @@ describe("groupByCompany", () => {
     expect(thingsThatMatter(g)).toBe(3);
     const s = companySections(g);
     expect(s.needs.length + s.worth.length).toBe(2);
+  });
+});
+
+describe("summaryLine", () => {
+  const line = (items: Item[], n = 18) => summaryLine(groupItems(items), n);
+
+  it("says the day was quiet when nothing is material, however many routine filings there are", () => {
+    expect(line([])).toBe("Quiet day: nothing needs action across your 18 companies");
+    expect(line([item({ routine: true, priority: 99 }), item({ priority: 20 })], 1)).toBe("Quiet day: nothing needs action across your 1 company");
+  });
+
+  it("counts the material filings tagged Risk", () => {
+    expect(line([item({ priority: 90, tone: "bad" })])).toBe("1 risk to review");
+    expect(line([item({ priority: 90, tone: "bad" }), item({ symbol: "BBB", priority: 60, tone: "bad" }), item({ symbol: "CCC", priority: 60, tone: "good" })])).toBe("2 risks to review");
+  });
+
+  it("calls it busy when five or more companies have something material, and joins the two parts", () => {
+    const five = ["A", "B", "C", "D", "E"].map((symbol) => item({ symbol, priority: 80 }));
+    expect(line(five)).toBe("Busy day: 5 of your companies filed");
+    expect(line(five.slice(0, 4))).toBe("4 filings worth a look");
+    expect(line([...five, item({ symbol: "F", priority: 95, tone: "bad" })])).toBe("1 risk to review · Busy day: 6 of your companies filed");
+  });
+
+  it("counts companies, not filings, for a busy day", () => {
+    const many = Array.from({ length: 8 }, (_, i) => item({ id: `x${i}`, symbol: i < 4 ? "AAA" : "BBB", priority: 80 }));
+    expect(line(many)).toBe("8 filings worth a look");
   });
 });
 

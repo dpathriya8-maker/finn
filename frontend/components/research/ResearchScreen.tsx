@@ -75,7 +75,7 @@ function Home() {
             Any company on the NSE. One that is not listed below is read on demand, which can take a minute or two.
           </p>
         )}
-        <button type="submit" className="mt-3 min-h-12 w-full rounded-full bg-ink text-base font-semibold text-surface">
+        <button type="submit" className="mt-3 min-h-12 w-full rounded-full bg-accent-bg text-base font-semibold text-on-accent">
           Research this company
         </button>
       </form>

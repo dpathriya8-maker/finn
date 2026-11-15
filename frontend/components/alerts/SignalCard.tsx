@@ -9,15 +9,7 @@ import { Avatar, PriceChip } from "@/components/ui/Price";
 import { formatDay, formatMove, formatPrice, formatShares } from "@/lib/format";
 
 /** An unusual end-of-day move: price, volume, or both, measured against the user's own lines. */
-export function SignalCard({
-  alert,
-  priceMovePct,
-  volumeMultiple,
-}: {
-  alert: SignalAlert;
-  priceMovePct: number;
-  volumeMultiple: number;
-}) {
+export function SignalCard({ alert, reasons, note }: { alert: SignalAlert; reasons: string[]; note: string }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const tone = TONE[alert.tone];
@@ -32,12 +24,6 @@ export function SignalCard({
       : price
         ? `${alert.symbol} ${moveWords(s.change_pct)}`
         : `${alert.symbol} traded ${ratio.toFixed(1)}× its usual volume`;
-  const why = [
-    price ? `Moved more than ±${priceMovePct}% in a day, your line.` : "",
-    volume ? `Volume above ${volumeMultiple}× its 20-day average, your line.` : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
 
   return (
     <article className={`rounded-2xl border border-l-4 border-line ${tone.border} bg-surface`}>
@@ -70,7 +56,14 @@ export function SignalCard({
           <span className={`font-medium ${tone.text}`}>{formatMove(s.change_pct)}</span> to {formatPrice(s.close)}
           {volume && <span> · {ratio.toFixed(1)}× average volume</span>}
         </span>
-        <span className="mt-1.5 block text-xs leading-5 text-ink-soft">{why}</span>
+        <span className="mt-1.5 block text-xs leading-5 text-ink-soft">
+          {reasons.map((reason) => (
+            <span key={reason} className="block">
+              {reason}
+            </span>
+          ))}
+          <span className="block text-ink-faint">{note}</span>
+        </span>
         <span className="mt-2 flex items-center gap-1 text-xs font-medium text-ink-faint">
           {open ? "Hide the numbers" : "The numbers"}
           <Chevron open={open} />

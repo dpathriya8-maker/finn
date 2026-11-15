@@ -1,4 +1,5 @@
-import { selectItems } from "@/lib/brief";
+import { istDate, selectItems } from "@/lib/brief";
+import { shortCategory } from "@/lib/labels";
 import type { Settings } from "@/lib/settings";
 import type { Brief, Item, Session } from "@/lib/types";
 
@@ -77,4 +78,35 @@ export function alertCount(brief: Brief, settings: Settings): number {
 /** "fell 5.3%" or "rose 5.3%". */
 export function moveWords(changePct: number): string {
   return `${changePct < 0 ? "fell" : "rose"} ${Math.abs(changePct).toFixed(1)}%`;
+}
+
+/** "−6.1%" with a real minus sign, "+3.8%" for a rise. */
+function signed(pct: number): string {
+  return `${pct < 0 ? "−" : "+"}${Math.abs(pct).toFixed(1)}%`;
+}
+
+/**
+ * Why a price or volume alert fired, in plain words and against the reader's own lines, one string per reason:
+ * "Price −6.1% · your limit ±5%" and "Volume 3.2× the 20-day average · your limit 2×".
+ */
+export function signalReasons(alert: Pick<SignalAlert, "session" | "reasons">, lines: Pick<Settings, "priceMovePct" | "volumeMultiple">): string[] {
+  const out: string[] = [];
+  if (alert.reasons.includes("price")) out.push(`Price ${signed(alert.session.change_pct)} · your limit ±${lines.priceMovePct}%`);
+  if (alert.reasons.includes("volume")) out.push(`Volume ${(alert.session.volume_ratio ?? 0).toFixed(1)}× the 20-day average · your limit ${lines.volumeMultiple}×`);
+  return out;
+}
+
+/**
+ * Does a filing explain the move? Real data only: the company's material (not routine) filings of the same India calendar day as
+ * the session. "A filing came out today: Results" if that day is the day the data was made, "... that day: ..." for an older session,
+ * and "No filing explains this move" if there is none. Several filings are named by their short labels, most important first.
+ */
+export function filingNote(symbol: string, day: string, items: readonly Item[], generatedAt: string): string {
+  const same = items
+    .filter((item) => item.symbol === symbol && !item.routine && istDate(Date.parse(item.published_at)) === day)
+    .sort((a, b) => b.priority - a.priority);
+  if (same.length === 0) return "No filing explains this move";
+  const labels = [...new Set(same.map((item) => shortCategory(item)))];
+  const when = istDate(Date.parse(generatedAt)) === day ? "today" : "that day";
+  return `A filing came out ${when}: ${labels.slice(0, 2).join(", ")}${labels.length > 2 ? ` and ${labels.length - 2} more` : ""}`;
 }

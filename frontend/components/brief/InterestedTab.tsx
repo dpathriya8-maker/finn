@@ -97,7 +97,7 @@ function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: s
               type="button"
               aria-pressed={followed}
               onClick={() => toggleFollow("companies", entry.symbol)}
-              className={`inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border text-sm font-medium ${followed ? "border-ink bg-backdrop" : "border-line"}`}
+              className={`inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border text-sm font-medium ${followed ? "border-accent bg-backdrop text-accent" : "border-line"}`}
             >
               <StarIcon filled={followed} size={16} />
               {followed ? "Following" : "Follow"}
@@ -106,9 +106,9 @@ function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: s
           <button
             type="button"
             onClick={() => onInvest(name)}
-            className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-ink text-sm font-medium text-surface"
+            className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-accent-bg text-sm font-medium text-on-accent"
           >
-            Invest <PreviewBadge className="border-surface/60 text-surface" />
+            Invest <PreviewBadge className="border-on-accent/60 text-on-accent" />
           </button>
         </div>
       )}
@@ -135,7 +135,7 @@ function PersonRow({ person, on }: { person: PersonEntry; on: boolean }) {
         aria-pressed={on}
         aria-label={on ? `Following ${person.name}. Tap to stop` : `Follow ${person.name}`}
         onClick={() => toggleFollow("people", person.id)}
-        className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-xs font-semibold ${on ? "border-ink bg-ink text-surface" : "border-line text-ink-soft"}`}
+        className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-xs font-semibold ${on ? "border-accent-bg bg-accent-bg text-on-accent" : "border-line text-ink-soft"}`}
       >
         {on ? "Following" : "Follow"}
       </button>

@@ -329,3 +329,16 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 112 frontend unit tests (new: grouping and order, labels, short why, headlines, greeting, name, scorecard wording), type-check, lint, production build. In a real phone-sized Chromium on the production build: Brief, Interested, Alerts and You at 360 and 390 px, light and dark, collapsed and fully expanded: `scrollWidth` equals `clientWidth`, the nav is at left 0 with the screen's width, and no text is below 4.5:1 contrast. 29 behaviour checks (shared window setting across screens, name typing and greeting, nav pinned while scrolling).
 
 **Not working / known:** the Language row on You is honest, not a setting (English is the only language). A headline can take two lines (not one) so it is not cut mid-fact. The "Signal" cards on Alerts (price and volume) keep their older layout. Vitest fails to start from this Git Bash session (a worker error on every file, also on a clean checkout) but passes from PowerShell; the cause was not found and it is unrelated to the code.
+
+## Calm colours, summary line, calm alerts (15 Nov 2026, "Chat 2" of the night's prompts)
+
+**Asked:** an indigo accent with softer status colours; one summary line computed in code; calm alerts (a dot not a number, a plain reason on every alert, whether a filing explains a price or volume move); the You tab. The You tab, the shared window sheet, the greeting and the new backgrounds were already in `12afdab`.
+
+**Done:**
+- **Accent:** deep indigo (`--accent`, `--accent-bg`, `--on-accent`) for the active tab and nav item, buttons, links, switches, sliders and one focus ring everywhere; never used for good or bad. Red and its tint made richer; green and amber unchanged. Every text pairing is at 4.5:1 or better, light and dark.
+- **Summary line** (`summaryParts` in `lib/brief.ts`, unit-tested): "N risks to review" (material filings tagged Risk) and "Busy day: N of your companies filed" (five or more companies with a material filing), joined with " · "; "Quiet day: nothing needs action across your 18 companies" when nothing is material. Where something is material but is neither a risk nor a busy day it says "N filings worth a look" (not in the brief; a fallback so the line is never empty). It replaces "N things that matter".
+- **Alerts:** the tab shows a small indigo dot, no number, when there are alerts and the reader has not opened Alerts since the data was refreshed (`lib/alertsSeen.ts`, localStorage). The header says "N material alerts". Every price or volume alert states its reason against the reader's own limit ("Price −6.1% · your limit ±5%", "Volume 3.2× the 20-day average · your limit 2×") and whether a filing explains it: the company's material (not routine) filing of the same India calendar day, named by its short label, else "No filing explains this move". Real data only; for an older session it says "that day", not "today".
+
+**Verified:** 120 unit tests, types, lint, build; Brief, Alerts, You and Research at 360 and 390 px, light and dark, no sideways scroll and no text below 4.5:1; 29 behaviour checks.
+
+**Not done:** the dot's "new" is per data refresh, not per alert (there is no per-alert read state).

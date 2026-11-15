@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { alertCount, filingAlerts, moveWords, sessionCount, signalAlerts } from "@/lib/alerts";
+import { alertCount, filingAlerts, filingNote, moveWords, sessionCount, signalAlerts, signalReasons } from "@/lib/alerts";
 import type { Settings } from "@/lib/settings";
 import type { Brief, Item, Session } from "@/lib/types";
 
@@ -138,3 +138,40 @@ describe("moveWords", () => {
     expect(moveWords(7)).toBe("rose 7.0%");
   });
 });
+
+describe("signalReasons", () => {
+  const alert = (change: number, ratio: number | null, reasons: ("price" | "volume")[]) => ({ session: session("2026-11-13", change, ratio), reasons });
+  const lines = { priceMovePct: 5, volumeMultiple: 2 };
+
+  it("states each reason against the reader's own limit, in plain words", () => {
+    expect(signalReasons(alert(-6.14, 1, ["price"]), lines)).toEqual(["Price −6.1% · your limit ±5%"]);
+    expect(signalReasons(alert(3.8, 3.2, ["volume"]), lines)).toEqual(["Volume 3.2× the 20-day average · your limit 2×"]);
+    expect(signalReasons(alert(5.5, 3.2, ["price", "volume"]), { priceMovePct: 4.5, volumeMultiple: 2.5 })).toEqual([
+      "Price +5.5% · your limit ±4.5%",
+      "Volume 3.2× the 20-day average · your limit 2.5×",
+    ]);
+  });
+});
+
+describe("filingNote", () => {
+  const filed = (over: Partial<Item>) => item({ published_at: "2026-11-15T08:00:00+05:30", ...over });
+
+  it("names the material filing the company made that same day", () => {
+    expect(filingNote("AAA", "2026-11-15", [filed({})], REF)).toBe("A filing came out today: Results");
+    expect(filingNote("AAA", "2026-11-13", [filed({ published_at: "2026-11-13T17:00:00+05:30" })], REF)).toBe("A filing came out that day: Results");
+  });
+
+  it("says no filing explains the move when there is none that day, only a routine one, or only another company's", () => {
+    expect(filingNote("AAA", "2026-11-15", [], REF)).toBe("No filing explains this move");
+    expect(filingNote("AAA", "2026-11-15", [filed({ published_at: "2026-11-14T08:00:00+05:30" })], REF)).toBe("No filing explains this move");
+    expect(filingNote("AAA", "2026-11-15", [filed({ routine: true, category: "agm_egm" })], REF)).toBe("No filing explains this move");
+    expect(filingNote("AAA", "2026-11-15", [filed({ symbol: "BBB" })], REF)).toBe("No filing explains this move");
+  });
+
+  it("counts the day in India, not in UTC, and lists the most important filings first", () => {
+    expect(filingNote("AAA", "2026-11-15", [filed({ published_at: "2026-11-15T00:21:18+05:30" })], REF)).toBe("A filing came out today: Results");
+    const several = [filed({ category: "m_and_a", priority: 80 }), filed({ category: "results", priority: 88 }), filed({ category: "litigation", priority: 95 })];
+    expect(filingNote("AAA", "2026-11-15", several, REF)).toBe("A filing came out today: Legal, Results and 1 more");
+  });
+});
+

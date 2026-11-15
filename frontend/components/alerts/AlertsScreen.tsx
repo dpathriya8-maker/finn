@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SignalCard } from "@/components/alerts/SignalCard";
 import { CompanyCard } from "@/components/brief/CompanyCard";
 import { PricesProvider } from "@/components/brief/PricesContext";
-import { filingAlerts, signalAlerts } from "@/lib/alerts";
+import { filingAlerts, filingNote, signalAlerts, signalReasons } from "@/lib/alerts";
+import { markAlertsSeen } from "@/lib/alertsSeen";
 import { GROUP_LIMIT, groupByCompany, whenLabel } from "@/lib/brief";
 import { useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
@@ -26,6 +27,12 @@ export function AlertsScreen() {
   const settings = useSettings(configState.kind === "ready" ? configState.data : null);
   const [allSignals, setAllSignals] = useState(false);
   const [allFilings, setAllFilings] = useState(false);
+  const generatedAt = briefState.kind === "ready" ? briefState.data.generated_at : null;
+
+  // Opening Alerts counts as seeing this refresh's alerts: the dot on the tab goes quiet until the data is refreshed again.
+  useEffect(() => {
+    if (generatedAt) markAlertsSeen(generatedAt);
+  }, [generatedAt]);
 
   if (briefState.kind === "loading") {
     return <div className="h-64 animate-pulse rounded-2xl bg-line" aria-label="Loading your alerts" />;
@@ -50,13 +57,13 @@ export function AlertsScreen() {
 
   return (
     <PricesProvider brief={brief}>
-      <p className="text-lg font-semibold tracking-tight">{total === 0 ? "No alerts" : `${total} ${total === 1 ? "alert" : "alerts"}`}</p>
+      <p className="text-lg font-semibold tracking-tight">{total === 0 ? "No material alerts" : `${total} material ${total === 1 ? "alert" : "alerts"}`}</p>
 
       <p className="mt-3 rounded-xl bg-line px-3 py-2 text-xs leading-5 text-ink-soft">
         Your lines: price moves above ±{settings.priceMovePct}%, volume above {settings.volumeMultiple}× its 20-day average,{" "}
         {kinds} kinds of filing
         {settings.mutedSymbols.length > 0 && `, ${settings.mutedSymbols.length} muted`}.{" "}
-        <Link href="/settings" className="font-medium text-ink underline underline-offset-2">
+        <Link href="/settings" className="font-medium text-accent underline underline-offset-2">
           Change them
         </Link>
       </p>
@@ -72,8 +79,8 @@ export function AlertsScreen() {
               <SignalCard
                 key={`${alert.symbol}-${alert.session.day}`}
                 alert={alert}
-                priceMovePct={settings.priceMovePct}
-                volumeMultiple={settings.volumeMultiple}
+                reasons={signalReasons(alert, settings)}
+                note={filingNote(alert.symbol, alert.session.day, brief.items, brief.generated_at)}
               />
             ))}
           </div>

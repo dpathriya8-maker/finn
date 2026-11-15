@@ -16,7 +16,7 @@ export function WindowPicker({ value, onChange }: { value: number; onChange: (ho
             aria-checked={selected}
             onClick={() => onChange(w.hours)}
             className={`min-h-11 rounded-full text-sm font-medium ${
-              selected ? "bg-surface text-ink shadow-sm" : "text-ink-soft"
+              selected ? "bg-surface font-semibold text-accent shadow-sm" : "text-ink-soft"
             }`}
           >
             {w.label}

@@ -31,12 +31,12 @@ export function SwitchRow({
       <span
         aria-hidden="true"
         className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors motion-reduce:transition-none ${
-          checked ? "bg-ink" : "bg-line"
+          checked ? "bg-accent-bg" : "bg-line"
         }`}
       >
         <span
           className={`absolute size-5 rounded-full shadow transition-transform motion-reduce:transition-none ${
-            checked ? "translate-x-6 bg-surface" : "translate-x-1 bg-ink-faint"
+            checked ? "translate-x-6 bg-on-accent" : "translate-x-1 bg-ink-faint"
           }`}
         />
       </span>
@@ -88,7 +88,7 @@ export function RangeSetting({
         value={value}
         aria-valuetext={`${value}${unit}`}
         onChange={(event) => onChange(Number(event.target.value))}
-        className="mt-1 h-11 w-full accent-[var(--ink)]"
+        className="mt-1 h-11 w-full accent-[var(--accent)]"
       />
       <div className="flex justify-between text-xs tabular-nums text-ink-faint">
         <span>
