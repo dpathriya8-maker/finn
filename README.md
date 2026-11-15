@@ -32,7 +32,7 @@ More screens: [Alerts](docs/screens/04-alerts-light.png) · [Research home](docs
 **Pull**
 - **Research any NSE ticker.** The last four concall transcripts and the latest annual report are found on the exchange, read, and kept. Four companies are prepared in advance; any other ticker is researched on demand in the background while the screen shows its stage.
 - **What management said about the future,** found by rule, word for word, with its page and a link that opens the PDF there.
-- **Promise Tracker** (Kept / Partly / Missed / Too early, each with the quote, the document and the page). **Needs a model key; see the status table below.**
+- **Promise Tracker** (Kept / Partly / Missed / Not followed up / Too early, each with the quote, the document and the page). A promise is only called Kept, Partly or Missed once its date has passed; the date and the arithmetic are decided in code, not by the model.
 - **Ask the documents.** Answers only from the filings, or says "Not found in the documents".
 
 ## What is verified, and what is not
@@ -43,10 +43,10 @@ I would rather you hear this from me than find it.
 |---|---|
 | Morning Brief, Alerts, Settings, classification of every filing | Real data for 18 companies from BSE, NSE and Yahoo; verified in a phone-sized browser, light and dark |
 | Results card, management card | Real filings: 7 results PDFs (including a scan, a sideways page and a lender) and 4 management filings; **no model is used**; scans are refused unless an independent source confirms them |
-| Documents, statements, retrieval, Ask (passages) | Run on real transcripts and annual reports for Bajaj Finance, Asian Paints, HAL, Info Edge, and Titan, which was never prepared and was researched on demand |
-| Promise verdicts and the model router | **Run live on 15 Nov 2026** (Gemini free tier, `gemini-3.5-flash-lite` and `gemini-3.5-flash`) on 4 companies: 3 got verdicts (54: 24 Kept, 3 Partly, 0 Missed, 27 Too early); HAL has one call in the window, so it shows statements and no verdicts. Every verdict carries a quote that is verified word for word; whether each verdict is *right* has not been audited transcript by transcript |
-| Written answers ("Ask the documents") | Built and tested against a scripted model; **not yet run against a live model** |
-| Deployment (Vercel, Render) | Not done yet; click-by-click steps are in [docs/deploy.md](docs/deploy.md). BSE and NSE are only proven reachable from a home connection, so on a server an unprepared ticker may fail, with a stated reason |
+| Documents, statements, retrieval, Ask (passages) | Run on real transcripts and annual reports for Bajaj Finance, Asian Paints, HAL, Info Edge, and Titan, which was never prepared and was researched on demand (from a home connection; from Render, BSE refuses the server, see Deployment) |
+| Promise verdicts and the model router | **Run live on 15 Nov 2026** (Gemini free tier) on 4 companies: 3 got verdicts (40 promises: 5 Kept, 1 Partly, 1 Missed, 4 Not followed up, 29 Too early); HAL has one call in the window, so it shows statements and no verdicts. The first run was too generous (24 of 54 Kept), so due dates, number checks and a second reading of every decided verdict were added; I then read each decided verdict against the transcript. Right: Asian Paints "almost 10 lakh" vs "more than 9 lakh" is Partly (90%); Bajaj "book below INR 1,500 crore by Sept '26" vs "now INR 2,400 crore" is Missed (62.5%); the VAE facility "started in September" is Kept. **Known wrong: Naukri's "billings growth to recover in Q1" (about 99acres) shows Not followed up, although the Q1 call discusses 99acres billings; the search did not surface that passage.** The strong model's free quota is 20 requests a day and ran out during re-runs, so these verdicts were made by `gemini-3.5-flash-lite` (each record says which model answered). Every quote is verified word for word; whether every verdict is right has not been audited line by line |
+| Written answers ("Ask the documents") | **Run live on 15 Nov 2026** on all four companies: answered with quotes and pages (Bajaj, Asian Paints, HAL); a question the documents cannot answer returned "Not found in the documents"; Naukri's answer was cut back to bare quotes because it contained a figure its quotes did not support |
+| Deployment (Vercel, Render) | **Live.** Backend on Render's free plan (Singapore): https://finn-api-v8fm.onrender.com. Frontend on Vercel: https://finn-mocha.vercel.app. Checked from the server: Yahoo, NSE announcements and screener.in work, **BSE answers HTTP 403** (see [docs/data-sources.md](docs/data-sources.md)). So an unprepared ticker such as TITAN **fails on Render with a stated reason** ("could not be completed") when the BSE scrip list is refused; the four prepared companies, Ask on them, the Brief and Alerts do not depend on it |
 | Push notifications | Not built, and the Alerts screen says so. They need a server holding subscriptions, which means accounts |
 | Web search for management bios | Not built; the filing's own profile answers the question without a key |
 
@@ -56,7 +56,7 @@ To rebuild the Promise Tracker: put `GEMINI_API_KEY`, `LLM_CHEAP_MODEL` (and opt
 
 - **No model reads a results PDF.** Figures come from word positions on the page, and a figure it cannot read is dropped, never guessed. A column whose total income does not equal revenue plus other income is dropped.
 - **A quote is shown only if it is word for word on the page it cites.** The check forgives line breaks, hyphenation, curly quotes and ligatures, and nothing else; a changed number or word fails. The page number comes from FINN's own chunk, never from a model.
-- **A verdict other than "Too early" needs a quote from a later call.** Without one it is set back, and the card says so.
+- **A verdict needs a quote from a later call, and Kept, Partly and Missed only come after the promise's date has passed.** The date is read by code from the speaker's words, a number counts only if it is in the quotes (met, 75 to 99% Partly, below 75% Missed), a miss needs a word of a miss in its quote, and a second reading checks the quote is about the same thing. Without a quote that holds up, the card is set back and says so.
 - **Counts, deltas, margins and the delivery rate are computed in code.** An answer's figures must appear in its own quotes.
 - **A source that disagrees is shown, not hidden:** the Yahoo check says "differs", a scan nothing can confirm says "figures not shown", an unreadable filing says so.
 - **Data is labelled with its age.** The Brief counts windows from the data's own timestamp and says when the data was produced.
@@ -105,7 +105,7 @@ Push data is precomputed into static JSON, so it loads instantly and the browser
 
 Most of FINN uses **no model at all**: classification of every filing (exchange labels plus rules), the results and management cards, the statements found by rule, retrieval ("Not found" is decided by word overlap before any model is asked). A model is used for three things only: extracting promises (a cheap model, about 14 short excerpts per call), judging them against later calls (a strong model), and writing an answer to a question (a cheap model, six short excerpts). That is roughly seven calls per company for the whole tracker, every answer is cached by its input, the prompt version and the model, and no whole document is ever sent. Every call is logged without the prompt or the key.
 
-**Measured on the first live run: 25 successful calls (12 cheap extraction, 9 strong verdict, 4 cheap-fallback verdict), about 71,000 tokens in and 11,000 out for 3 companies, $0 on the free tier.** `python -m app.core.llm` prints the table. Details in [docs/cost.md](docs/cost.md).
+**Measured over the whole session (two live runs and their re-runs): 210 successful calls, 75 of them answered from the cache, about 367,000 tokens in and 35,000 out, $0 on the free tier.** The first run alone was 25 calls and about 71,000 tokens in for 3 companies. `python -m app.core.llm` prints the table. Details in [docs/cost.md](docs/cost.md).
 
 ## Run it
 

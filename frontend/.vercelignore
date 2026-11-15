@@ -1,0 +1,4 @@
+.env*
+public/pub.env.local
+.next
+node_modules

@@ -1,21 +1,21 @@
 # Data sources
 
-Verified on **15 Nov 2026** from the developer's Windows laptop (Step 3). Two columns are still open: **Render** waits for the deploy (the probe route is already built, see "Re-running the probes"), and **GitHub Actions** needs the `workflow` scope on the GitHub login before a probe workflow can be pushed. Gemini, Groq and Tavily were not tested because no API keys exist yet. "Works" below means tested for real; "untested" means exactly that.
+Verified on **15 Nov 2026** from the developer's Windows laptop (Step 3), and the **Render** column from the deployed free instance (Singapore) on the same day, with the temporary `/debug/sources` route for RELIANCE and CDSL. **GitHub Actions** is still untested: it needs the `workflow` scope on the GitHub login. Gemini was tested for real on 15 Nov 2026 (see "LLM providers and Tavily"); Groq and Tavily were not tested because no keys were set. "Works" below means tested for real; "untested" means exactly that.
 
 ## Summary
 
 | Source | Laptop | Render | GitHub Actions | Notes / fallback |
 |---|---|---|---|---|
-| yfinance prices (`SYMBOL.NS`) | Works: 63 daily bars in 0.2 to 1.7 s, 4 of 4 tickers | untested | untested | `.BO` fallback works but is thin for some tickers (RELIANCE.BO and BAJFINANCE.BO returned 1 bar in 2 months), so `.NS` is the source and `.BO` the fallback. Use raw, not split-adjusted, prices. |
-| yfinance quarterly income statement | Works: 5 to 6 quarters, 4 of 4 tickers | untested | untested | Cross-check only. Yahoo skips quarters (RELIANCE and KAYNES have no Sep-2025), has no EBITDA for lenders (BAJFINANCE), and lags a fresh filing (KAYNES Sep-2026 is absent). |
-| NSE symbol to BSE scrip code (BSE scrip master + NSE `EQUITY_L.csv`, joined on ISIN) | Works: 2,294 of 2,391 NSE equity symbols (95.9%); 21 of our 22 tickers | untested | untested | **CDSL has no BSE scrip** in BSE's master: it is an NSE-only feed. Never match on name (BSE's quote search for "CDSL" returns ICDS Ltd). |
-| BSE announcements API | Works: 0.1 to 0.5 s a request, 50 rows a page | untested | untested | Needs User-Agent, Referer, Origin and Accept together (User-Agent plus Referer alone is refused with 403). At most 365 days per request. |
-| BSE results PDFs | Works: 3 of 3 downloaded (1.2, 8.6, 18.8 MB, each under 1.5 s); all text-extractable | untested | untested | Tables are findable by page. Units and layout differ per company (see "Results filings"). |
-| BSE concall transcripts | Works: the last 4 quarterly transcripts were found for 3 of 3 companies, looking back up to 13 months | untested | untested | Filed under `Earnings Call Transcript` **or** `Analyst / Investor Meet`; the text must be checked too. Clean extractable text. |
-| BSE annual reports | Found for 3 of 3 (8 to 22 MB) | untested | untested | `Others / Reg. 34 (1) Annual Report`. Bajaj's 22 MB is close to the 25 MB cap. |
-| NSE announcements API | Works with a normal browser-style session (cookies from the home page first), with a date range | untested | untested | The only feed for CDSL. Keyed by symbol, so no scrip-code mapping. Akamai-protected, so cloud IPs may be refused. Attachments are served from `nseindia.in` as well as `nseindia.com`. |
-| screener.in company page | Works: 4 of 4, with 18 to 39 transcript links each | untested | untested | Fallback for transcript links. CDSL's links point to NSE's archive. |
-| Gemini API | untested: no key | untested | untested | See "LLM providers and Tavily". |
+| yfinance prices (`SYMBOL.NS`) | Works: 63 daily bars in 0.2 to 1.7 s, 4 of 4 tickers | Works: 63 daily bars for RELIANCE and CDSL (17 s on the first call after a cold start, then under 1 s) | untested | `.BO` fallback works but is thin for some tickers (RELIANCE.BO and BAJFINANCE.BO returned 1 bar in 2 months), so `.NS` is the source and `.BO` the fallback. Use raw, not split-adjusted, prices. |
+| yfinance quarterly income statement | Works: 5 to 6 quarters, 4 of 4 tickers | Works: 5 and 6 quarters (RELIANCE, CDSL) | untested | Cross-check only. Yahoo skips quarters (RELIANCE and KAYNES have no Sep-2025), has no EBITDA for lenders (BAJFINANCE), and lags a fresh filing (KAYNES Sep-2026 is absent). |
+| NSE symbol to BSE scrip code (BSE scrip master + NSE `EQUITY_L.csv`, joined on ISIN) | Works: 2,294 of 2,391 NSE equity symbols (95.9%); 21 of our 22 tickers | **Fails: HTTP 403** (BSE's scrip master is refused). The join with NSE's list cannot be built on Render | untested | **CDSL has no BSE scrip** in BSE's master: it is an NSE-only feed. Never match on name (BSE's quote search for "CDSL" returns ICDS Ltd). |
+| BSE announcements API | Works: 0.1 to 0.5 s a request, 50 rows a page | **Fails: HTTP 403** | untested | Needs User-Agent, Referer, Origin and Accept together (User-Agent plus Referer alone is refused with 403). At most 365 days per request. |
+| BSE results PDFs | Works: 3 of 3 downloaded (1.2, 8.6, 18.8 MB, each under 1.5 s); all text-extractable | **Fails: HTTP 403** | untested | Tables are findable by page. Units and layout differ per company (see "Results filings"). |
+| BSE concall transcripts | Works: the last 4 quarterly transcripts were found for 3 of 3 companies, looking back up to 13 months | **Fails: HTTP 403** | untested | Filed under `Earnings Call Transcript` **or** `Analyst / Investor Meet`; the text must be checked too. Clean extractable text. |
+| BSE annual reports | Found for 3 of 3 (8 to 22 MB) | **Fails: HTTP 403** (same host) | untested | `Others / Reg. 34 (1) Annual Report`. Bajaj's 22 MB is close to the 25 MB cap. |
+| NSE announcements API | Works with a normal browser-style session (cookies from the home page first), with a date range | Works: 2 announcements (RELIANCE) and 4 (CDSL) in 7 days | untested | The only feed for CDSL. Keyed by symbol, so no scrip-code mapping. Akamai-protected, so cloud IPs may be refused. Attachments are served from `nseindia.in` as well as `nseindia.com`. |
+| screener.in company page | Works: 4 of 4, with 18 to 39 transcript links each | Works: page ok, 20 (RELIANCE) and 29 (CDSL) transcript links | untested | Fallback for transcript links. CDSL's links point to NSE's archive. |
+| Gemini API | Works: `gemini-3.5-flash-lite` (cheap) and `gemini-3.5-flash` (strong) answered; free tier: `gemini-3.5-flash` is limited to 20 requests a day, `-flash-lite` has a per-minute limit | Key and model names set; not exercised from Render in this check (the TITAN run stopped earlier) | untested | See "LLM providers and Tavily". |
 | Groq API | untested: no key | untested | untested | Fallback LLM. |
 | Tavily search | untested: no key | untested | untested | Management bios. |
 
@@ -161,12 +161,12 @@ When keys exist: list the models the key can use, make one tiny call to the chea
 ## Re-running the probes
 
 - **Laptop:** from `backend/`, `python -m probes.run_probes [SYMBOL ...]` (default RELIANCE, KAYNES, BAJFINANCE, CDSL) prints a table and writes `probes/out/report.json`. The three CDSL failures in the BSE rows are the expected "no BSE scrip" result.
-- **Render:** `GET /debug/sources?symbol=RELIANCE` with the header `X-Admin-Token: <ADMIN_TOKEN>` runs the same probes on the server. It is temporary and admin-only; see [deploy.md](deploy.md). Paste the JSON into the Render column.
+- **Render:** `GET /debug/sources?symbol=RELIANCE` with the header `X-Admin-Token: <ADMIN_TOKEN>` ran the same probes on the server on 15 Nov 2026 (result in the Render column above). The route has been removed now that the column is filled in.
 - **GitHub Actions:** needs the `workflow` scope on the GitHub login. Then a manual `workflow_dispatch` workflow can run `python -m probes.run_probes`.
 
 ## What this means for the build
 
-1. **Run the pipeline on the laptop for now** and commit the JSON it writes. Both exchanges are only proven from a home connection, and Indian exchange sites often refuse datacenter IPs. Render and GitHub Actions have to be tested before anything depends on them.
+1. **Run the pipeline on the laptop and commit the JSON it writes.** Measured from Render: **BSE refuses it (HTTP 403)** on every endpoint, while Yahoo, NSE announcements and screener.in work. So the live engine cannot resolve an unprepared ticker through BSE; the four demo companies are precomputed and unaffected.
 2. **BSE first, NSE second.** BSE gives a category and subcategory, which Tier 0 rules can use. NSE needs no code mapping and is the only feed for NSE-only issuers such as CDSL. For an unseen ticker, resolve it, use BSE if there is a scrip code, otherwise NSE.
 3. **Classification needs the subject text**, not only the category: `General` is 28% of rows and transcripts hide under `Analyst / Investor Meet`.
 4. **Results extraction is verify-then-compute:** page selection, model extraction to JSON, a verbatim check per number, deltas in code, a Yahoo cross-check that tolerates restatements and attribution differences.

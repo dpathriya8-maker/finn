@@ -56,19 +56,7 @@ If the build fails, open the service's **Logs** tab. The two things worth checki
 
 ## E. Check which data sources work from Render (Step 3)
 
-This fills the "Render" column of [data-sources.md](data-sources.md). It needs `ADMIN_TOKEN` from step A5.
-
-1. Wake the service first by opening `/health` in a browser.
-2. In PowerShell, run (put your own token and service URL in; it takes 10 to 30 seconds):
-
-   ```
-   Invoke-RestMethod -Headers @{ "X-Admin-Token" = "<ADMIN_TOKEN>" } "https://<your-service>.onrender.com/debug/sources?symbol=RELIANCE" | ConvertTo-Json -Depth 5
-   ```
-
-3. Each probe comes back as `ok: true` with a detail line, or `ok: false` with the error. Paste the output to the coding agent (it contains no secrets). Repeat with `symbol=CDSL` to see the NSE-only case.
-4. If the BSE or NSE probes fail with 403 from Render, that means the exchange refuses Render's IP range, and the data pipeline must keep running on your laptop.
-
-The route is temporary. It is removed once the table is filled in.
+Done on 15 Nov 2026, and the temporary `/debug/sources` route has been removed. Result: Yahoo, NSE announcements and screener.in work from Render; **BSE answers HTTP 403** on every endpoint. The table is in [data-sources.md](data-sources.md). Because of that, an unprepared ticker fails on Render at "finding the company" with a stated reason, while the four prepared companies do not depend on it.
 
 ## F. Turn on the Promise Tracker (needs your API keys)
 
