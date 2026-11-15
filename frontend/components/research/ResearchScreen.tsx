@@ -4,10 +4,45 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CompanyResearch } from "@/components/research/CompanyResearch";
-import { isValidTicker, normaliseTicker, type ResearchIndex } from "@/lib/research";
+import { VerdictBar } from "@/components/ui/Charts";
+import { Avatar, PriceLine } from "@/components/ui/Price";
+import { shortName } from "@/lib/headline";
+import { deliveredShort, documentsLine, isValidTicker, normaliseTicker, type IndexEntry, type ResearchIndex, type ResearchRecord } from "@/lib/research";
 import { useJson } from "@/lib/useJson";
+import { useCompanyPrices } from "@/lib/useSessions";
 
-const STATUS_NOTE = { ready: "verdicts ready", statements_only: "no verdict yet", no_documents: "nothing to read" } as const;
+/**
+ * One researched company as three lines, like a filing in the Brief:
+ *   line 1  badge, short name, price chip
+ *   line 2  "Delivered 5 of 7 due" with a thin stacked bar, or "Not enough calls yet"
+ *   line 3  grey: how many calls were read and when
+ */
+function CompanyRow({ entry }: { entry: IndexEntry }) {
+  const prices = useCompanyPrices(entry.symbol);
+  const state = useJson<ResearchRecord>(`/data/research/${encodeURIComponent(entry.symbol)}.json`);
+  const record = state.kind === "ready" ? state.data : null;
+  const card = record && record.status === "ready" ? record.scorecard : null;
+  const headline = deliveredShort(card) ?? "Not enough calls yet";
+
+  return (
+    <Link href={`/research?symbol=${encodeURIComponent(entry.symbol)}`} className="block min-h-14 min-w-0 px-4 py-3">
+      <span className="flex min-w-0 items-center gap-2.5">
+        <Avatar symbol={entry.symbol} name={entry.name} size={32} />
+        <span className="min-w-0 flex-1 truncate text-sm font-semibold">{shortName(entry.name)}</span>
+        <PriceLine sessions={prices.sessions} generatedAt={prices.generatedAt} />
+      </span>
+      <span className="mt-2 block text-base font-semibold leading-snug">{headline}</span>
+      {card && deliveredShort(card) && (
+        <span className="mt-1.5 block">
+          <VerdictBar card={card} legend={false} thin />
+        </span>
+      )}
+      <span className="mt-1.5 block truncate text-xs text-ink-faint">
+        {record ? documentsLine(record) : `${entry.documents} documents read`}
+      </span>
+    </Link>
+  );
+}
 
 /** The Research tab: a ticker box and the companies researched in advance; with ?symbol=, one company's research. */
 export function ResearchScreen() {
@@ -48,7 +83,7 @@ function Home() {
         }}
       >
         <label htmlFor="ticker" className="text-sm font-medium">
-          NSE ticker
+          Research any NSE company
         </label>
         <input
           id="ticker"
@@ -61,7 +96,7 @@ function Home() {
           spellCheck={false}
           inputMode="text"
           maxLength={24}
-          placeholder="For example RELIANCE or M&M"
+          placeholder="Type a ticker, e.g. RELIANCE"
           aria-invalid={invalid}
           aria-describedby={invalid ? "ticker-error" : "ticker-help"}
           className="mt-1.5 min-h-12 w-full rounded-xl border border-line bg-surface px-4 text-base uppercase placeholder:normal-case placeholder:text-ink-faint"
@@ -87,20 +122,10 @@ function Home() {
         {index.kind === "loading" && <div className="mt-2 h-24 animate-pulse rounded-2xl bg-line" aria-label="Loading the list" />}
         {index.kind === "error" && <p className="mt-2 text-sm text-ink-soft">The list could not be loaded. Type a ticker above.</p>}
         {index.kind === "ready" && (
-          <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface">
+          <ul className="mt-2 divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface">
             {index.data.companies.map((company) => (
               <li key={company.symbol}>
-                <Link href={`/research?symbol=${encodeURIComponent(company.symbol)}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
-                  <span>
-                    <span className="block text-sm font-semibold">{company.name}</span>
-                    <span className="block text-xs text-ink-faint">
-                      {company.symbol} · {company.documents} documents · {STATUS_NOTE[company.status]}
-                    </span>
-                  </span>
-                  <span aria-hidden="true" className="text-ink-faint">
-                    ›
-                  </span>
-                </Link>
+                <CompanyRow entry={company} />
               </li>
             ))}
           </ul>

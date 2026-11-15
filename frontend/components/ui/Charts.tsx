@@ -4,22 +4,22 @@ import type { Scorecard } from "@/lib/research";
 
 // ------------------------------------------------------------------------------------------------ verdicts
 const SEGMENTS = [
-  { key: "kept", label: "Kept", bar: "bg-good", dot: "bg-good" },
-  { key: "partly", label: "Partly", bar: "bg-watch", dot: "bg-watch" },
   { key: "missed", label: "Missed", bar: "bg-bad", dot: "bg-bad" },
   { key: "not_followed_up", label: "Not followed up", bar: "border-2 border-watch bg-transparent", dot: "border-2 border-watch" },
+  { key: "partly", label: "Partly", bar: "bg-watch", dot: "bg-watch" },
+  { key: "kept", label: "Kept", bar: "bg-good", dot: "bg-good" },
   { key: "too_early", label: "Too early", bar: "bg-ink-faint/40", dot: "bg-ink-faint/40" },
 ] as const;
 
 /** The counts of a Promise Tracker as one stacked bar with a legend. Colour is the verdict; the numbers are written out too. */
-export function VerdictBar({ card, legend = true }: { card: Scorecard; legend?: boolean }) {
+export function VerdictBar({ card, legend = true, thin = false }: { card: Scorecard; legend?: boolean; thin?: boolean }) {
   const counts = SEGMENTS.map((s) => ({ ...s, n: (card[s.key as keyof Scorecard] as number | undefined) ?? 0 }));
   const total = counts.reduce((sum, c) => sum + c.n, 0);
   if (total === 0) return null;
   const summary = counts.filter((c) => c.n > 0).map((c) => `${c.label} ${c.n}`).join(", ");
   return (
     <div>
-      <div role="img" aria-label={`Verdicts: ${summary}`} className="flex h-3 w-full gap-0.5 overflow-hidden rounded-full">
+      <div role="img" aria-label={`Verdicts: ${summary}`} className={`flex w-full gap-0.5 overflow-hidden rounded-full ${thin ? "h-2" : "h-3"}`}>
         {counts
           .filter((c) => c.n > 0)
           .map((c) => (

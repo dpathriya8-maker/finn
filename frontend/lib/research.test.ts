@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 import {
+  byDue,
   byId,
+  callCount,
+  decidedCounts,
+  deliveredShort,
+  deliveredText,
+  documentsLine,
+  excerpt,
+  fewCallsText,
+  modelNote,
+  promiseTopic,
+  sayingLine,
+  soWhat,
+  tooFewCalls,
   dateLabel,
   deliveryText,
   dueText,
@@ -252,5 +265,86 @@ describe("a research company as a list row", () => {
     expect(scorecardTone(card({ kept: 1, too_early: 9 }))).toBe("good");
     expect(scorecardTone(card({ too_early: 4 }))).toBe("neutral");
     expect(scorecardTone(null)).toBe("neutral");
+  });
+});
+
+describe("the verdict summary", () => {
+  const card = (over: Partial<Scorecard>): Scorecard => ({ kept: 0, partly: 0, missed: 0, not_followed_up: 0, too_early: 0, total: 0, decided: 0, delivery_rate_pct: null, ...over });
+
+  it("counts what came due: Kept and Partly delivered, Missed and Not followed up not, Too early left out", () => {
+    expect(decidedCounts(card({ kept: 2, partly: 1, missed: 1, not_followed_up: 2, too_early: 15 }))).toEqual({ delivered: 3, due: 6 });
+    expect(deliveredText(card({ kept: 5, partly: 0, missed: 1, not_followed_up: 1 }))).toBe("Delivered 5 of 7 promises that came due");
+    expect(deliveredText(card({ too_early: 4 }))).toBe("No promise has come due yet");
+    expect(deliveredShort(card({ kept: 5, missed: 2 }))).toBe("Delivered 5 of 7 due");
+    expect(deliveredShort(card({ too_early: 3 }))).toBeNull();
+    expect(deliveredShort(null)).toBeNull();
+  });
+
+  it("says what the counts mean, by rule", () => {
+    expect(soWhat(card({ kept: 1, missed: 3 }))).toBe("Missed more than it kept");
+    expect(soWhat(card({ kept: 1, missed: 1, too_early: 9 }))).toBe("Too early to judge most promises");
+    expect(soWhat(card({ kept: 3, partly: 1, not_followed_up: 1, too_early: 5 }))).toBe("Mostly delivers, but went quiet on 1 promise");
+    expect(soWhat(card({ kept: 3, not_followed_up: 2, too_early: 1 }))).toBe("Mostly delivers, but went quiet on 2 promises");
+    expect(soWhat(card({ kept: 2, not_followed_up: 2, too_early: 1 }))).toBe("Mixed record: 0 missed, 2 gone quiet");
+    expect(soWhat(card({ kept: 4, partly: 1, too_early: 2 }))).toBe("Mostly delivers on what it promises");
+    expect(soWhat(card({ too_early: 6 }))).toBe("Too early to judge: nothing has come due yet");
+    expect(soWhat(card({}))).toBe("Nothing to judge yet");
+  });
+
+  it("names the model that ran, and the documents read", () => {
+    expect(modelNote({ model: { ran: true, reason: null, models: ["gemini:gemini-3.5-flash-lite"] } })).toBe("Verdicts by gemini-3.5-flash-lite, checked against later calls.");
+    expect(modelNote({ model: { ran: true, reason: null, models: ["gemini:gemini-3.5-flash", "gemini:gemini-3.5-flash-lite"] } })).toBe("Verdicts by gemini-3.5-flash and gemini-3.5-flash-lite, checked against later calls.");
+    expect(modelNote({ model: { ran: true, reason: null } })).toBe("Verdicts by an AI model, checked against later calls.");
+    const docs = [DOC, { ...DOC, id: "d3" }, { ...DOC, id: "d4" }, { ...DOC, id: "d5" }, REPORT];
+    expect(callCount({ documents: docs })).toBe(4);
+    expect(documentsLine({ documents: docs, generated_at: "2026-11-15T15:50:48+05:30" })).toBe(`4 calls + annual report read · updated ${dateLabel("2026-11-15T15:50:48+05:30")}`);
+    expect(documentsLine({ documents: [DOC], generated_at: "2026-11-15" })).toBe(`1 call read · updated ${dateLabel("2026-11-15")}`);
+  });
+
+  it("explains a company with too few calls", () => {
+    expect(tooFewCalls({ status: "statements_only", documents: [DOC, REPORT] })).toBe(true);
+    expect(tooFewCalls({ status: "statements_only", documents: [DOC, { ...DOC, id: "x" }] })).toBe(false);
+    expect(tooFewCalls({ status: "ready", documents: [DOC] })).toBe(false);
+    expect(fewCallsText({ documents: [DOC, REPORT] })).toBe("Only 1 earnings call found, so promises can't be checked yet");
+    expect(fewCallsText({ documents: [REPORT] })).toBe("No earnings call was found, so promises can't be checked yet");
+  });
+});
+
+describe("a promise in three lines", () => {
+  const topic = (what: string, kind = "other") => promiseTopic({ what, quote: what, kind });
+
+  it("names the topic in two to four words, cut from the promise's own words", () => {
+    expect(topic("Achieve full year AUM growth between 22% and 23%, more likely 22%.", "growth")).toBe("Full year AUM growth");
+    expect(topic("Expect industrial coatings growth to exceed decorative coatings.", "growth")).toBe("Industrial coatings growth");
+    expect(topic("Take the JobHai playbook to other cities")).toBe("JobHai playbook");
+  });
+
+  it("falls back on the kind when little is left", () => {
+    expect(topic("Expand 99Shorts to other major cities in FY27.", "launch")).toBe("99Shorts launch");
+  });
+
+  it("cuts an excerpt at a word, never inside one, and never rewords it", () => {
+    const quote = "We expect to deliver full year AUM growth of 22% to 23% as the festive quarter and the new products ramp up well";
+    const short = excerpt(quote, 60);
+    expect(short.endsWith("…")).toBe(true);
+    expect(short.length).toBeLessThanOrEqual(61);
+    expect(quote.startsWith(short.slice(0, -1))).toBe(true);
+    expect(excerpt("Short one.", 90)).toBe("Short one.");
+  });
+
+  it("says where it was said and where it was checked", () => {
+    const docs = new Map([["d1", DOC], ["d2", { ...DOC, id: "d2", period: "Q2 FY27" }]]);
+    const kept = { ...promise("a", "Kept", "d1"), verdict: { status: "Kept" as const, reason: "", downgraded: false, evidence: [{ doc: "d2", page: 4, quote: "q" }] } };
+    expect(sayingLine(kept, docs, null)).toBe("Said in Q1 FY27 call → checked in Q2 FY27 call");
+    const quiet = promise("b", "Not followed up");
+    expect(sayingLine(quiet, docs, { kept: 0, partly: 0, missed: 0, too_early: 0, total: 0, decided: 0, delivery_rate_pct: null, as_of_call: "Q2 FY27" })).toBe("Said in Q1 FY27 call → checked in Q2 FY27 call");
+    expect(sayingLine({ ...promise("c", "Too early"), target_period: "FY27", due: "2027-03-31" }, docs, null)).toBe("Said in Q1 FY27 call · due FY27");
+  });
+
+  it("sorts what is due soonest first, with undated last", () => {
+    const a = { ...promise("a", "Too early"), due: "2027-03-31" };
+    const b = { ...promise("b", "Too early"), due: "2026-12-31" };
+    const c = promise("c", "Too early");
+    expect([a, c, b].sort(byDue).map((p) => p.id)).toEqual(["b", "a", "c"]);
   });
 });

@@ -342,3 +342,16 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 120 unit tests, types, lint, build; Brief, Alerts, You and Research at 360 and 390 px, light and dark, no sideways scroll and no text below 4.5:1; 29 behaviour checks.
 
 **Not done:** the dot's "new" is per data refresh, not per alert (there is no per-alert read state).
+
+## Research redesign: verdict summary, bad-news-first promises (15 Nov 2026, "Chat R")
+
+**Asked:** make the Research screens calm, scannable and convincing; ENAM values "promised vs delivered" most. Frontend only, real data only, every quote word for word with its page.
+
+**Done:**
+- **Company page**, top to bottom: header (badge, name, price chip, then "4 calls + annual report read · updated 15 Nov 2026"); a verdict summary computed in code (`Delivered 2 of 5 promises that came due`, a stacked bar led by Missed, one plain "so what" line from fixed rules, "Verdicts by gemini-3.5-flash-lite, checked against later calls"); promises in bad-news-first groups (Missed, Not followed up, Partly, Kept; five per group, then "Show more"), each a three-line card: verdict chip and a 2-4 word topic cut from the promise's own words, a word-for-word excerpt of at most 80 characters, and "Said in Q3 FY26 call → checked in Q2 FY27 call"; tap for the full quote with "Open at page N", what a later call says, the numbers and the reason. "Too early" promises are one collapsed row ("15 promises are due later"), soonest due first. What management said about the future is collapsed, newest call first, three per call. Ask the documents has three example chips. A company with fewer than two calls (HAL) gets a calm explanation card instead of a fake verdict.
+- **Research home:** each company is three lines (badge, name, price chip; "Delivered 5 of 7 due" with a thin bar, or "Not enough calls yet"; "4 calls + annual report read · updated ...").
+- **Rules, all in `lib/research.ts` and unit-tested:** delivered = Kept + Partly out of Kept, Partly, Missed and Not followed up (Too early is not counted); the "so what" line; the topic and the excerpt (a prefix of the quote, never reworded).
+
+**Verified:** 129 unit tests, types, lint, build. In a phone-sized Chromium: 36 behaviour checks on the real shipped records (the summary numbers recomputed from the raw record, group order, at most five per group, every excerpt on screen is the unchanged start of a real quote, three lines per collapsed card, page links of the form `.pdf#page=N`, collapsed rows, HAL's explanation, the Interested-tab link into Research); 360 and 390 px, light and dark, no sideways scroll and no text below 4.5:1.
+
+**Not working / known:** the topic is cut by rules, so a few are clumsy ("Run off the specific"). The excerpt is the start of the quote, not the most telling part. The HAL card says "found", not "in the last 12 months", because the engine looked back 14 months. Verdicts on shipped companies were made by the cheap model (the strong model's free quota ran out earlier). Ask needs the live engine; with it asleep it says so.

@@ -21,8 +21,8 @@ function Source({ result, doc, page }: { result: AskResult; doc: string; page: n
     <span className="flex flex-wrap items-center gap-x-2 text-xs text-ink-faint">
       <span>{found?.title ? `${found.title}, page ${page}` : label}</span>
       {link && (
-        <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-medium text-ink-soft underline underline-offset-2">
-          Open at that page
+        <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center font-medium text-accent underline underline-offset-2">
+          Open at page {page}
         </a>
       )}
     </span>
@@ -91,7 +91,7 @@ export function AskBox({ symbol, suggestions }: { symbol: string; suggestions: s
           onChange={(event) => setQuestion(event.target.value)}
           maxLength={MAX}
           rows={2}
-          placeholder="For example: What did management say about capex?"
+          placeholder="Ask anything the filings might say, e.g. margins"
           className="w-full resize-none rounded-xl border border-line bg-surface px-3 py-2.5 text-base leading-6 placeholder:text-ink-faint"
         />
         <div className="mt-1 flex items-center justify-between text-xs text-ink-faint">

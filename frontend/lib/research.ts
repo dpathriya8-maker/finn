@@ -306,3 +306,126 @@ export function statementsByCall(statements: readonly Statement[]): { quarter: s
   }
   return [...groups.values()].sort((a, b) => b.doc.localeCompare(a.doc, undefined, { numeric: true }));
 }
+
+// ------------------------------------------------------------------------------------------------ the verdict summary
+/** Promises that came due and were judged: Kept and Partly are delivered; Missed and Not followed up are not. Too early is not counted. */
+export function decidedCounts(card: Scorecard): { delivered: number; due: number } {
+  const delivered = card.kept + card.partly;
+  return { delivered, due: delivered + card.missed + (card.not_followed_up ?? 0) };
+}
+
+/** "Delivered 5 of 7 promises that came due", or why there is nothing to count. Counted in code from the verdicts. */
+export function deliveredText(card: Scorecard): string {
+  const { delivered, due } = decidedCounts(card);
+  return due === 0 ? "No promise has come due yet" : `Delivered ${delivered} of ${due} promises that came due`;
+}
+
+/** The list-row version: "Delivered 5 of 7 due", or null when nothing is due yet. */
+export function deliveredShort(card: Scorecard | null): string | null {
+  if (!card) return null;
+  const { delivered, due } = decidedCounts(card);
+  return due === 0 ? null : `Delivered ${delivered} of ${due} due`;
+}
+
+/**
+ * One plain line on what the counts say, from fixed rules (never a model), bad news first:
+ * nothing due, "Missed more than it kept", mostly too early, "Mostly delivers, but went quiet on 2 promises", and so on.
+ */
+export function soWhat(card: Scorecard): string {
+  const { delivered, due } = decidedCounts(card);
+  const quiet = card.not_followed_up ?? 0;
+  if (due === 0) return card.too_early > 0 ? "Too early to judge: nothing has come due yet" : "Nothing to judge yet";
+  if (card.missed > delivered) return "Missed more than it kept";
+  if (card.too_early > due) return "Too early to judge most promises";
+  const rate = delivered / due;
+  if (quiet > 0 && rate >= 0.6) return `Mostly delivers, but went quiet on ${quiet} ${quiet === 1 ? "promise" : "promises"}`;
+  if (rate >= 0.75) return "Mostly delivers on what it promises";
+  return `Mixed record: ${card.missed} missed, ${quiet} gone quiet`;
+}
+
+/** "Verdicts by gemini-3.5-flash-lite, checked against later calls." The model name is the one the record says ran. */
+export function modelNote(record: Pick<ResearchRecord, "model">): string {
+  const names = [...new Set((record.model.models ?? []).map((m) => m.split(":").pop() ?? m))];
+  return `Verdicts by ${names.length > 0 ? names.join(" and ") : "an AI model"}, checked against later calls.`;
+}
+
+export function callCount(record: Pick<ResearchRecord, "documents">): number {
+  return record.documents.filter((d) => d.kind === "transcript").length;
+}
+
+/** "4 calls + annual report read · updated 15 Nov". */
+export function documentsLine(record: Pick<ResearchRecord, "documents" | "generated_at">): string {
+  const calls = callCount(record);
+  const report = record.documents.some((d) => d.kind === "annual_report");
+  const read = [calls > 0 ? `${calls} ${calls === 1 ? "call" : "calls"}` : "", report ? "annual report" : ""].filter(Boolean).join(" + ");
+  return `${read || "No filings"} read · updated ${dateLabel(record.generated_at)}`;
+}
+
+/** A company with fewer than two earnings calls cannot have a promise checked against a later call. */
+export function tooFewCalls(record: Pick<ResearchRecord, "documents" | "status">): boolean {
+  return record.status !== "ready" && callCount(record) < 2;
+}
+
+export function fewCallsText(record: Pick<ResearchRecord, "documents">): string {
+  const calls = callCount(record);
+  return calls === 0
+    ? "No earnings call was found, so promises can't be checked yet"
+    : `Only ${calls} earnings call found, so promises can't be checked yet`;
+}
+
+// ------------------------------------------------------------------------------------------------ a promise in three lines
+const LEADING_VERBS = new Set([
+  "achieve", "add", "aim", "become", "bring", "build", "commission", "complete", "continue", "cut", "deliver", "double", "expand",
+  "expect", "get", "grow", "have", "hire", "improve", "increase", "introduce", "invest", "launch", "maintain", "open", "reach",
+  "reduce", "roll", "scale", "see", "take", "target", "train", "triple",
+]);
+const SKIP = new Set(["a", "an", "the", "all", "its", "our", "their", "more", "to", "of", "in", "on", "for", "by", "that"]);
+const STOP = new Set(["to", "between", "from", "by", "in", "than", "and", "at", "for", "with", "as", "that", "which", "is", "are", "will", "be"]);
+
+/**
+ * Two to four words naming what a promise is about, cut out of the promise's own words by fixed rules:
+ * "Achieve full year AUM growth between 22% and 23%" -> "Full year AUM growth". A very short result takes its kind as a tail.
+ */
+export function promiseTopic(promise: Pick<TrackedPromise, "what" | "quote" | "kind">): string {
+  const words = (promise.what || promise.quote).replace(/[.,;:()“”"]/g, " ").split(/\s+/).filter(Boolean);
+  while (words.length > 0 && (LEADING_VERBS.has(words[0].toLowerCase()) || SKIP.has(words[0].toLowerCase()))) words.shift();
+  const kept: string[] = [];
+  for (const word of words) {
+    const lower = word.toLowerCase();
+    if (STOP.has(lower)) {
+      if (kept.length >= 1) break;
+      continue;
+    }
+    if (/^[\d%₹.,-]+$/.test(word)) continue;
+    kept.push(word);
+    if (kept.length === 4) break;
+  }
+  if (kept.length < 2 && ["growth", "launch", "margin", "cost", "capex"].includes(promise.kind)) kept.push(promise.kind);
+  const text = kept.join(" ") || (promise.what || promise.quote).split(/\s+/).slice(0, 3).join(" ");
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/** The start of a quote, at most `max` characters, cut at a word boundary with "…"; never reworded. */
+export function excerpt(text: string, max = 90): string {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean;
+  const cut = clean.slice(0, max).replace(/\s+\S*$/, "").replace(/[ ,;:\-–]+$/, "");
+  return `${cut || clean.slice(0, max)}…`;
+}
+
+/** "Said in Q3 FY26 call → checked in Q2 FY27 call", or for one not due yet "Said in Q3 FY26 call · due FY27". */
+export function sayingLine(promise: TrackedPromise, docs: ReadonlyMap<string, ResearchDocument>, card: Scorecard | null): string {
+  const said = `Said in ${promise.quarter} call`;
+  if (promise.verdict.status === "Too early") {
+    const due = dueText(promise);
+    return due ? `${said} · due ${promise.target_period ?? due}` : said;
+  }
+  const lastEvidence = [...promise.verdict.evidence].reverse().map((e) => docs.get(e.doc)?.period).find(Boolean);
+  const checked = lastEvidence ?? card?.as_of_call;
+  return checked ? `${said} → checked in ${checked} call` : said;
+}
+
+/** Soonest due first; a promise with no date last. */
+export function byDue(a: TrackedPromise, b: TrackedPromise): number {
+  return (a.due ?? "9999").localeCompare(b.due ?? "9999") || a.quarter.localeCompare(b.quarter);
+}
