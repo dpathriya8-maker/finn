@@ -7,6 +7,8 @@ export function SwitchRow({
   checked,
   onChange,
   ariaLabel,
+  dim = false,
+  tag,
 }: {
   label: string;
   hint?: string;
@@ -14,6 +16,9 @@ export function SwitchRow({
   onChange: (next: boolean) => void;
   /** What a screen reader says instead of the visible text, when the visible text alone would leave "on" ambiguous. */
   ariaLabel?: string;
+  /** The row is switched off and shown grey, with `tag` beside the name. */
+  dim?: boolean;
+  tag?: string;
 }) {
   return (
     <button
@@ -22,10 +27,13 @@ export function SwitchRow({
       aria-checked={checked}
       aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
-      className="flex min-h-14 w-full items-center justify-between gap-4 px-4 py-2 text-left"
+      className={`flex min-h-14 w-full items-center justify-between gap-4 px-4 py-2 text-left ${dim ? "bg-backdrop" : ""}`}
     >
       <span className="min-w-0">
-        <span className="block text-sm font-medium">{label}</span>
+        <span className={`block text-sm font-medium ${dim ? "text-ink-faint" : ""}`}>
+          {label}
+          {tag && <span className="ml-2 rounded bg-line px-1.5 py-0.5 text-xs font-medium text-ink-soft">{tag}</span>}
+        </span>
         {hint && <span className="block text-xs leading-5 text-ink-faint">{hint}</span>}
       </span>
       <span

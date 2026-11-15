@@ -3,10 +3,13 @@
 import { useState, type ReactNode } from "react";
 import { WindowPicker } from "@/components/brief/WindowPicker";
 import { RangeSetting, SwitchRow } from "@/components/settings/controls";
+import Link from "next/link";
 import { PersonIcon } from "@/components/ui/Icons";
 import { filingAlerts, signalAlerts } from "@/lib/alerts";
 import { windowLabel } from "@/lib/brief";
-import { hueFor } from "@/lib/headline";
+import { hueFor, shortName } from "@/lib/headline";
+import { formatInr, parseAmountInput, setInvested, totalInvested, useInvested } from "@/lib/invested";
+import type { ResearchIndex } from "@/lib/research";
 import { nameInitials, setProfileName, useProfileName } from "@/lib/profile";
 import { resetSettings, setAlertCategory, setMuted, updateSettings, useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
@@ -76,6 +79,63 @@ function Profile() {
   );
 }
 
+/** One company's invested amount: validated as you type (a number of rupees, 0 or more), kept on this phone. */
+function AmountRow({ symbol, name, saved }: { symbol: string; name: string; saved: number | undefined }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const shown = draft ?? (saved ? String(saved) : "");
+  const invalid = !parseAmountInput(shown).valid;
+  const id = `amount-${symbol}`;
+  return (
+    <div className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
+      <label htmlFor={id} className="min-w-0 text-sm font-medium">
+        <span className="block truncate">{name}</span>
+        <span className={`block text-xs font-normal ${invalid ? "text-bad" : "text-ink-faint"}`}>{invalid ? "Enter a number of rupees, 0 or more" : "Amount invested (₹)"}</span>
+      </label>
+      <input
+        id={id}
+        type="text"
+        inputMode="decimal"
+        autoComplete="off"
+        value={shown}
+        placeholder="Optional"
+        aria-invalid={invalid}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          const parsed = parseAmountInput(event.target.value);
+          if (parsed.valid) setInvested(symbol, parsed.value);
+        }}
+        onBlur={() => setDraft(null)}
+        className={`min-h-11 w-32 shrink-0 rounded-xl border bg-page px-3 text-right text-base tabular-nums placeholder:text-ink-faint ${invalid ? "border-bad" : "border-line"}`}
+      />
+    </div>
+  );
+}
+
+/** The companies being researched, not held: "Watching". */
+function Watching() {
+  const index = useJson<ResearchIndex>("/data/research/index.json");
+  if (index.kind !== "ready" || index.data.companies.length === 0) return null;
+  return (
+    <>
+      <h3 className="mt-7 text-sm font-semibold">Watching</h3>
+      <p className="mt-0.5 text-xs text-ink-faint">Companies you are researching, from the Interested tab.</p>
+      <Card>
+        {index.data.companies.map((c) => (
+          <Link key={c.symbol} href={`/research?symbol=${encodeURIComponent(c.symbol)}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-medium">{shortName(c.name)}</span>
+              <span className="block text-xs text-ink-faint">{c.symbol}</span>
+            </span>
+            <span aria-hidden="true" className="text-ink-faint">
+              ›
+            </span>
+          </Link>
+        ))}
+      </Card>
+    </>
+  );
+}
+
 const PRINCIPLES = [
   { lead: "Bad news first.", text: "Risks and misses rank above good news, and every card says why it ranked where it did." },
   { lead: "Every claim has a source.", text: "Numbers and quotes link back to the filing and the page. If the documents do not say it, FINN says so." },
@@ -93,6 +153,7 @@ export function YouScreen() {
   const configState = useJson<AppConfig>("/data/config.json");
   const config = configState.kind === "ready" ? configState.data : null;
   const settings = useSettings(config);
+  const invested = useInvested();
 
   if (configState.kind === "loading" || briefState.kind === "loading") {
     return <div className="h-64 animate-pulse rounded-2xl bg-line" aria-label="Loading your settings" />;
@@ -115,6 +176,7 @@ export function YouScreen() {
   const categories = [...config.categories].sort((a, b) => b.weight - a.weight);
   const companies = [...brief.companies].sort((a, b) => a.name.localeCompare(b.name));
   const muted = new Set(settings.mutedSymbols);
+  const total = totalInvested(invested, companies.map((c) => c.symbol));
 
   return (
     <div>
@@ -124,20 +186,37 @@ export function YouScreen() {
         id="muted"
         title="My portfolio"
         count={`${companies.length} companies${muted.size > 0 ? ` · ${muted.size} muted` : ""}`}
-        hint="The companies FINN watches for you. Switch one on to mute it: a muted company is left out of the Brief and of Alerts."
+        hint="The companies FINN watches for you. Switch one off to leave it out of the Brief and of Alerts."
       >
+        <h3 className="mt-4 text-sm font-semibold">Show in my brief</h3>
         <Card>
           {companies.map((c) => (
             <SwitchRow
               key={c.symbol}
               label={c.name}
-              ariaLabel={`Mute ${c.name}`}
-              hint={`${c.symbol} · ${c.sector}${muted.has(c.symbol) ? " · muted" : ""}`}
-              checked={muted.has(c.symbol)}
-              onChange={(on) => setMuted(c.symbol, on)}
+              ariaLabel={c.name}
+              hint={`${c.symbol} · ${c.sector}`}
+              checked={!muted.has(c.symbol)}
+              dim={muted.has(c.symbol)}
+              tag={muted.has(c.symbol) ? "Muted" : undefined}
+              onChange={(on) => setMuted(c.symbol, !on)}
             />
           ))}
         </Card>
+      </Section>
+
+      <Section
+        id="investments"
+        title="My investments"
+        count={total > 0 ? `Total invested ${formatInr(total)}` : undefined}
+        hint="Optional. How much you have put into each company, kept on this phone only. The Brief uses it to show what a day's move means in rupees."
+      >
+        <Card>
+          {companies.map((c) => (
+            <AmountRow key={c.symbol} symbol={c.symbol} name={shortName(c.name)} saved={invested[c.symbol]} />
+          ))}
+        </Card>
+        <Watching />
       </Section>
 
       <Section id="preferences" title="Preferences" hint="You decide what counts as news. Changes apply at once.">
