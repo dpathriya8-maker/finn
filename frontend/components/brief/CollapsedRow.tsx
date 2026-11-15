@@ -22,7 +22,7 @@ export function CollapsedRow({
   if (items.length === 0) return null;
 
   return (
-    <section className="mt-8 rounded-2xl border border-line">
+    <section className="mt-8 rounded-2xl border border-line bg-surface">
       <button
         type="button"
         aria-expanded={open}

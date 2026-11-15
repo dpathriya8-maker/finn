@@ -10,6 +10,9 @@ import {
   numbersText,
   orderPromises,
   pageLink,
+  promiseCounts,
+  promiseHeadline,
+  scorecardTone,
   runResearchFlow,
   sourceLabel,
   STATUS_LOOK,
@@ -220,5 +223,34 @@ describe("runResearchFlow", () => {
     resolveRead?.();
     await new Promise((r) => setTimeout(r, 10));
     expect(reads).toBe(1);
+  });
+});
+
+describe("a research company as a list row", () => {
+  const card = (over: Partial<Scorecard>): Scorecard => ({ kept: 0, partly: 0, missed: 0, too_early: 0, total: 0, decided: 0, delivery_rate_pct: null, ...over });
+
+  it("puts the delivery rate in the bold line, or says why there is none", () => {
+    expect(promiseHeadline(card({ decided: 3, delivery_rate_pct: 67 }), "ready")).toBe("67% of judged promises delivered");
+    expect(promiseHeadline(card({ decided: 1 }), "ready")).toBe("Only 1 promise judged so far");
+    expect(promiseHeadline(card({ decided: 4 }), "ready")).toBe("Only 4 promises judged so far");
+    expect(promiseHeadline(card({}), "ready")).toBe("No promise could be judged yet");
+    expect(promiseHeadline(null, "statements_only")).toBe("No verdict yet");
+    expect(promiseHeadline(null, "no_documents")).toBe("No filings to read yet");
+  });
+
+  it("lists the counts with bad news first and leaves zeros out", () => {
+    expect(promiseCounts(card({ kept: 2, missed: 1, not_followed_up: 2, too_early: 15 }))).toBe("1 missed, 2 not followed up, 2 kept, 15 too early");
+    expect(promiseCounts(card({ kept: 1, too_early: 9 }))).toBe("1 kept, 9 too early");
+    expect(promiseCounts(card({}))).toBe("Nothing to judge yet");
+  });
+
+  it("colours by rule: a miss no smaller than the kept is bad; anything missed, partly kept or unanswered is watch; kept alone is good", () => {
+    expect(scorecardTone(card({ kept: 1, missed: 1 }))).toBe("bad");
+    expect(scorecardTone(card({ kept: 2, missed: 1 }))).toBe("watch");
+    expect(scorecardTone(card({ kept: 3, partly: 1 }))).toBe("watch");
+    expect(scorecardTone(card({ kept: 3, not_followed_up: 1 }))).toBe("watch");
+    expect(scorecardTone(card({ kept: 1, too_early: 9 }))).toBe("good");
+    expect(scorecardTone(card({ too_early: 4 }))).toBe("neutral");
+    expect(scorecardTone(null)).toBe("neutral");
   });
 });

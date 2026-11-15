@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useState } from "react";
 import { SignalCard } from "@/components/alerts/SignalCard";
-import { FilingCard } from "@/components/brief/FilingCard";
-import { WindowPicker } from "@/components/brief/WindowPicker";
+import { CompanyCard } from "@/components/brief/CompanyCard";
+import { PricesProvider } from "@/components/brief/PricesContext";
 import { filingAlerts, signalAlerts } from "@/lib/alerts";
-import { GROUP_LIMIT, whenLabel, windowLabel } from "@/lib/brief";
-import { updateSettings, useSettings } from "@/lib/settings";
+import { GROUP_LIMIT, groupByCompany, whenLabel } from "@/lib/brief";
+import { useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
 
@@ -32,7 +32,7 @@ export function AlertsScreen() {
   }
   if (briefState.kind === "error") {
     return (
-      <section className="rounded-2xl border border-line p-5">
+      <section className="rounded-2xl border border-line bg-surface p-5">
         <h2 className="text-base font-medium text-watch">Your alerts are unavailable right now</h2>
         <p className="mt-1 text-sm leading-6 text-ink-soft">The data file could not be loaded. Check your connection and reload.</p>
       </section>
@@ -45,16 +45,12 @@ export function AlertsScreen() {
   const total = signals.length + filings.length;
   const kinds = Object.values(settings.alertCategories).filter(Boolean).length;
   const shownSignals = allSignals ? signals : signals.slice(0, GROUP_LIMIT);
-  const shownFilings = allFilings ? filings : filings.slice(0, GROUP_LIMIT);
+  const filingGroups = groupByCompany(filings);
+  const shownFilings = allFilings ? filingGroups : filingGroups.slice(0, GROUP_LIMIT);
 
   return (
-    <div>
-      <WindowPicker value={settings.windowHours} onChange={(windowHours) => updateSettings({ windowHours })} />
-
-      <p className="mt-5 text-lg font-semibold tracking-tight">
-        {total === 0 ? "No alerts" : `${total} ${total === 1 ? "alert" : "alerts"}`}
-        <span className="block text-sm font-normal text-ink-soft">in the last {windowLabel(settings.windowHours)}</span>
-      </p>
+    <PricesProvider brief={brief}>
+      <p className="text-lg font-semibold tracking-tight">{total === 0 ? "No alerts" : `${total} ${total === 1 ? "alert" : "alerts"}`}</p>
 
       <p className="mt-3 rounded-xl bg-line px-3 py-2 text-xs leading-5 text-ink-soft">
         Your lines: price moves above ±{settings.priceMovePct}%, volume above {settings.volumeMultiple}× its 20-day average,{" "}
@@ -90,13 +86,13 @@ export function AlertsScreen() {
           <h2 className="flex items-baseline gap-2 text-sm font-semibold">
             Filings you asked about <span className="text-xs font-normal text-ink-faint">{filings.length}</span>
           </h2>
-          <p className="mt-0.5 text-xs text-ink-faint">The kinds of filing you switched on in Settings</p>
+          <p className="mt-0.5 text-xs text-ink-faint">The kinds of filing you switched on under You</p>
           <div className="mt-3 flex flex-col gap-3">
-            {shownFilings.map((item) => (
-              <FilingCard key={item.id} item={item} referenceIso={brief.generated_at} size="md" />
+            {shownFilings.map((group) => (
+              <CompanyCard key={group.symbol} group={group} referenceIso={brief.generated_at} size="md" />
             ))}
           </div>
-          <ShowMore hidden={filings.length - shownFilings.length} onClick={() => setAllFilings(true)} />
+          <ShowMore hidden={filingGroups.length - shownFilings.length} onClick={() => setAllFilings(true)} />
         </section>
       )}
 
@@ -110,6 +106,6 @@ export function AlertsScreen() {
       <p className="mx-auto mt-4 max-w-xs text-center text-xs leading-5 text-ink-faint">
         FINN checks when you open it. Push notifications to your phone are not part of this version.
       </p>
-    </div>
+    </PricesProvider>
   );
 }

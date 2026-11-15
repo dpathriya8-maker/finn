@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { highlightsTitle } from "@/lib/brief";
-import { cardHeadline, hueFor, initials, shortName } from "@/lib/headline";
+import { cardHeadline, filingHeadline, hueFor, initials, shortName } from "@/lib/headline";
 import { closeCaption, completeSessions, moveLook, priceView, sparkPoints, trendLabel } from "@/lib/prices";
 import type { Session } from "@/lib/types";
 
@@ -81,7 +81,35 @@ describe("company names and headlines", () => {
       metrics: [metric("revenue", 12.34), metric("pat", -3.1)], margins: {}, warnings: [], check: { status: "ok" as const, against: "", note: "" },
       tone: "neutral" as const, tone_reason: "", extractor: "",
     };
-    expect(cardHeadline({ company: "ITC Ltd", headline: "x", card })).toBe("ITC Q2 FY27: revenue ▲ 12.3%, profit ▼ 3.1% YoY");
+    expect(cardHeadline({ company: "ITC Ltd", headline: "x", card })).toBe("ITC Q2 FY27: revenue ▲\u00a012.3%, profit ▼\u00a03.1% YoY");
+  });
+});
+
+describe("the headline of a filing under its company's header", () => {
+  it("leaves the company's name out, because the header already says it", () => {
+    expect(filingHeadline({ company: "Trent Ltd", headline: "Trent: fixes a date for its AGM", card: undefined })).toBe("fixes a date for its AGM");
+    expect(filingHeadline({ company: "Trent Ltd", headline: "Execution of Joint Venture", card: undefined })).toBe("Execution of Joint Venture");
+  });
+  it("keeps a long subject to about two phone lines", () => {
+    const text = filingHeadline({ company: "Trent Ltd", headline: "Credit rating reaffirmed at AA+ by CRISIL for the long-term bank facilities of the company and its subsidiaries", card: undefined });
+    expect(text.length).toBeLessThanOrEqual(84);
+    expect(text.endsWith("…")).toBe(true);
+  });
+  it("says what changed on a results filing, from the figures, without the name", () => {
+    const metric = (key: "revenue" | "pat", yoy_pct: number | null) => ({
+      key, label: key, current: 1, previous: 1, year_ago: 1, qoq_pct: null, yoy_pct, qoq_swing: null, yoy_swing: null, printed: { label: "", page: 1, tokens: [] },
+    });
+    const card = {
+      type: "results" as const, status: "ok" as const, verification: null, basis: "consolidated" as const, unit_printed: null,
+      period: { label: "Q2 FY27", current: null, previous: null, year_ago: null }, source: { url: null, pages: [] },
+      metrics: [metric("revenue", 12.34), metric("pat", -3.1)], margins: {}, warnings: [], check: { status: "ok" as const, against: "", note: "" },
+      tone: "neutral" as const, tone_reason: "", extractor: "",
+    };
+    expect(filingHeadline({ company: "ITC Ltd", headline: "x", card })).toBe("Q2 FY27: revenue ▲\u00a012.3%, profit ▼\u00a03.1% YoY");
+  });
+  it("falls back to the exchange's words when the results could not be read", () => {
+    const failed = { type: "results" as const, status: "failed" as const, reason: "scanned", extractor: "" };
+    expect(filingHeadline({ company: "ITC Ltd", headline: "Financial Results", card: failed })).toBe("Financial Results");
   });
 });
 

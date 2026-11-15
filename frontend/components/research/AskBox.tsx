@@ -32,7 +32,7 @@ function Source({ result, doc, page }: { result: AskResult; doc: string; page: n
 function Result({ result }: { result: AskResult }) {
   if (result.status === "not_found") {
     return (
-      <div role="status" className="rounded-2xl border border-line p-4">
+      <div role="status" className="rounded-2xl border border-line bg-surface p-4">
         <p className="text-base font-semibold">Not found in the documents</p>
         <p className="mt-1 text-sm leading-6 text-ink-soft">The filings FINN has read do not say. It does not guess, and it does not use anything outside them.</p>
       </div>
@@ -70,7 +70,7 @@ export function AskBox({ symbol, suggestions }: { symbol: string; suggestions: s
   }
 
   return (
-    <section aria-labelledby="ask-title" className="rounded-2xl border border-line p-4">
+    <section aria-labelledby="ask-title" className="rounded-2xl border border-line bg-surface p-4">
       <h2 id="ask-title" className="text-sm font-semibold">
         Ask the documents
       </h2>

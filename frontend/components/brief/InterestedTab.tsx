@@ -1,91 +1,117 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
+import { Chevron } from "@/components/brief/Chevron";
+import { TONE } from "@/components/brief/tone";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { VerdictBar } from "@/components/ui/Charts";
-import { StarIcon } from "@/components/ui/Icons";
+import { BarChartIcon, StarIcon } from "@/components/ui/Icons";
 import { PreviewBadge } from "@/components/ui/Preview";
-import { Avatar, PriceChip } from "@/components/ui/Price";
+import { Avatar, PriceLine, PriceTrend } from "@/components/ui/Price";
 import { toggleFollow, useFollow } from "@/lib/follow";
 import { shortName } from "@/lib/headline";
 import { peopleFromBrief, plainName, type PersonEntry } from "@/lib/people";
-import { dateLabel, type IndexEntry, type ResearchIndex, type ResearchRecord } from "@/lib/research";
+import { dateLabel, promiseCounts, promiseHeadline, scorecardTone, type IndexEntry, type ResearchIndex, type ResearchRecord } from "@/lib/research";
 import type { Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
 import { useCompanyPrices } from "@/lib/useSessions";
 
 const PEOPLE_SHOWN = 5;
 
-function FollowStar({ name, on, onToggle }: { name: string; on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={on}
-      aria-label={on ? `Following ${name}. Tap to stop` : `Follow ${name}`}
-      onClick={onToggle}
-      className={`-mr-2 inline-flex size-11 shrink-0 items-center justify-center rounded-full ${on ? "text-watch" : "text-ink-faint"}`}
-    >
-      <StarIcon filled={on} size={20} />
-    </button>
-  );
-}
-
-/** One company the reader is interested in: price, what management promised and kept, the way into the research. */
+/**
+ * One company the reader is researching, in the same three lines as a filing:
+ *   line 1  badge, short name, price chip
+ *   line 2  what the Promise Tracker says, bold
+ *   line 3  small and grey: icon, "Promises", the counts (bad news first), and the tone
+ * The verdict bar, the way into the research, Follow and Invest are one tap away.
+ */
 function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: string) => void }) {
   const prices = useCompanyPrices(entry.symbol);
   const record = useJson<ResearchRecord>(`/data/research/${encodeURIComponent(entry.symbol)}.json`);
   const follow = useFollow();
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
   const followed = follow.companies.includes(entry.symbol);
   const name = shortName(entry.name);
   const card = record.kind === "ready" && record.data.status === "ready" ? record.data.scorecard : null;
+  const tone = TONE[scorecardTone(card)];
 
   return (
-    <article className="rounded-2xl border border-line bg-surface p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <Avatar symbol={entry.symbol} name={entry.name} size={38} />
-          <div className="min-w-0">
-            <h3 className="text-base font-semibold leading-tight">{name}</h3>
-            <p className="text-xs text-ink-faint">{entry.symbol}</p>
+    <article aria-label={name} className="relative min-w-0 overflow-hidden rounded-2xl border border-line bg-surface">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => setOpen((value) => !value)}
+        className={`block min-h-11 w-full min-w-0 border-l-4 px-3 py-3 text-left ${card && scorecardTone(card) !== "neutral" ? tone.border : "border-l-transparent"}`}
+      >
+        <span className="flex min-w-0 items-center gap-2.5">
+          <Avatar symbol={entry.symbol} name={entry.name} size={32} />
+          <span className="flex min-w-0 flex-1 items-center gap-1.5">
+            <span className="truncate text-sm font-semibold text-ink">{name}</span>
+            {followed && (
+              <span className="shrink-0 text-watch" role="img" aria-label="Following">
+                <StarIcon filled size={12} />
+              </span>
+            )}
+          </span>
+          <PriceLine sessions={prices.sessions} generatedAt={prices.generatedAt} />
+        </span>
+        <span className="mt-2 line-clamp-2 break-words text-base font-semibold leading-snug">{promiseHeadline(card, entry.status)}</span>
+        <span className="mt-1 flex min-w-0 items-center gap-1.5 text-xs leading-5 text-ink-faint">
+          <span className="shrink-0">
+            <BarChartIcon size={14} />
+          </span>
+          <span className="shrink-0 whitespace-nowrap font-medium text-ink-soft">Promises</span>
+          <span className="min-w-0 flex-1 truncate">
+            {card ? promiseCounts(card) : entry.status === "statements_only" ? "What management said is in the research" : "Open the research to read the filings"}
+          </span>
+          {tone.tag && card && <span className={`shrink-0 whitespace-nowrap rounded px-1.5 font-medium ${tone.chip}`}>{tone.tag}</span>}
+          <span className="shrink-0">
+            <Chevron open={open} />
+          </span>
+        </span>
+      </button>
+
+      {open && (
+        <div id={panelId} className="min-w-0 border-t border-line px-3 py-3">
+          <div className="flex min-w-0 items-center justify-between gap-3">
+            <p className="min-w-0 truncate text-xs text-ink-faint">{entry.name} ({entry.symbol})</p>
+            <PriceTrend sessions={prices.sessions} generatedAt={prices.generatedAt} />
           </div>
+          {card && (
+            <div className="mt-3">
+              <VerdictBar card={card} />
+              <p className="mt-1.5 text-xs text-ink-faint">Promise Tracker{card.as_of_call ? `, as of the ${card.as_of_call} call` : ""}</p>
+            </div>
+          )}
+          <div className="mt-3 flex gap-2">
+            <Link
+              href={`/research?symbol=${encodeURIComponent(entry.symbol)}`}
+              className="inline-flex min-h-11 min-w-0 flex-1 items-center justify-center rounded-full border border-line text-sm font-medium"
+            >
+              Open research
+            </Link>
+            <button
+              type="button"
+              aria-pressed={followed}
+              onClick={() => toggleFollow("companies", entry.symbol)}
+              className={`inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full border text-sm font-medium ${followed ? "border-ink bg-backdrop" : "border-line"}`}
+            >
+              <StarIcon filled={followed} size={16} />
+              {followed ? "Following" : "Follow"}
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={() => onInvest(name)}
+            className="mt-2 inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-ink text-sm font-medium text-surface"
+          >
+            Invest <PreviewBadge className="border-surface/60 text-surface" />
+          </button>
         </div>
-        <div className="flex items-start gap-1">
-          <PriceChip sessions={prices.sessions} generatedAt={prices.generatedAt} />
-          <FollowStar name={name} on={followed} onToggle={() => toggleFollow("companies", entry.symbol)} />
-        </div>
-      </div>
-
-      <div className="mt-3">
-        {card ? (
-          <>
-            <VerdictBar card={card} />
-            <p className="mt-1.5 text-xs text-ink-faint">
-              Promise Tracker{card.as_of_call ? `, as of the ${card.as_of_call} call` : ""}
-            </p>
-          </>
-        ) : (
-          <p className="text-xs leading-5 text-ink-soft">
-            {entry.status === "statements_only" ? "No verdict yet: what management said is in the research." : "Open the research to read the filings."}
-          </p>
-        )}
-      </div>
-
-      <div className="mt-3 flex gap-2">
-        <Link
-          href={`/research?symbol=${encodeURIComponent(entry.symbol)}`}
-          className="inline-flex min-h-11 flex-1 items-center justify-center rounded-full border border-line text-sm font-medium"
-        >
-          Open research
-        </Link>
-        <button
-          type="button"
-          onClick={() => onInvest(name)}
-          className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full bg-ink text-sm font-medium text-surface"
-        >
-          Invest <PreviewBadge className="border-surface/60 text-surface" />
-        </button>
-      </div>
+      )}
     </article>
   );
 }
@@ -159,7 +185,7 @@ export function InterestedTab() {
   if (index.kind === "loading") return <div className="h-48 animate-pulse rounded-2xl bg-line" aria-label="Loading" />;
   if (index.kind === "error") {
     return (
-      <section className="rounded-2xl border border-line p-5">
+      <section className="rounded-2xl border border-line bg-surface p-5">
         <h2 className="text-base font-medium text-watch">The list is unavailable right now</h2>
         <p className="mt-1 text-sm leading-6 text-ink-soft">The data file could not be loaded. Check your connection and reload.</p>
       </section>
@@ -168,7 +194,7 @@ export function InterestedTab() {
   const companies = [...index.data.companies].sort((a, b) => Number(follow.companies.includes(b.symbol)) - Number(follow.companies.includes(a.symbol)));
   return (
     <div>
-      <p className="text-xs leading-5 text-ink-soft">Companies you are researching. Tap the star to follow one; it stays in this browser.</p>
+      <p className="text-xs leading-5 text-ink-soft">Companies you are researching. Tap one to open it and follow it; this stays in this browser.</p>
       <div className="mt-3 space-y-3">
         {companies.map((entry) => (
           <CompanyRow key={entry.symbol} entry={entry} onInvest={setInvestIn} />

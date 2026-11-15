@@ -3,7 +3,7 @@
 export const TONE = {
   bad: { border: "border-l-bad", chip: "bg-bad-bg text-bad", tag: "Risk", text: "text-bad" },
   watch: { border: "border-l-watch", chip: "bg-watch-bg text-watch", tag: "Watch", text: "text-watch" },
-  good: { border: "border-l-good", chip: "bg-good-bg text-good", tag: "Good news", text: "text-good" },
+  good: { border: "border-l-good", chip: "bg-good-bg text-good", tag: "Good", text: "text-good" },
   neutral: { border: "border-l-line", chip: "", tag: "", text: "text-ink" },
 } as const;
 

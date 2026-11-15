@@ -6,17 +6,21 @@ export function SwitchRow({
   hint,
   checked,
   onChange,
+  ariaLabel,
 }: {
   label: string;
   hint?: string;
   checked: boolean;
   onChange: (next: boolean) => void;
+  /** What a screen reader says instead of the visible text, when the visible text alone would leave "on" ambiguous. */
+  ariaLabel?: string;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      aria-label={ariaLabel}
       onClick={() => onChange(!checked)}
       className="flex min-h-14 w-full items-center justify-between gap-4 px-4 py-2 text-left"
     >

@@ -40,6 +40,31 @@ export function groupItems(items: readonly Item[]): Groups {
   return groups;
 }
 
+/** One company's filings in the window, most important first. `top` is the priority of the first. */
+export type CompanyGroup = { symbol: string; company: string; items: Item[]; top: number };
+
+/**
+ * The filings that matter (high and medium), gathered under one company each. Companies come in the order of
+ * their most important filing, so a risk anywhere in a company brings the whole company up. Within a company the
+ * order is the same: most important first, newest first among equals. Input must already be sorted that way
+ * (`groupItems` does it), which makes the first filing seen for a company its top one.
+ */
+export function groupByCompany(items: readonly Item[]): CompanyGroup[] {
+  const byCompany = new Map<string, CompanyGroup>();
+  for (const item of items) {
+    const group = byCompany.get(item.symbol);
+    if (group) group.items.push(item);
+    else byCompany.set(item.symbol, { symbol: item.symbol, company: item.company, items: [item], top: item.priority });
+  }
+  return [...byCompany.values()];
+}
+
+/** The two priority sections of the Brief as companies: those with a filing at HIGH_MIN or above, and the rest. */
+export function companySections(groups: Groups): { needs: CompanyGroup[]; worth: CompanyGroup[] } {
+  const all = groupByCompany([...groups.high, ...groups.medium]);
+  return { needs: all.filter((g) => g.top >= HIGH_MIN), worth: all.filter((g) => g.top < HIGH_MIN) };
+}
+
 /** The "N things that matter" in the headline: what needs attention plus what is worth a look. */
 export function thingsThatMatter(groups: Groups): number {
   return groups.high.length + groups.medium.length;

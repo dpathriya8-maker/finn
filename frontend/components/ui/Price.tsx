@@ -32,7 +32,7 @@ export function PriceChip({ sessions, generatedAt, spark = true }: { sessions?: 
   if (!view) return null;
   const move = moveLook(view.changePct);
   return (
-    <span className="flex shrink-0 items-center gap-2.5">
+    <span className="relative flex shrink-0 items-center gap-2.5">
       {spark && <Sparkline view={view} />}
       <span className="block text-right leading-tight tabular-nums">
         <span className="block text-sm font-semibold text-ink">{formatPrice(view.close)}</span>
@@ -41,6 +41,40 @@ export function PriceChip({ sessions, generatedAt, spark = true }: { sessions?: 
           {move.text}
         </span>
         <span className="block text-[11px] text-ink-faint">{closeCaption(view.day)}</span>
+      </span>
+    </span>
+  );
+}
+
+/**
+ * "₹3,430.00 ▼ 1.55%" on one line, the whole chip never wider than it needs and never shrunk or wrapped, so a long company
+ * name gives way to it and not the other way round. The move is red, green or grey and also written in words for a screen
+ * reader. No sparkline and no date: those are one tap away. `relative` keeps the screen-reader text inside the chip.
+ */
+export function PriceLine({ sessions, generatedAt }: { sessions?: readonly Session[] | null; generatedAt?: string }) {
+  const view = priceView(sessions, generatedAt);
+  if (!view) return null;
+  const move = moveLook(view.changePct);
+  return (
+    <span className="relative flex shrink-0 items-baseline gap-1.5 whitespace-nowrap rounded-full bg-backdrop px-2.5 py-1 tabular-nums">
+      <span className="text-sm font-semibold text-ink">{formatPrice(view.close)}</span>
+      <span className={`text-xs font-medium ${MOVE_CLASS[move.tone]}`}>
+        <span className="sr-only">{move.tone === "good" ? "up " : move.tone === "bad" ? "down " : "flat "}</span>
+        {move.text}
+      </span>
+    </span>
+  );
+}
+
+/** The 30-day line and the day of the close it ends on: the price detail behind a tap. */
+export function PriceTrend({ sessions, generatedAt }: { sessions?: readonly Session[] | null; generatedAt?: string }) {
+  const view = priceView(sessions, generatedAt);
+  if (!view) return null;
+  return (
+    <span className="flex items-center gap-2 text-xs text-ink-faint">
+      <Sparkline view={view} />
+      <span>
+        {view.closes.length}-day trend · {closeCaption(view.day)}
       </span>
     </span>
   );

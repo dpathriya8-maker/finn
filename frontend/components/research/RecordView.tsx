@@ -95,7 +95,7 @@ function Scorecard({ record }: { record: ResearchRecord }) {
   // Worry first, in rows of three then two (design rule 10: chunks of five at most).
   const cells = STATUS_ORDER.map((status, i) => ({ status, n: counts[status], span: i < 3 ? "col-span-2" : "col-span-3" }));
   return (
-    <section aria-labelledby="score-title" className="rounded-2xl border border-line p-4">
+    <section aria-labelledby="score-title" className="rounded-2xl border border-line bg-surface p-4">
       <h2 id="score-title" className="text-sm font-semibold">
         Promise Tracker
       </h2>
@@ -149,7 +149,7 @@ function Statements({ record, docs }: { record: ResearchRecord; docs: Map<string
             <h3 className="text-xs font-semibold text-ink-soft">{group.quarter} call</h3>
             <ul className="mt-2 space-y-3">
               {group.items.map((s) => (
-                <li key={`${s.doc}-${s.page}-${s.text.slice(0, 24)}`} className="rounded-2xl border border-line p-4">
+                <li key={`${s.doc}-${s.page}-${s.text.slice(0, 24)}`} className="rounded-2xl border border-line bg-surface p-4">
                   <Quote text={s.text} doc={docs.get(s.doc)} page={s.page} />
                 </li>
               ))}
@@ -168,7 +168,7 @@ function Documents({ record }: { record: ResearchRecord }) {
       <h2 id="docs-title" className="text-sm font-semibold">
         The documents read
       </h2>
-      <ul className="mt-2 divide-y divide-line rounded-2xl border border-line">
+      <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface">
         {record.documents.map((d) => (
           <li key={d.id} className="flex items-center justify-between gap-3 px-4 py-3">
             <span className="min-w-0">
@@ -210,7 +210,7 @@ export function RecordView({ record, source }: { record: ResearchRecord; source:
       </header>
 
       {noDocuments && (
-        <section className="rounded-2xl border border-line p-5" role="status">
+        <section className="rounded-2xl border border-line bg-surface p-5" role="status">
           <h3 className="text-base font-medium text-watch">Nothing to read</h3>
           <p className="mt-1 text-sm leading-6 text-ink-soft">{record.reason}</p>
         </section>

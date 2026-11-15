@@ -17,7 +17,7 @@ export function ResearchScreen() {
     return isValidTicker(symbol) ? (
       <CompanyResearch key={symbol} symbol={symbol} />
     ) : (
-      <section className="rounded-2xl border border-line p-5" role="alert">
+      <section className="rounded-2xl border border-line bg-surface p-5" role="alert">
         <h2 className="text-base font-medium text-watch">That is not an NSE ticker</h2>
         <p className="mt-1 text-sm leading-6 text-ink-soft">A ticker is up to 20 capital letters, digits, &amp; or -, such as RELIANCE or M&amp;M.</p>
         <Link href="/research" className="mt-3 inline-flex min-h-11 items-center text-sm font-medium underline underline-offset-2">
@@ -87,7 +87,7 @@ function Home() {
         {index.kind === "loading" && <div className="mt-2 h-24 animate-pulse rounded-2xl bg-line" aria-label="Loading the list" />}
         {index.kind === "error" && <p className="mt-2 text-sm text-ink-soft">The list could not be loaded. Type a ticker above.</p>}
         {index.kind === "ready" && (
-          <ul className="mt-2 divide-y divide-line rounded-2xl border border-line">
+          <ul className="mt-2 divide-y divide-line rounded-2xl border border-line bg-surface">
             {index.data.companies.map((company) => (
               <li key={company.symbol}>
                 <Link href={`/research?symbol=${encodeURIComponent(company.symbol)}`} className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">

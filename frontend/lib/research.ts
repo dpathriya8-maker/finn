@@ -133,6 +133,39 @@ export function deliveryText(card: Scorecard): string {
   return `Delivered ${card.delivery_rate_pct}% of the promises that could be judged`;
 }
 
+/** The Promise Tracker in one bold line for a list row: "67% of judged promises delivered", or why there is no rate. */
+export function promiseHeadline(card: Scorecard | null, status: string): string {
+  if (!card) return status === "statements_only" ? "No verdict yet" : status === "no_documents" ? "No filings to read yet" : "Open the research";
+  if (card.delivery_rate_pct !== null) return `${card.delivery_rate_pct}% of judged promises delivered`;
+  return card.decided === 0 ? "No promise could be judged yet" : `Only ${card.decided} promise${card.decided === 1 ? "" : "s"} judged so far`;
+}
+
+/** What the counts say in plain words, bad news first: "1 missed, 2 not followed up, 2 kept". Zeros are left out. */
+export function promiseCounts(card: Scorecard): string {
+  const parts: [number, string][] = [
+    [card.missed, "missed"],
+    [card.not_followed_up ?? 0, "not followed up"],
+    [card.partly, "partly kept"],
+    [card.kept, "kept"],
+    [card.too_early, "too early"],
+  ];
+  const shown = parts.filter(([n]) => n > 0).map(([n, label]) => `${n} ${label}`);
+  return shown.length > 0 ? shown.join(", ") : "Nothing to judge yet";
+}
+
+/**
+ * The colour of a Promise Tracker row, by fixed rules on the counts: bad when something was missed and no more was kept
+ * than missed; watch when anything was missed, partly kept or went unanswered; good when something was kept and nothing else
+ * needs watching; otherwise none. Promises that are not due yet say nothing either way.
+ */
+export function scorecardTone(card: Scorecard | null): "bad" | "watch" | "good" | "neutral" {
+  if (!card) return "neutral";
+  const quiet = card.not_followed_up ?? 0;
+  if (card.missed > 0 && card.missed >= card.kept) return "bad";
+  if (card.missed > 0 || card.partly > 0 || quiet > 0) return "watch";
+  return card.kept > 0 ? "good" : "neutral";
+}
+
 /** A link that opens the PDF at the page, in browsers that honour the #page= parameter. */
 export function pageLink(doc: Pick<ResearchDocument, "url"> | undefined, page: number): string | null {
   return doc ? `${doc.url}#page=${page}` : null;

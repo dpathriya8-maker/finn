@@ -1,20 +1,20 @@
 import type { Metadata } from "next";
-import { SettingsScreen } from "@/components/settings/SettingsScreen";
+import { YouScreen } from "@/components/settings/YouScreen";
 
-export const metadata: Metadata = { title: "Settings · FINN" };
+export const metadata: Metadata = { title: "You · FINN" };
 
-export default function SettingsPage() {
+// The route stays /settings so every existing link (the Brief's "Manage" muted companies, saved shortcuts) keeps working.
+export default function YouPage() {
   return (
     <>
-      <section aria-labelledby="settings-title" className="pt-4">
-        <h1 id="settings-title" className="text-2xl font-semibold tracking-tight">
-          Settings
+      <section aria-labelledby="you-title" className="pt-4">
+        <h1 id="you-title" className="text-2xl font-semibold tracking-tight">
+          You
         </h1>
-        <p className="mt-1 text-sm text-ink-soft">You decide what counts as news.</p>
       </section>
 
-      <div className="mt-5">
-        <SettingsScreen />
+      <div className="mt-4">
+        <YouScreen />
       </div>
     </>
   );

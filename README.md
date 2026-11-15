@@ -19,7 +19,7 @@ Built for the ENAM AI Engineer Build Challenge. The design rule behind every scr
 </tr>
 </table>
 
-More screens: [Interested tab (preview)](docs/screens/08-interested-light.png) · [Time-window sheet, dark](docs/screens/09-window-sheet-dark.png) · [Live research on a company never prepared (TITAN)](docs/screens/10-live-research-titan-light.png) · [Alerts](docs/screens/04-alerts-light.png) · [Research home](docs/screens/05-research-light.png) · [Settings](docs/screens/07-settings-light.png).
+More screens: [Interested tab (preview)](docs/screens/08-interested-light.png) · [Time-window sheet, dark](docs/screens/09-window-sheet-dark.png) · [Live research on a company never prepared (TITAN)](docs/screens/10-live-research-titan-light.png) · [Alerts](docs/screens/04-alerts-light.png) · [Research home](docs/screens/05-research-light.png) · [You, formerly Settings](docs/screens/07-settings-light.png).
 
 ## What it does
 
@@ -41,7 +41,7 @@ I would rather you hear this from me than find it.
 
 | Part | Status |
 |---|---|
-| Morning Brief, Alerts, Settings, classification of every filing | Real data for 18 companies from BSE, NSE and Yahoo; verified in a phone-sized browser, light and dark |
+| Morning Brief, Alerts, You (profile and settings), classification of every filing | Real data for 18 companies from BSE, NSE and Yahoo; verified in a phone-sized browser, light and dark |
 | Results card, management card | Real filings: 7 results PDFs (including a scan, a sideways page and a lender) and 4 management filings; **no model is used**; scans are refused unless an independent source confirms them |
 | Documents, statements, retrieval, Ask (passages) | Run on real transcripts and annual reports for Bajaj Finance, Asian Paints, HAL, Info Edge, and on Titan, which was never prepared and was researched on demand, on a home connection and again on Render (through NSE) |
 | Promise verdicts and the model router | **Run live on 15 Nov 2026** (Gemini free tier) on 4 companies: 3 got verdicts (40 promises: 6 Kept, 1 Partly, 1 Missed, 3 Not followed up, 29 Too early); HAL has one call in the window, so it shows statements and no verdicts. The first run was too generous (24 of 54 Kept), so due dates, number checks and a second reading of every decided verdict were added; I then read each decided verdict against the transcript. Right: Asian Paints "almost 10 lakh" vs "more than 9 lakh" is Partly (90%); Bajaj "book below INR 1,500 crore by Sept '26" vs "now INR 2,400 crore" is Missed (62.5%); the VAE facility "started in September" is Kept; Naukri's "billings growth to recover in Q1" (about 99acres) was wrongly "Not followed up" until retrieval learned to search the business unit named before the promise, and is now Kept with the Q2 call's "Billings grew by 21% YoY in Q2, up from 17% in Q1". Not audited line by line: a few verdicts (for example Bajaj's "Not followed up" on a balance-sheet run-off) may be wrong in the same way. The strong model's free quota is 20 requests a day and ran out during re-runs, so most of these verdicts were made by `gemini-3.5-flash-lite` (each record says which model answered). Every quote is verified word for word |
@@ -81,7 +81,7 @@ flowchart LR
   end
   DATA[("Static JSON: brief, per-company, research")]
   CORPUS[("Saved documents for the demo companies")]
-  WEB["Next.js app (Vercel): Brief, Alerts, Research, Settings"]
+  WEB["Next.js app (Vercel): Brief, Alerts, Research, You"]
   API["FastAPI (Render): research jobs, Ask, rate limits, daily cap"]
   LLM["Optional model: Gemini, Groq"]
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GROUP_LIMIT, groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel } from "@/lib/brief";
+import { companySections, GROUP_LIMIT, groupByCompany, groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel } from "@/lib/brief";
 import type { Brief, Item } from "@/lib/types";
 
 const REF = "2026-11-15T09:00:00+05:30";
@@ -65,6 +65,53 @@ describe("groupItems", () => {
 
   it("never shows more than five at a time", () => {
     expect(GROUP_LIMIT).toBe(5);
+  });
+});
+
+describe("groupByCompany", () => {
+  it("shows a company once, with its filings under it, most important first", () => {
+    const g = groupItems([
+      item({ id: "a-low", symbol: "AAA", priority: 50 }),
+      item({ id: "b", symbol: "BBB", priority: 80 }),
+      item({ id: "a-top", symbol: "AAA", priority: 90 }),
+    ]);
+    const companies = groupByCompany([...g.high, ...g.medium]);
+    expect(companies.map((c) => [c.symbol, c.items.map((i) => i.id)])).toEqual([
+      ["AAA", ["a-top", "a-low"]],
+      ["BBB", ["b"]],
+    ]);
+  });
+
+  it("orders companies by their highest-priority filing, so one risk lifts the whole company", () => {
+    const g = groupItems([
+      item({ id: "x1", symbol: "XXX", priority: 60 }),
+      item({ id: "x2", symbol: "XXX", priority: 55 }),
+      item({ id: "x3", symbol: "XXX", priority: 50 }),
+      item({ id: "y1", symbol: "YYY", priority: 95, tone: "bad" }),
+    ]);
+    expect(groupByCompany([...g.high, ...g.medium]).map((c) => c.symbol)).toEqual(["YYY", "XXX"]);
+  });
+
+  it("splits companies into the two sections by their top filing, keeping routine and low filings out", () => {
+    const g = groupItems([
+      item({ id: "hi", symbol: "AAA", priority: 90 }),
+      item({ id: "mid", symbol: "AAA", priority: 50 }),
+      item({ id: "only-mid", symbol: "BBB", priority: 60 }),
+      item({ id: "low", symbol: "CCC", priority: 40 }),
+      item({ id: "routine", symbol: "DDD", priority: 99, routine: true }),
+    ]);
+    const s = companySections(g);
+    expect(s.needs.map((c) => [c.symbol, c.items.length])).toEqual([["AAA", 2]]);
+    expect(s.worth.map((c) => c.symbol)).toEqual(["BBB"]);
+    expect(g.low.map((i) => i.id)).toEqual(["low"]);
+    expect(g.routine.map((i) => i.id)).toEqual(["routine"]);
+  });
+
+  it("keeps the count of things that matter as a count of filings", () => {
+    const g = groupItems([item({ symbol: "AAA", priority: 90 }), item({ symbol: "AAA", priority: 60 }), item({ symbol: "BBB", priority: 50 })]);
+    expect(thingsThatMatter(g)).toBe(3);
+    const s = companySections(g);
+    expect(s.needs.length + s.worth.length).toBe(2);
   });
 });
 

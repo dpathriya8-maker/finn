@@ -57,13 +57,12 @@ const ITEMS: Item[] = [
     ),
   },
   {
-    label: "Settings",
+    label: "You",
     href: "/settings",
     icon: (
       <Icon>
-        <path d="M4 7h9M17 7h3M4 17h3M11 17h9" />
-        <circle cx="15" cy="7" r="2" />
-        <circle cx="9" cy="17" r="2" />
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6" />
       </Icon>
     ),
   },
@@ -80,7 +79,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 mx-auto w-full max-w-[430px] border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]"
+      className="sticky bottom-0 z-20 w-full border-t border-line bg-surface pb-[env(safe-area-inset-bottom)]"
     >
       <ul className="grid grid-cols-4">
         {ITEMS.map((item) => {

@@ -78,7 +78,7 @@ export function BriefHome() {
         ))}
       </div>
 
-      <div ref={scroller} onScroll={onScroll} className="mt-5 flex snap-x snap-mandatory items-start overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div ref={scroller} onScroll={onScroll} className="relative mt-5 flex snap-x snap-mandatory items-start overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((tab, i) => {
           const hidden = active !== i && !moving;
           return (

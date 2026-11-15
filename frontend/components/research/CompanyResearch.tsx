@@ -8,7 +8,7 @@ import { realDeps } from "@/lib/researchApi";
 
 function Panel({ title, tone = "text-ink", children, role }: { title: string; tone?: string; children: React.ReactNode; role?: "status" | "alert" }) {
   return (
-    <section className="rounded-2xl border border-line p-5" role={role} aria-live={role === "status" ? "polite" : undefined}>
+    <section className="rounded-2xl border border-line bg-surface p-5" role={role} aria-live={role === "status" ? "polite" : undefined}>
       <h2 className={`text-base font-medium ${tone}`}>{title}</h2>
       <div className="mt-1 space-y-2 text-sm leading-6 text-ink-soft">{children}</div>
     </section>

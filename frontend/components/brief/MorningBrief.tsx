@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
 import { GroupSection } from "@/components/brief/GroupSection";
 import { PricesProvider } from "@/components/brief/PricesContext";
-import { groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel, WINDOWS } from "@/lib/brief";
+import { companySections, groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel, WINDOWS } from "@/lib/brief";
 import { updateSettings, useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
@@ -19,7 +19,7 @@ export function MorningBrief() {
   }
   if (briefState.kind === "error") {
     return (
-      <section className="rounded-2xl border border-line p-5">
+      <section className="rounded-2xl border border-line bg-surface p-5">
         <h2 className="text-base font-medium text-watch">Your brief is unavailable right now</h2>
         <p className="mt-1 text-sm leading-6 text-ink-soft">The data file could not be loaded. Check your connection and reload.</p>
       </section>
@@ -29,6 +29,7 @@ export function MorningBrief() {
   const brief = briefState.data;
   const hours = settings.windowHours;
   const groups = groupItems(selectItems(brief, hours, settings.mutedSymbols));
+  const sections = companySections(groups);
   const matter = thingsThatMatter(groups);
   const stale = staleNotes(brief);
   const empty = groups.high.length + groups.medium.length + groups.low.length + groups.routine.length === 0;
@@ -50,14 +51,14 @@ export function MorningBrief() {
         <GroupSection
           title="Needs attention"
           hint="Risks and the biggest filings first"
-          items={groups.high}
+          groups={sections.needs}
           size="lg"
           referenceIso={brief.generated_at}
         />
         <GroupSection
           title="Worth a look"
           hint="Material, but not urgent"
-          items={groups.medium}
+          groups={sections.worth}
           size="md"
           referenceIso={brief.generated_at}
         />
