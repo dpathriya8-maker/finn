@@ -215,7 +215,7 @@ export type FlowDeps = {
 
 export const POLL_MS = 3_000;
 export const WAKE_RETRY_MS = 5_000;
-export const WAKE_GIVE_UP_MS = 90_000;
+export const WAKE_GIVE_UP_MS = 150_000;
 export const JOB_GIVE_UP_MS = 6 * 60_000;
 
 /**

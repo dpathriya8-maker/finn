@@ -7,14 +7,14 @@ type Status = "checking" | "online" | "waking" | "offline" | "unconfigured";
 
 const ATTEMPT_TIMEOUT_MS = 8_000;
 const RETRY_EVERY_MS = 5_000;
-const GIVE_UP_AFTER_MS = 90_000;
+const GIVE_UP_AFTER_MS = 150_000;
 const SHOW_WAKING_AFTER_MS = 3_000;
 
 // Full class names, so Tailwind can see them. Colour = meaning: green good, amber watch, red bad.
 const LOOK: Record<Status, { label: string; tone: string; pulse: boolean }> = {
   checking: { label: "Checking engine…", tone: "bg-line text-ink-soft", pulse: true },
   online: { label: "Engine online", tone: "bg-good-bg text-good", pulse: false },
-  waking: { label: "Engine waking up…", tone: "bg-watch-bg text-watch", pulse: true },
+  waking: { label: "Waking up… (free server, up to 2 min)", tone: "bg-watch-bg text-watch", pulse: true },
   offline: { label: "Engine offline", tone: "bg-bad-bg text-bad", pulse: false },
   unconfigured: { label: "Engine not configured", tone: "bg-bad-bg text-bad", pulse: false },
 };
@@ -31,7 +31,7 @@ async function isHealthy(signal: AbortSignal): Promise<boolean> {
 /**
  * Shows whether the research engine (the FastAPI backend) is reachable.
  * Render's free tier sleeps after 15 idle minutes and takes about a minute to wake, so a slow
- * or failing first answer is shown as "waking up" and retried every 5 s for up to 90 s
+ * or failing first answer is shown as "waking up" and retried every 5 s for up to 150 s
  * before the pill gives up and says "offline".
  */
 export function StatusPill() {

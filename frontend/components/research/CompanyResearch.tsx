@@ -68,7 +68,7 @@ export function CompanyResearch({ symbol }: { symbol: string }) {
       )}
       {state.kind === "offline" && (
         <Panel title="The research engine is not reachable" tone="text-bad" role="alert">
-          <p>It did not wake within a minute and a half. Companies listed on the Research tab can still be read.</p>
+          <p>It did not wake within two and a half minutes. Companies listed on the Research tab can still be read.</p>
           {retry}
         </Panel>
       )}
