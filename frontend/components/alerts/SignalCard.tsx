@@ -4,6 +4,8 @@ import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
 import { TONE } from "@/components/brief/tone";
 import { moveWords, type SignalAlert } from "@/lib/alerts";
+import { CategoryIcon } from "@/components/ui/Icons";
+import { Avatar, PriceChip } from "@/components/ui/Price";
 import { formatDay, formatMove, formatPrice, formatShares } from "@/lib/format";
 
 /** An unusual end-of-day move: price, volume, or both, measured against the user's own lines. */
@@ -46,14 +48,24 @@ export function SignalCard({
         onClick={() => setOpen((value) => !value)}
         className="block min-h-11 w-full px-4 py-3 text-left"
       >
-        <span className="flex items-center justify-between gap-3 text-xs text-ink-faint">
-          <span className="flex items-center gap-2">
-            <span className="font-semibold text-ink-soft">{alert.symbol}</span>
-            <span className={`rounded px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.tag}</span>
+        <span className="flex items-start justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <Avatar symbol={alert.symbol} name={alert.name} size={34} />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold text-ink-soft">{alert.symbol}</span>
+              <span className="flex items-center gap-1 text-xs text-ink-faint">
+                <CategoryIcon category="results" size={14} />
+                <span>End-of-day move</span>
+              </span>
+            </span>
           </span>
+          <PriceChip sessions={alert.sessions} />
+        </span>
+        <span className="mt-2 flex items-center gap-2 text-xs text-ink-faint">
+          <span className={`rounded px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.tag}</span>
           <time dateTime={s.day}>{formatDay(s.day)}</time>
         </span>
-        <span className="mt-1.5 block text-base font-semibold leading-snug">{headline}</span>
+        <span className="mt-1 block text-base font-semibold leading-snug">{headline}</span>
         <span className="mt-1 block text-sm text-ink-soft">
           <span className={`font-medium ${tone.text}`}>{formatMove(s.change_pct)}</span> to {formatPrice(s.close)}
           {volume && <span> · {ratio.toFixed(1)}× average volume</span>}
@@ -84,7 +96,7 @@ export function SignalCard({
               </tr>
             </thead>
             <tbody>
-              {[...alert.sessions].reverse().map((row) => (
+              {[...alert.sessions].slice(-5).reverse().map((row) => (
                 <tr key={row.day} className={row.day === s.day ? "font-semibold text-ink" : "text-ink-soft"}>
                   <th scope="row" className="py-1 font-[inherit]">{formatDay(row.day)}</th>
                   <td className="py-1 text-right">{formatPrice(row.close)}</td>

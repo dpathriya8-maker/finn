@@ -29,6 +29,7 @@ from app.sources import bse, documents, nse, prices, symbols
 from app.sources.models import Announcement, Listing, PriceHistory, QuarterFigures
 
 DEFAULT_OUT = REPO_ROOT / "frontend" / "public" / "data"
+SESSIONS_KEPT = 30  # price sessions kept per company: the Brief and Alerts use the last few, the sparklines draw all
 ITEM_DAYS = 14  # how far back announcements are kept; the app offers windows up to 7 days
 PAUSE_BETWEEN_COMPANIES_S = 0.3
 
@@ -136,7 +137,7 @@ def process_company(
         history = sources.history(symbol)
         price_rows = [digest.bar_row(b) for b in history.bars]
         price_symbol = history.yahoo_symbol
-        signal_rows = [digest.signal_dict(s) for s in compute_signals(history.bars)]
+        signal_rows = [digest.signal_dict(s) for s in compute_signals(history.bars, last_n=SESSIONS_KEPT)]
     except Exception as exc:
         failed("prices", exc)
         price_rows, price_symbol, signal_rows = (

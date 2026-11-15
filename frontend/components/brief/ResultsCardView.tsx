@@ -1,4 +1,5 @@
 import { basisLabel, checkView, DELTA_CLASS, marginLines, metricRows, pagesLabel, printedLine, unitNote } from "@/lib/results";
+import { MetricBars } from "@/components/ui/Charts";
 import type { ResultsCard } from "@/lib/types";
 
 const CHECK_TONE = { good: "bg-good-bg text-good", watch: "bg-watch-bg text-watch", neutral: "bg-backdrop text-ink-soft" } as const;
@@ -70,6 +71,8 @@ export function ResultsCardView({ card }: { card: ResultsCard }) {
           ))}
         </tbody>
       </table>
+
+      <MetricBars card={card} />
 
       {margins.length > 0 && (
         <ul className="mt-2 space-y-0.5 text-xs leading-5 text-ink-soft">

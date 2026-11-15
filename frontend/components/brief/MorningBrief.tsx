@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
 import { GroupSection } from "@/components/brief/GroupSection";
-import { WindowPicker } from "@/components/brief/WindowPicker";
-import { groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel, windowLabel, WINDOWS } from "@/lib/brief";
+import { PricesProvider } from "@/components/brief/PricesContext";
+import { groupItems, selectItems, staleNotes, thingsThatMatter, whenLabel, WINDOWS } from "@/lib/brief";
 import { updateSettings, useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
@@ -35,12 +35,9 @@ export function MorningBrief() {
   const wider = WINDOWS.find((w) => w.hours > hours);
 
   return (
-    <div>
-      <WindowPicker value={hours} onChange={(windowHours) => updateSettings({ windowHours })} />
-
-      <p className="mt-5 text-lg font-semibold tracking-tight">
+    <PricesProvider brief={brief}>
+      <p className="text-lg font-semibold tracking-tight">
         {matter === 0 ? "Nothing needs your attention" : `${matter} ${matter === 1 ? "thing" : "things"} that matter`}
-        <span className="block text-sm font-normal text-ink-soft">in the last {windowLabel(hours)}</span>
       </p>
 
       {stale.length > 0 && (
@@ -104,6 +101,6 @@ export function MorningBrief() {
         You&apos;re all caught up
         <span className="mt-1 block text-xs text-ink-faint">Checked {whenLabel(brief.generated_at, brief.generated_at)}</span>
       </p>
-    </div>
+    </PricesProvider>
   );
 }

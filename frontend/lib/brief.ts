@@ -68,6 +68,11 @@ export const WINDOWS = [
   { hours: 168, label: "7 days" },
 ] as const;
 
+/** The Brief's heading: "Today's Highlights" for the last day, otherwise "Highlights: last 3 days". */
+export function highlightsTitle(hours: number): string {
+  return hours === 24 ? "Today's Highlights" : `Highlights: last ${windowLabel(hours)}`;
+}
+
 export function windowLabel(hours: number): string {
   return WINDOWS.find((w) => w.hours === hours)?.label ?? `${hours} hours`;
 }

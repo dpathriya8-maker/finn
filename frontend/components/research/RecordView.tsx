@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { AskBox } from "@/components/research/AskBox";
 import { TONE } from "@/components/brief/tone";
+import { VerdictBar } from "@/components/ui/Charts";
+import { Avatar, PriceChip } from "@/components/ui/Price";
+import { shortName } from "@/lib/headline";
+import { useCompanyPrices } from "@/lib/useSessions";
 import {
   byId,
   dateLabel,
@@ -58,7 +62,7 @@ function PromiseCard({ promise, docs }: { promise: TrackedPromise; docs: Map<str
         <Quote text={promise.quote} doc={docs.get(promise.doc)} page={promise.page} />
       </div>
       {promise.verdict.reason && <p className="mt-3 text-sm leading-6 text-ink-soft">{promise.verdict.reason}</p>}
-      {promise.verdict.numbers && <p className="mt-1 text-xs leading-5 text-ink-faint tabular-nums">{numbersText(promise.verdict.numbers)}</p>}
+      {promise.verdict.numbers && !promise.verdict.reason.includes("of the promise") && <p className="mt-1 text-xs leading-5 text-ink-faint tabular-nums">{numbersText(promise.verdict.numbers)}</p>}
       {evidence.length > 0 && (
         <>
           <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="mt-2 inline-flex min-h-11 items-center text-xs font-medium text-ink-soft underline underline-offset-2">
@@ -96,6 +100,9 @@ function Scorecard({ record }: { record: ResearchRecord }) {
         Promise Tracker
       </h2>
       <p className="mt-1 text-lg font-semibold leading-snug">{deliveryText(card)}</p>
+      <div className="mt-3">
+        <VerdictBar card={card} />
+      </div>
       <ul className="mt-3 grid grid-cols-6 gap-2 text-center">
         {cells.map((cell) => (
           <li key={cell.status} className={`${cell.span} rounded-xl px-1 py-2 ${TONE[STATUS_LOOK[cell.status].tone].chip || "bg-line text-ink-soft"}`}>
@@ -185,14 +192,21 @@ export function RecordView({ record, source }: { record: ResearchRecord; source:
   const docs = byId(record.documents);
   const promises = orderPromises(record.promises);
   const noDocuments = record.status === "no_documents";
+  const prices = useCompanyPrices(record.symbol);
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-xl font-semibold tracking-tight">{record.name}</h2>
-        <p className="mt-0.5 text-xs text-ink-faint">
-          {record.symbol} · {noDocuments ? "nothing to read" : `${record.documents.length} filings read`} · {source === "shipped" ? "prepared in advance" : "read just now"}, {dateLabel(record.generated_at)}
-        </p>
+      <header className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar symbol={record.symbol} name={record.name} size={40} />
+          <div className="min-w-0">
+            <h2 className="text-xl font-semibold tracking-tight">{shortName(record.name)}</h2>
+            <p className="mt-0.5 text-xs text-ink-faint">
+              {record.symbol} · {noDocuments ? "nothing to read" : `${record.documents.length} filings read`} · {source === "shipped" ? "prepared in advance" : "read just now"}, {dateLabel(record.generated_at)}
+            </p>
+          </div>
+        </div>
+        <PriceChip sessions={prices.sessions} generatedAt={prices.generatedAt} />
       </header>
 
       {noDocuments && (

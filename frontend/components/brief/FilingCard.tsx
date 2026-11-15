@@ -4,8 +4,12 @@ import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
 import { ManagementCardView } from "@/components/brief/ManagementCardView";
 import { ResultsCardView } from "@/components/brief/ResultsCardView";
+import { useBriefPrices } from "@/components/brief/PricesContext";
 import { TONE } from "@/components/brief/tone";
+import { CategoryIcon } from "@/components/ui/Icons";
+import { Avatar, PriceChip } from "@/components/ui/Price";
 import { whenLabel } from "@/lib/brief";
+import { cardHeadline } from "@/lib/headline";
 import { setMuted } from "@/lib/settings";
 import type { Item } from "@/lib/types";
 
@@ -27,6 +31,7 @@ export function FilingCard({ item, referenceIso, size }: { item: Item; reference
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const tone = TONE[item.tone];
+  const { sessions, generatedAt } = useBriefPrices(item.symbol);
   const label = [item.raw_category, item.raw_subcategory].filter(Boolean).join(" / ");
   // A card that read the filing says more than the exchange's one-line text; a card that failed leaves that text in place.
   const cardReplacesBody = item.card?.status === "ok" || (item.card?.type === "results" && item.card.status === "partial");
@@ -40,14 +45,24 @@ export function FilingCard({ item, referenceIso, size }: { item: Item; reference
         onClick={() => setOpen((value) => !value)}
         className="block min-h-11 w-full px-4 py-3 text-left"
       >
-        <span className="flex items-center justify-between gap-3 text-xs text-ink-faint">
-          <span className="flex items-center gap-2">
-            <span className="font-semibold text-ink-soft">{item.symbol}</span>
-            {tone.tag && <span className={`rounded px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.tag}</span>}
+        <span className="flex items-start justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-2.5">
+            <Avatar symbol={item.symbol} name={item.company} size={34} />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold text-ink-soft">{item.symbol}</span>
+              <span className="flex items-center gap-1 text-xs text-ink-faint">
+                <CategoryIcon category={item.category} routine={item.routine} />
+                <span className="truncate">{item.category_label}</span>
+              </span>
+            </span>
           </span>
+          <PriceChip sessions={sessions} generatedAt={generatedAt} />
+        </span>
+        <span className="mt-2 flex items-center gap-2 text-xs text-ink-faint">
+          {tone.tag && <span className={`rounded px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.tag}</span>}
           <time dateTime={item.published_at}>{whenLabel(item.published_at, referenceIso)}</time>
         </span>
-        <span className={`mt-1.5 block ${HEADLINE[size]}`}>{item.headline}</span>
+        <span className={`mt-1 block ${HEADLINE[size]}`}>{cardHeadline(item)}</span>
         <span className="mt-1.5 block text-xs leading-5 text-ink-soft">{item.why}</span>
         <span className="mt-2 flex items-center gap-1 text-xs font-medium text-ink-faint">
           {open ? "Hide details" : "Details"}

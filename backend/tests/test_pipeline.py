@@ -58,13 +58,13 @@ def test_a_normal_run_writes_the_company_file_the_brief_and_the_meta(tmp_path):
     rec = read(tmp_path, "RELIANCE.json")
     assert rec["sources"] == {"announcements": "bse", "prices": "RELIANCE.NS", "quarters": "yahoo"}
     assert rec["errors"] == {} and rec["stale"] == {}
-    assert len(rec["announcements"]) == 2 and len(rec["prices"]) == 30 and len(rec["signals"]) == 5
+    assert len(rec["announcements"]) == 2 and len(rec["prices"]) == 30 and len(rec["signals"]) == 29  # all 29 sessions of the 30 bars (up to SESSIONS_KEPT are kept)
     assert rec["announcements"][0]["id"] == "bse:id1" and rec["announcements"][0]["size_kb"] == 2
     assert len(rec["announcements"][0]["body"]) <= 600
     assert rec["listing"]["bse_code"] == "500325"
     brief = read(tmp_path, "brief.json")
     assert [i["id"] for i in brief["items"]] == ["bse:id1", "bse:id2"]  # newest first
-    assert brief["signals"][0]["symbol"] == "RELIANCE" and len(brief["signals"][0]["sessions"]) == 5
+    assert brief["signals"][0]["symbol"] == "RELIANCE" and len(brief["signals"][0]["sessions"]) == 29
     meta = read(tmp_path, "meta.json")
     assert meta["companies"] == 1 and meta["announcement_sources"] == {"bse": 1, "nse": 0}
     assert "note" not in meta  # real data is never labelled as the skeleton sample
