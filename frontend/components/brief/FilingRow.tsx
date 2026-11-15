@@ -8,6 +8,7 @@ import { useBriefPrices } from "@/components/brief/PricesContext";
 import { TONE } from "@/components/brief/tone";
 import { CategoryIcon } from "@/components/ui/Icons";
 import { PriceTrend } from "@/components/ui/Price";
+import { WhatIf } from "@/components/WhatIf";
 import { whenLabel } from "@/lib/brief";
 import { filingHeadline } from "@/lib/headline";
 import { shortCategory, shortWhy } from "@/lib/labels";
@@ -75,6 +76,9 @@ export function FilingRow({ item, referenceIso, size }: { item: Item; referenceI
           </p>
           <div className="mt-2">
             <PriceTrend sessions={sessions} generatedAt={generatedAt} />
+          </div>
+          <div className="mt-3">
+            <WhatIf symbol={item.symbol} sessions={sessions} generatedAt={generatedAt} />
           </div>
           {item.card?.type === "results" && (
             <div className="mt-3">

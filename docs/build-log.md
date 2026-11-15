@@ -370,3 +370,14 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 
 
 **Late addition, found by looking at the TITAN page:** "Delivered 0 of 1 promises that came due" followed by a so-what line reads as a verdict on a record of one. When fewer than three promises have come due the line now says "Only 1 promise has come due, too few to judge" (decision S107). Deployed and checked on the live site: 36 of 36 Research checks, 29 of 29 earlier checks, no sideways scroll and no text below 4.5:1 on the TITAN page. The README screenshots were retaken from the live site at 390 px.
+
+## My money, the What if calculator, the mark (16 Nov 2026)
+
+**Asked:** the engine wake-up (P0), My investments with the mute toggles reversed (P1), a "What if" calculator (P2), the FINN mark (P3).
+
+**Done:** P0 (`01b66e6`), P1 (`4b8a44f`) and the mark (`70ee29f`) shipped earlier. The calculator is one component in an open Brief card and on every Research page, with its arithmetic in `lib/whatif.ts` (12 unit tests: gains, losses, 0%, an empty box, ₹1 lakh crore, a history too short, a bar still being traded). Today's row is the latest session's change; "Last 30 days" is the latest close against the close on or before 30 calendar days earlier (the data keeps 30 sessions, about 44 days), left out if the history is too short. Decisions S111 to S115.
+
+**Verified:** 148 unit tests, types, lint, build. 24 checks in a phone-sized browser on the real data (the 30-day figure recomputed independently in Python from the raw prices, Indian grouping, validation of a bad, negative and empty amount, the slider spoken as "minus 10 percent, you'd have 9,000 rupees", keyboard steps of 1%, every tap target 44 px, the amount prefilled from My investments, the calculator under the header on Research and absent from a collapsed card); 360 and 390 px, light and dark, every card open: no sideways scroll, no text below 4.5:1.
+
+**Not done:** the soft section boxes from P3. The calculator restates the past; it forecasts nothing.
+

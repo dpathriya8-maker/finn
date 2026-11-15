@@ -6,6 +6,7 @@ import { TONE } from "@/components/brief/tone";
 import { AskBox } from "@/components/research/AskBox";
 import { VerdictBar } from "@/components/ui/Charts";
 import { Avatar, PriceLine } from "@/components/ui/Price";
+import { WhatIf } from "@/components/WhatIf";
 import { GROUP_LIMIT } from "@/lib/brief";
 import { shortName } from "@/lib/headline";
 import { useCompanyPrices } from "@/lib/useSessions";
@@ -307,6 +308,8 @@ export function RecordView({ record }: { record: ResearchRecord; source: "shippe
         </div>
         <p className="mt-2 text-xs leading-5 text-ink-faint">{noDocuments ? "Nothing to read yet" : documentsLine(record)}</p>
       </header>
+
+      <WhatIf symbol={record.symbol} sessions={prices.sessions} generatedAt={prices.generatedAt} />
 
       {noDocuments && (
         <section className="rounded-2xl border border-line bg-surface p-5" role="status">
