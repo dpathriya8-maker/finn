@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
+import { FinnMark } from "@/components/FinnMark";
 import { StatusPill } from "@/components/StatusPill";
 import "./globals.css";
 
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <header className="px-5 pb-3 pt-[max(1.25rem,env(safe-area-inset-top))]">
             {/* Fixed row height: the pill grows from 32px to 44px when it becomes a Retry button. */}
             <div className="flex min-h-11 items-center justify-between gap-3">
-              <p className="text-xl font-bold tracking-[0.18em]">FINN</p>
+              <p className="flex items-center gap-2.5 text-xl font-bold tracking-[0.18em]">
+                <FinnMark />
+                FINN
+              </p>
               <StatusPill />
             </div>
           </header>

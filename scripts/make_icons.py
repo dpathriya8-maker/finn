@@ -11,9 +11,9 @@ from pathlib import Path
 
 OUT = Path(__file__).resolve().parents[1] / "frontend" / "public" / "icons"
 
-INK = (17, 24, 39)
+INK = (55, 48, 163)  # deep indigo, the accent
 WHITE = (255, 255, 255)
-UP_GREEN = (74, 222, 128)
+UP_GREEN = (255, 255, 255)  # the upward tick, white on indigo
 
 # Shapes in a unit square. Later shapes paint over earlier ones.
 RECT, TRI = "rect", "tri"
