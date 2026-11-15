@@ -1,7 +1,28 @@
 {
  "schema": 1,
- "generated_at": "2026-11-15T21:27:59+05:30",
+ "generated_at": "2026-11-15T21:38:47+05:30",
  "companies": [
+  {
+   "symbol": "BAJFINANCE",
+   "name": "Bajaj Finance Limited",
+   "status": "ready",
+   "documents": 5,
+   "generated_at": "2026-11-15T15:50:48+05:30"
+  },
+  {
+   "symbol": "ASIANPAINT",
+   "name": "Asian Paints Limited",
+   "status": "ready",
+   "documents": 4,
+   "generated_at": "2026-11-15T15:51:47+05:30"
+  },
+  {
+   "symbol": "HAL",
+   "name": "Hindustan Aeronautics Limited",
+   "status": "statements_only",
+   "documents": 2,
+   "generated_at": "2026-11-15T15:51:58+05:30"
+  },
   {
    "symbol": "NAUKRI",
    "name": "Info Edge (India) Limited",

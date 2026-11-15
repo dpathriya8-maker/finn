@@ -48,6 +48,18 @@ def _previous(path: Path) -> dict[str, Any]:
         return {}
 
 
+def write_index(companies: list[dict[str, str]], out_dir: Path) -> None:
+    """index.json lists every research company that has a record: all of the configured ones, plus any other symbol just
+    researched. A run for one symbol (`--symbols NAUKRI`) must never shrink the list the Research and Interested screens read."""
+    configured = load_companies()
+    listed = [*configured, *[c for c in companies if c["symbol"] not in {k["symbol"] for k in configured}]]
+    index = [
+        {"symbol": r["symbol"], "name": r["name"], "status": r["status"], "documents": len(r["documents"]), "generated_at": r["generated_at"]}
+        for c in listed if (r := _previous(out_dir / f"{c['symbol']}.json"))
+    ]
+    write_json(out_dir / "index.json", {"schema": SCHEMA, "generated_at": now_ist().isoformat(timespec="seconds"), "companies": index}, indent=1)
+
+
 def run(
     companies: list[dict[str, str]],
     *,
@@ -91,11 +103,7 @@ def run(
         report.written.append(symbol)
         docs = ", ".join(f"{d['period']}" for d in record["documents"])
         log(f"{symbol:11s} {record['status']:16s} {len(record['documents'])} documents ({docs}), {len(record['statements'])} statements, {len(record['promises'])} promises")
-    index = [
-        {"symbol": r["symbol"], "name": r["name"], "status": r["status"], "documents": len(r["documents"]), "generated_at": r["generated_at"]}
-        for c in companies if (r := _previous(out_dir / f"{c['symbol']}.json"))
-    ]
-    write_json(out_dir / "index.json", {"schema": SCHEMA, "generated_at": now_ist().isoformat(timespec="seconds"), "companies": index}, indent=1)
+    write_index(companies, out_dir)
     return report
 
 
