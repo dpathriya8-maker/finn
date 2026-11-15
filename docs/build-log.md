@@ -393,3 +393,13 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 174 frontend unit tests, types, lint, build; 219 browser checks locally, all but that bug passing before the fix.
 
 **Not done / known:** a holding for a research (Interested) company cannot be entered; My investments lists the 18 portfolio companies only.
+
+## Night plan, Part B: follow companies, people and topics (16 Nov 2026)
+
+**Asked:** the research companies' filings in a separate data file, a follow list of companies, people and topics, and an Interested tab with one search box, chips, and a Following feed of matching filings.
+
+**Done:** `python -m pipeline.run --research` was run from this laptop (22 companies, no problems; BSE works here) and now also writes `research_brief.json`; 3 new pipeline tests. `lib/followMatch.ts` holds the rules (company by symbol, person by exact full name, topic by category or keyword) with 25 unit tests; `FollowSection` is the search box, chips and feed; the Brief's cards gained one grey "Because you follow ..." line, only inside the Following feed. The Interested tab is now: search, chips, Following feed, "Companies you are researching", "People in the filings". Decisions S122 to S127.
+
+**Verified:** 199 frontend unit tests and 683 backend tests, types, lint, build; 47 browser checks for this part (empty and starter state, topic, company plus topic with no duplicates, person by exact name, nothing-found lines, search by typing, an order win found by keywords, the x to unfollow), then the whole sweep at 360 and 390 px, light and dark.
+
+**Not done / known:** a person is followed by exact name only, so "Mr. V. S. Rangan" in a filing will not match "V. Srinivasa Rangan"; a keyword rule can miss an unusual wording; the people list is the few names in the 14 days of filings, plus any full name typed in.

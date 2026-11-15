@@ -3,8 +3,10 @@ import type { Brief } from "@/lib/types";
 
 /** A person named in a real management-change filing. Every field is a literal piece of that filing, found by rules. */
 export type PersonEntry = {
-  /** Stable id for following: the symbol and the name as filed. */
+  /** Stable id for the list: the symbol and the name as filed. */
   id: string;
+  /** What is stored when this person is followed: the name without its honorific, matched by exact name in filings. */
+  followName: string;
   name: string;
   role: string;
   /** "appointed", "resigned" and so on, from the filing's own kind. */
@@ -48,6 +50,7 @@ export function peopleFromBrief(brief: Pick<Brief, "items">): PersonEntry[] {
       if (seen.has(id) || !person.name) continue;
       seen.set(id, {
         id,
+        followName: plainName(person.name),
         name: person.name,
         role: person.role,
         action: actionWords(person.kind),

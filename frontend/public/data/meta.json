@@ -1,8 +1,9 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-15T21:12:19+05:30",
+  "generated_at": "2026-11-16T04:34:26+05:30",
   "item_days": 14,
   "companies": 18,
+  "research_companies": 4,
   "announcement_sources": {
     "bse": 17,
     "nse": 1

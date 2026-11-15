@@ -158,6 +158,31 @@ def test_research_companies_get_their_own_file_but_stay_out_of_the_brief(tmp_pat
     assert [c["symbol"] for c in read(tmp_path, "brief.json")["companies"]] == ["RELIANCE"]
 
 
+def test_the_research_companies_filings_go_to_a_separate_file_with_the_same_shape(tmp_path):
+    run([RELIANCE], [CDSL], out_dir=tmp_path, now=NOW, sources=make_sources(), pause=0, log=lambda _m: None)
+    feed = read(tmp_path, "research_brief.json")
+    assert [c["symbol"] for c in feed["companies"]] == ["CDSL"]
+    assert set(feed) == set(read(tmp_path, "brief.json"))  # the same shape
+    assert {i["symbol"] for i in feed["items"]} == {"CDSL"} and feed["items"]
+    assert set(feed["items"][0]) == set(read(tmp_path, "brief.json")["items"][0])
+    assert feed["signals"][0]["symbol"] == "CDSL"
+    assert read(tmp_path, "meta.json")["research_companies"] == 1
+
+
+def test_a_run_that_skips_the_research_companies_rebuilds_their_file_from_what_is_on_disk(tmp_path):
+    run([RELIANCE], [CDSL], out_dir=tmp_path, now=NOW, sources=make_sources(), pause=0, log=lambda _m: None)
+    later = NOW + timedelta(days=1)
+    run([RELIANCE], [], out_dir=tmp_path, now=later, sources=make_sources(), pause=0, log=lambda _m: None, research_listed=[CDSL])
+    feed = read(tmp_path, "research_brief.json")
+    assert feed["generated_at"] == NOW.isoformat(timespec="seconds")  # honest: it is the older data
+    assert read(tmp_path, "brief.json")["generated_at"] == later.isoformat(timespec="seconds")
+
+
+def test_no_research_file_is_written_when_there_are_no_research_companies(tmp_path):
+    go(tmp_path, sources=make_sources())
+    assert not (tmp_path / "research_brief.json").exists()
+
+
 def test_the_real_config_loads_18_portfolio_and_4_research_companies():
     portfolio, research = load_companies(include_research=True)
     assert (len(portfolio), len(research)) == (18, 4)

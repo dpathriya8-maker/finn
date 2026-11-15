@@ -2,7 +2,7 @@
 
     python -m pipeline.run                      # the 18 portfolio companies
     python -m pipeline.run --symbols RELIANCE   # just these (the brief is rebuilt from all existing files)
-    python -m pipeline.run --research           # also the research companies
+    python -m pipeline.run --research           # also refresh the research companies (research_brief.json is rebuilt either way)
 
 Raw metrics only: price move and volume ratio are stored as numbers, and the app applies the user's
 thresholds. If a source fails, the last good data for that part is kept and flagged as stale.
@@ -205,6 +205,7 @@ def run(
     sources: Sources | None = None,
     pause: float = PAUSE_BETWEEN_COMPANIES_S,
     log: Callable[[str], None] = print,
+    research_listed: list[dict[str, str]] | None = None,
 ) -> RunReport:
     now = now or now_ist()
     sources = sources or Sources()
@@ -234,6 +235,14 @@ def run(
     # The brief is always rebuilt from every portfolio file on disk, so a partial run keeps the rest.
     records = [r for c in portfolio if (r := _read_previous(out_dir / f"{c['symbol']}.json"))]
     write_json(out_dir / "brief.json", digest.brief(records, now=now, item_days=days))
+    # The research companies' filings, in a file of their own with the same shape, so the Following feed can match filings of
+    # companies that are not in the portfolio. The portfolio brief above is untouched. Built from the files on disk, so a run
+    # that did not refresh the research companies keeps theirs, and says how old they are (the oldest file's time).
+    listed = research_listed if research_listed is not None else (research or [])
+    research_records = [r for c in listed if (r := _read_previous(out_dir / f"{c['symbol']}.json"))]
+    if research_records:
+        oldest = min(datetime.fromisoformat(r["generated_at"]) for r in research_records)
+        write_json(out_dir / "research_brief.json", digest.brief(research_records, now=oldest, item_days=days))
     write_json(out_dir / "config.json", app_config(), indent=1)
     write_json(
         out_dir / "meta.json",
@@ -242,6 +251,7 @@ def run(
             "generated_at": now.isoformat(timespec="seconds"),
             "item_days": days,
             "companies": len(records),
+            "research_companies": len(research_records),
             "announcement_sources": {
                 s: sum(1 for r in records if r["sources"]["announcements"] == s) for s in ("bse", "nse")
             },
@@ -265,8 +275,16 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     args = parser.parse_args(argv)
 
-    portfolio, research = load_companies(args.research)
-    report = run(portfolio, research, only=args.symbols, out_dir=args.out, days=args.days, sources=Sources(cache=default_cache()))
+    portfolio, research = load_companies(True)
+    report = run(
+        portfolio,
+        research if args.research else [],
+        only=args.symbols,
+        out_dir=args.out,
+        days=args.days,
+        sources=Sources(cache=default_cache()),
+        research_listed=research,
+    )
     print(f"\n{len(report.processed)} companies processed, {len(report.failures)} with problems -> {args.out}")
     return 0 if report.processed else 1
 

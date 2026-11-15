@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
 import { TONE } from "@/components/brief/tone";
+import { FollowSection } from "@/components/follow/FollowSection";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { VerdictBar } from "@/components/ui/Charts";
 import { BarChartIcon, StarIcon } from "@/components/ui/Icons";
@@ -11,9 +12,11 @@ import { PreviewBadge } from "@/components/ui/Preview";
 import { Avatar, PriceLine, PriceTrend } from "@/components/ui/Price";
 import { toggleFollow, useFollow } from "@/lib/follow";
 import { shortName } from "@/lib/headline";
+import { mergeBriefs } from "@/lib/followMatch";
 import { peopleFromBrief, plainName, type PersonEntry } from "@/lib/people";
 import { dateLabel, promiseCounts, promiseHeadline, scorecardTone, type IndexEntry, type ResearchIndex, type ResearchRecord } from "@/lib/research";
-import type { Brief } from "@/lib/types";
+import { useSettings } from "@/lib/settings";
+import type { AppConfig, Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
 import { useCompanyPrices } from "@/lib/useSessions";
 
@@ -117,6 +120,7 @@ function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: s
 }
 
 function PersonRow({ person, on }: { person: PersonEntry; on: boolean }) {
+  // A person is followed by name, and matched by that exact name in filings.
   return (
     <li className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3">
       <Avatar symbol={person.symbol} name={plainName(person.name)} size={36} />
@@ -134,7 +138,7 @@ function PersonRow({ person, on }: { person: PersonEntry; on: boolean }) {
         type="button"
         aria-pressed={on}
         aria-label={on ? `Following ${person.name}. Tap to stop` : `Follow ${person.name}`}
-        onClick={() => toggleFollow("people", person.id)}
+        onClick={() => toggleFollow("people", person.followName)}
         className={`inline-flex min-h-11 shrink-0 items-center rounded-full border px-4 text-xs font-semibold ${on ? "border-accent-bg bg-accent-bg text-on-accent" : "border-line text-ink-soft"}`}
       >
         {on ? "Following" : "Follow"}
@@ -143,28 +147,25 @@ function PersonRow({ person, on }: { person: PersonEntry; on: boolean }) {
   );
 }
 
-/** People named in real management-change filings in the brief. Following is stored here only: it triggers nothing yet. */
-function People() {
-  const brief = useJson<Brief>("/data/brief.json");
+/** People named in real management-change filings. Following one lists any filing that names them in the Following feed above. */
+function People({ brief }: { brief: Brief }) {
   const follow = useFollow();
   const [all, setAll] = useState(false);
-  const people = useMemo(() => (brief.kind === "ready" ? peopleFromBrief(brief.data) : []), [brief]);
-  if (brief.kind !== "ready" || people.length === 0) return null;
+  const people = useMemo(() => peopleFromBrief(brief), [brief]);
+  if (people.length === 0) return null;
   const shown = all ? people : people.slice(0, PEOPLE_SHOWN);
+  const isOn = (p: PersonEntry) => follow.people.some((name) => name.toLowerCase() === p.followName.toLowerCase());
   return (
     <section aria-labelledby="people-title" className="mt-8">
-      <div className="flex items-center gap-2">
-        <h2 id="people-title" className="text-sm font-semibold">
-          People to follow
-        </h2>
-        <PreviewBadge />
-      </div>
+      <h2 id="people-title" className="text-sm font-semibold">
+        People in the filings
+      </h2>
       <p className="mt-1 text-xs leading-5 text-ink-soft">
-        Named in real management-change filings. Alerts for followed people aren&apos;t connected yet: the plan is to track them through insider-trading and management-change filings.
+        Named in real management-change filings. Follow one and any filing that names them shows up in your feed. FINN does not send push notifications yet.
       </p>
       <ul className="mt-3 space-y-2">
         {shown.map((p) => (
-          <PersonRow key={p.id} person={p} on={follow.people.includes(p.id)} />
+          <PersonRow key={p.id} person={p} on={isOn(p)} />
         ))}
       </ul>
       {people.length > PEOPLE_SHOWN && !all && (
@@ -176,14 +177,25 @@ function People() {
   );
 }
 
-/** The Interested tab: the companies the reader is researching, and the people worth following. A concept preview on real data. */
+/**
+ * The Interested tab: follow a company, a person or a topic and see their filings (the Following feed), then the companies being
+ * researched and the people named in the filings. The Invest button is the only concept preview left; it says so.
+ */
 export function InterestedTab() {
   const index = useJson<ResearchIndex>("/data/research/index.json");
+  const portfolio = useJson<Brief>("/data/brief.json");
+  const research = useJson<Brief>("/data/research_brief.json");
+  const configState = useJson<AppConfig>("/data/config.json");
+  const settings = useSettings(configState.kind === "ready" ? configState.data : null);
   const follow = useFollow();
   const [investIn, setInvestIn] = useState<string | null>(null);
+  const merged = useMemo(
+    () => mergeBriefs(portfolio.kind === "ready" ? portfolio.data : null, research.kind === "ready" ? research.data : null),
+    [portfolio, research],
+  );
 
-  if (index.kind === "loading") return <div className="h-48 animate-pulse rounded-2xl bg-line" aria-label="Loading" />;
-  if (index.kind === "error") {
+  if (index.kind === "loading" || portfolio.kind === "loading") return <div className="h-48 animate-pulse rounded-2xl bg-line" aria-label="Loading" />;
+  if (index.kind === "error" || !merged) {
     return (
       <section className="rounded-2xl border border-line bg-surface p-5">
         <h2 className="text-base font-medium text-watch">The list is unavailable right now</h2>
@@ -194,14 +206,21 @@ export function InterestedTab() {
   const companies = [...index.data.companies].sort((a, b) => Number(follow.companies.includes(b.symbol)) - Number(follow.companies.includes(a.symbol)));
   return (
     <div>
-      <p className="text-xs leading-5 text-ink-soft">Companies you are researching. Tap one to open it and follow it; this stays in this browser.</p>
-      <div className="mt-3 space-y-3">
-        {companies.map((entry) => (
-          <CompanyRow key={entry.symbol} entry={entry} onInvest={setInvestIn} />
-        ))}
-      </div>
+      <FollowSection brief={merged} hours={settings.windowHours} researchMissing={research.kind === "error"} />
 
-      <People />
+      <section aria-labelledby="researching-title" className="mt-8">
+        <h2 id="researching-title" className="text-sm font-semibold">
+          Companies you are researching
+        </h2>
+        <p className="mt-1 text-xs leading-5 text-ink-soft">Tap one to open it. Follow it to see its filings in your feed.</p>
+        <div className="mt-3 space-y-3">
+          {companies.map((entry) => (
+            <CompanyRow key={entry.symbol} entry={entry} onInvest={setInvestIn} />
+          ))}
+        </div>
+      </section>
+
+      <People brief={merged} />
 
       <BottomSheet open={investIn !== null} onClose={() => setInvestIn(null)} title={investIn ? `Invest in ${investIn}` : "Invest"}>
         <div className="space-y-3 text-sm leading-6">

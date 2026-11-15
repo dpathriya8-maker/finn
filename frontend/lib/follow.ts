@@ -1,12 +1,14 @@
 "use client";
 
 import { useMemo, useSyncExternalStore } from "react";
+import { plainName } from "@/lib/people";
 
 /**
- * Who the reader follows: company symbols and people. Kept in this browser only (localStorage), like the settings:
- * no accounts, nothing sent anywhere. This is a PREVIEW of personalisation; following does not yet trigger any alert.
+ * What the reader follows: company symbols, people (by full name) and topics (by id). Kept in this browser only (localStorage), like
+ * the settings: no accounts, nothing sent anywhere. Following picks which filings appear in the Following feed on the Interested tab
+ * (see lib/followMatch.ts); it does not send push notifications.
  */
-export type Follow = { companies: string[]; people: string[] };
+export type Follow = { companies: string[]; people: string[]; topics: string[] };
 
 const KEY = "finn.follow.v1";
 const EMPTY = "{}";
@@ -35,22 +37,31 @@ function strings(value: unknown): string[] {
   return [...new Set(value.filter((v): v is string => typeof v === "string" && v.length > 0 && v.length <= 120))].slice(0, LIMIT);
 }
 
+/** The first version stored a person as "SYMBOL:Mr. Name"; a person is now followed by their name alone, without honorific. */
+function personName(stored: string): string {
+  return plainName(stored.replace(/^[A-Z0-9&-]{1,20}:/, ""));
+}
+
 /** Anything unexpected in storage is ignored, never trusted. */
 export function parseFollow(raw: string): Follow {
   try {
     const data: unknown = JSON.parse(raw);
     if (data && typeof data === "object") {
       const o = data as Record<string, unknown>;
-      return { companies: strings(o.companies), people: strings(o.people) };
+      const people: string[] = [];
+      for (const name of strings(o.people).map(personName)) if (!people.some((p) => p.toLowerCase() === name.toLowerCase())) people.push(name);
+      return { companies: strings(o.companies), people, topics: strings(o.topics) };
     }
   } catch {
     /* fall through */
   }
-  return { companies: [], people: [] };
+  return { companies: [], people: [], topics: [] };
 }
 
+/** Add the id, or take it out if it is there (people compare without regard to case). */
 export function toggled(list: readonly string[], id: string): string[] {
-  return list.includes(id) ? list.filter((x) => x !== id) : [...list, id].slice(-LIMIT);
+  const same = (x: string) => x === id || x.toLowerCase() === id.toLowerCase();
+  return list.some(same) ? list.filter((x) => !same(x)) : [...list, id].slice(-LIMIT);
 }
 
 export function toggleFollow(kind: keyof Follow, id: string): void {

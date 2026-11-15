@@ -5,10 +5,10 @@ import type { Item } from "@/lib/types";
 
 describe("following", () => {
   it("reads only what it expects from storage", () => {
-    expect(parseFollow("{}")).toEqual({ companies: [], people: [] });
-    expect(parseFollow("not json")).toEqual({ companies: [], people: [] });
-    expect(parseFollow('{"companies":["HAL","HAL",3,""],"people":"x"}')).toEqual({ companies: ["HAL"], people: [] });
-    expect(parseFollow('{"companies":["HAL"],"people":["INFY:Mr. A"]}')).toEqual({ companies: ["HAL"], people: ["INFY:Mr. A"] });
+    expect(parseFollow("{}")).toEqual({ companies: [], people: [], topics: [] });
+    expect(parseFollow("not json")).toEqual({ companies: [], people: [], topics: [] });
+    expect(parseFollow('{"companies":["HAL","HAL",3,""],"people":"x"}')).toEqual({ companies: ["HAL"], people: [], topics: [] });
+    expect(parseFollow('{"companies":["HAL"],"people":["INFY:Mr. A B"]}')).toEqual({ companies: ["HAL"], people: ["A B"], topics: [] }); // the first version's format
   });
   it("toggles an id on and off without touching the others", () => {
     expect(toggled(["A"], "B")).toEqual(["A", "B"]);

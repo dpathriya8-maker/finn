@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
 import { ManagementCardView } from "@/components/brief/ManagementCardView";
 import { ResultsCardView } from "@/components/brief/ResultsCardView";
+import { useBecause } from "@/components/follow/BecauseContext";
 import { useBriefPrices } from "@/components/brief/PricesContext";
 import { TONE } from "@/components/brief/tone";
 import { CategoryIcon } from "@/components/ui/Icons";
@@ -33,6 +34,7 @@ function fileSize(kb: number | null): string {
  * One filing under its company's header, collapsed to two lines (the header is line one):
  *   line 2  the headline, bold
  *   line 3  small and grey: category icon, short label, the one-line reason it ranked here, and the tone
+ * In the Following feed a fourth grey line says why the filing is there ("Because you follow ...").
  * Everything else (date, price trend, the results table or the person's profile, the PDF, the full ranking reason,
  * mute) is one tap away. Every flex child that can be long has `min-w-0`, and the short label and the tone never shrink,
  * so nothing here can be wider than the screen.
@@ -41,6 +43,7 @@ export function FilingRow({ item, referenceIso, size }: { item: Item; referenceI
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const tone = TONE[item.tone];
+  const because = useBecause(item.id);
   const { sessions, generatedAt } = useBriefPrices(item.symbol);
   const label = [item.raw_category, item.raw_subcategory].filter(Boolean).join(" / ");
   // A card that read the filing says more than the exchange's one-line text; a card that failed leaves that text in place.
@@ -67,6 +70,11 @@ export function FilingRow({ item, referenceIso, size }: { item: Item; referenceI
             <Chevron open={open} />
           </span>
         </span>
+        {because && (
+          <span className="mt-0.5 block break-words text-xs leading-5 text-ink-faint" data-testid="because">
+            {because}
+          </span>
+        )}
       </button>
 
       {open && (
