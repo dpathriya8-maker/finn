@@ -54,9 +54,9 @@ def client(eng, monkeypatch, **env):
 
 
 # ---------------------------------------------------------------------------------------------- reading
-def test_a_company_nobody_has_researched_is_a_404_with_a_state_the_app_can_act_on(tmp_path, monkeypatch):
+def test_a_company_nobody_has_researched_is_a_200_with_a_state_the_app_can_act_on(tmp_path, monkeypatch):
     r = client(engine(tmp_path), monkeypatch).get("/research/ACME")
-    assert r.status_code == 404 and r.json() == {"state": "none"} and r.headers["cache-control"] == "no-store"
+    assert r.status_code == 200 and r.json() == {"state": "none"} and r.headers["cache-control"] == "no-store"  # not a 404: the browser would log it as an error
 
 
 def test_a_ticker_is_validated_and_upper_cased(tmp_path, monkeypatch):
@@ -64,7 +64,7 @@ def test_a_ticker_is_validated_and_upper_cased(tmp_path, monkeypatch):
     assert c.get("/research/bad%20ticker!").status_code == 422
     assert c.get("/research/" + "A" * 21).status_code == 422
     assert c.post("/research/%3Cscript%3E").status_code == 422
-    assert c.get("/research/acme").json() == {"state": "none"} and c.get("/research/M&M").status_code == 404  # valid NSE symbols pass
+    assert c.get("/research/acme").json() == {"state": "none"} and c.get("/research/M&M").status_code == 200  # valid NSE symbols pass
 
 
 def test_a_record_shipped_with_the_app_is_served_without_any_work(tmp_path, monkeypatch):
@@ -238,7 +238,7 @@ def test_the_limits_count_per_endpoint_so_a_different_ticker_does_not_reset_them
 def test_one_address_cannot_exceed_the_global_ceiling_across_routes(tmp_path, monkeypatch):
     c = client(engine(tmp_path), monkeypatch, RATE_LIMIT_GLOBAL="5/minute")
     codes = [c.get(f"/research/T{n}").status_code for n in range(7)]
-    assert codes[:5] == [404] * 5 and codes[5:] == [429, 429]
+    assert codes[:5] == [200] * 5 and codes[5:] == [429, 429]
     assert c.get("/health").status_code == 200  # the health check is never throttled
 
 

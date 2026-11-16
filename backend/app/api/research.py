@@ -1,7 +1,9 @@
 """PULL research routes: Promise Tracker for any NSE ticker.
 
 GET  /research/{ticker}  the finished record (200), a job in progress with its stage (202), a failed one with its reason
-                         (200, state "failed"), or nothing yet (404).
+                         (200, state "failed"), or nothing yet (200, state "none"). "Nothing yet" is an answer, not an error:
+                         it used to be a 404, which the browser prints in its console as a failed request every time an
+                         unprepared company was opened.
 POST /research/{ticker}  start fresh research if none exists: 202 while it runs, 200 if a record already exists, 429 once
                          the day's allowance of fresh research is used. Cached research is never refused.
 """
@@ -26,7 +28,7 @@ def get_engine(request: Request) -> Engine:
 
 
 def respond(result: dict) -> JSONResponse:
-    code = {"ready": 200, "running": 202, "failed": 200, "none": 404}[result["state"]]
+    code = {"ready": 200, "running": 202, "failed": 200, "none": 200}[result["state"]]
     return JSONResponse(result, status_code=code, headers=NO_STORE)
 
 

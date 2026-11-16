@@ -120,7 +120,7 @@ def main() -> int:
         if shots:
             shot(tab, shots / "demo-6-calculator-light.png", 390, max_height=3200)
 
-        record("no uncaught errors or failed requests along the way", not [e for e in tab.errors if "finn-api" not in e], "; ".join(tab.errors[:3]))
+        record("no console errors or failed requests along the way, from any step", not tab.errors, "; ".join(tab.errors[:3]))
     finally:
         browser.close()
     failed = [r for r in results if not r[1]]
