@@ -6,7 +6,7 @@ import { ManagementCardView } from "@/components/brief/ManagementCardView";
 import { ResultsCardView } from "@/components/brief/ResultsCardView";
 import { useBecause } from "@/components/follow/BecauseContext";
 import { useBriefPrices } from "@/components/brief/PricesContext";
-import { TONE } from "@/components/brief/tone";
+import { TONE, toneBox } from "@/components/brief/tone";
 import { CategoryIcon } from "@/components/ui/Icons";
 import { PriceTrend } from "@/components/ui/Price";
 import { WhatIf } from "@/components/WhatIf";
@@ -50,7 +50,7 @@ export function FilingRow({ item, referenceIso, size }: { item: Item; referenceI
   const cardReplacesBody = item.card?.status === "ok" || (item.card?.type === "results" && item.card.status === "partial");
 
   return (
-    <div className={`border-l-4 ${item.tone === "neutral" ? "border-l-transparent" : tone.border}`}>
+    <div className={toneBox(item.tone)}>
       <button
         type="button"
         aria-expanded={open}
@@ -65,7 +65,7 @@ export function FilingRow({ item, referenceIso, size }: { item: Item; referenceI
           </span>
           <span className="shrink-0 whitespace-nowrap font-medium text-ink-soft">{shortCategory(item)}</span>
           <span className="min-w-0 flex-1 truncate">{shortWhy(item)}</span>
-          {tone.tag && <span className={`shrink-0 whitespace-nowrap rounded px-1.5 font-medium ${tone.chip}`}>{tone.tag}</span>}
+          {tone.tag && <span className={`shrink-0 whitespace-nowrap rounded px-1.5 font-medium ${tone.chipOnTint}`}>{tone.tag}</span>}
           <span className="shrink-0 text-ink-faint">
             <Chevron open={open} />
           </span>

@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
-import { TONE } from "@/components/brief/tone";
+import { TONE, toneBox } from "@/components/brief/tone";
 import { AskBox } from "@/components/research/AskBox";
 import { VerdictBar } from "@/components/ui/Charts";
 import { Avatar, PriceLine } from "@/components/ui/Price";
@@ -76,10 +76,10 @@ function PromiseCard({ promise, docs, card }: { promise: TrackedPromise; docs: M
 
   return (
     <article className="relative min-w-0 overflow-hidden rounded-2xl border border-line bg-surface">
-      <div className={`border-l-4 ${look.tone === "neutral" ? "border-l-transparent" : tone.border}`}>
+      <div className={toneBox(look.tone)}>
         <button type="button" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((v) => !v)} className="block min-h-11 w-full min-w-0 px-3 py-2.5 text-left">
           <span className="flex min-w-0 items-center gap-2 text-xs">
-            <span className={`shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 font-semibold ${tone.chip || "bg-line text-ink-soft"}`}>{statusLabel(promise.verdict)}</span>
+            <span className={`shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 font-semibold ${tone.chipOnTint || "bg-line text-ink-soft"}`}>{statusLabel(promise.verdict)}</span>
             <span className="min-w-0 flex-1 truncate font-medium text-ink-soft">{promiseTopic(promise)}</span>
             <span className="shrink-0 text-ink-faint">
               <Chevron open={open} />
@@ -319,7 +319,7 @@ export function RecordView({ record }: { record: ResearchRecord; source: "shippe
       )}
 
       {!noDocuments && tooFewCalls(record) && (
-        <section className="rounded-2xl border border-line border-l-4 border-l-watch bg-surface p-4" role="note">
+        <section className={`rounded-2xl border border-line p-4 ${toneBox("watch")}`} role="note">
           <h3 className="text-sm font-semibold">{fewCallsText(record)}</h3>
           <p className="mt-1 text-sm leading-6 text-ink-soft">A promise is judged by what a later call says, so FINN needs at least two. What management said is below, word for word with its page.</p>
         </section>

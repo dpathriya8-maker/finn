@@ -45,7 +45,7 @@ export function MorningBrief() {
         {summary.map((part, i) => (
           <span key={part.text}>
             {i > 0 && <span className="text-ink-faint"> · </span>}
-            <span className={part.tone === "bad" ? "text-bad" : undefined}>{part.text}</span>
+            <span className={part.tone === "bad" ? "text-bad" : part.tone === "good" ? "text-good" : undefined}>{part.text}</span>
           </span>
         ))}
       </p>

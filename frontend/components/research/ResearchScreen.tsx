@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { CompanyResearch } from "@/components/research/CompanyResearch";
+import { toneBox } from "@/components/brief/tone";
 import { VerdictBar } from "@/components/ui/Charts";
 import { Avatar, PriceLine } from "@/components/ui/Price";
 import { shortName } from "@/lib/headline";
-import { deliveredShort, documentsLine, isValidTicker, normaliseTicker, type IndexEntry, type ResearchIndex, type ResearchRecord } from "@/lib/research";
+import { deliveredShort, documentsLine, isValidTicker, normaliseTicker, scorecardTone, type IndexEntry, type ResearchIndex, type ResearchRecord } from "@/lib/research";
 import { useJson } from "@/lib/useJson";
 import { useCompanyPrices } from "@/lib/useSessions";
 
@@ -25,7 +26,7 @@ function CompanyRow({ entry }: { entry: IndexEntry }) {
   const headline = deliveredShort(card) ?? "Not enough calls yet";
 
   return (
-    <Link href={`/research?symbol=${encodeURIComponent(entry.symbol)}`} className="block min-h-14 min-w-0 px-4 py-3">
+    <Link href={`/research?symbol=${encodeURIComponent(entry.symbol)}`} className={`block min-h-14 min-w-0 px-4 py-3 ${toneBox(scorecardTone(card))}`}>
       <span className="flex min-w-0 items-center gap-2.5">
         <Avatar symbol={entry.symbol} name={entry.name} size={32} />
         <span className="min-w-0 flex-1 truncate text-sm font-semibold">{shortName(entry.name)}</span>

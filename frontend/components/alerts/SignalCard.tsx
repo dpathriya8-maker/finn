@@ -2,7 +2,7 @@
 
 import { useId, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
-import { TONE } from "@/components/brief/tone";
+import { TONE, toneBox } from "@/components/brief/tone";
 import { moveWords, type SignalAlert } from "@/lib/alerts";
 import { CategoryIcon } from "@/components/ui/Icons";
 import { Avatar, PriceChip } from "@/components/ui/Price";
@@ -26,7 +26,7 @@ export function SignalCard({ alert, reasons, note }: { alert: SignalAlert; reaso
         : `${alert.symbol} traded ${ratio.toFixed(1)}× its usual volume`;
 
   return (
-    <article className={`rounded-2xl border border-l-4 border-line ${tone.border} bg-surface`}>
+    <article className={`rounded-2xl border border-line ${toneBox(alert.tone, "bg-surface")}`}>
       <button
         type="button"
         aria-expanded={open}
@@ -48,7 +48,7 @@ export function SignalCard({ alert, reasons, note }: { alert: SignalAlert; reaso
           <PriceChip sessions={alert.sessions} />
         </span>
         <span className="mt-2 flex items-center gap-2 text-xs text-ink-faint">
-          <span className={`rounded px-1.5 py-0.5 font-medium ${tone.chip}`}>{tone.tag}</span>
+          <span className={`rounded px-1.5 py-0.5 font-medium ${tone.chipOnTint}`}>{tone.tag}</span>
           <time dateTime={s.day}>{formatDay(s.day)}</time>
         </span>
         <span className="mt-1 block text-base font-semibold leading-snug">{headline}</span>

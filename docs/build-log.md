@@ -427,3 +427,13 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 209 unit tests (12 new: the window rule and stale data), types, lint, build; 279 browser checks on the production build for the screens this touches at 360 and 390 px, light and dark, plus 44 for the new states; the audit on the local build: Brief, Alerts, Research and You all inside Lighthouse's "good" limits.
 
 **Not done:** the actual Lighthouse scores. One command for DP: `npx lighthouse https://finn-mocha.vercel.app --form-factor=mobile`.
+
+## Night plan, Part E: good and bad as soft tints (16 Nov 2026)
+
+**Asked:** a stronger good and bad colour on every card (Brief, Following, Alerts, Research promises, the portfolio summary) as tints, not loud fills: a soft tint, a 3px edge, a coloured label, 8 to 12% in light and 14 to 18% in dark, 4.5:1 text, an arrow or word beside every colour, indigo kept for buttons and tabs.
+
+**Done:** `toneBox` in `components/brief/tone.ts` is the one place that says what a tone looks like; tokens `--good-tint`, `--bad-tint` and `--watch-tint` are the colour mixed into the surface (9 to 10% light, 16% dark). Applied to filings (Brief and Following), Alerts price and volume cards, promises and the company rows on Research and Interested, and the portfolio card and its breakdown rows. "Quiet day" is green. Decisions S135 and S136.
+
+**Found by the checks and fixed:** the first version failed the contrast check in dark mode only: "Risk" on a tinted card was 3.9:1 (a chip's own fill on top of the tint) and grey text on a green or amber tint was 4.2 to 4.4:1. The chip now sits on the plain surface with a thin ring, and the dark tertiary text is lighter.
+
+**Verified:** 213 unit tests, types, lint, build; 94 browser checks for this part at 360 and 390 px, light and dark, including that each tinted card's background is the status colour mixed into the real surface at the stated percentage and that its edge is 3px in the full colour, with every text at 4.5:1 or better.

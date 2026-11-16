@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
+import { toneBox, type Tone } from "@/components/brief/tone";
 import { useAllBriefPrices } from "@/components/brief/PricesContext";
 import { shortName } from "@/lib/headline";
 import { arrowInr, arrowInrPct, directionOf, formatInr, plainPct, quoteOf, summarize, useInvested, type Direction, type Summary } from "@/lib/invested";
@@ -9,6 +10,7 @@ import { priceView } from "@/lib/prices";
 import type { BriefCompany } from "@/lib/types";
 
 const TEXT: Record<Direction, string> = { good: "text-good", bad: "text-bad", flat: "text-ink" };
+const TONE_OF: Record<Direction, Tone> = { good: "good", bad: "bad", flat: "neutral" };
 
 function Figure({ label, children, tone = "flat" }: { label: string; children: React.ReactNode; tone?: Direction }) {
   return (
@@ -23,7 +25,7 @@ function Figure({ label, children, tone = "flat" }: { label: string; children: R
 function Row({ row, name, basis }: { row: Summary["rows"][number]; name: string; basis: Summary["weightBasis"] }) {
   const pnlTone = row.pnl === null ? "flat" : directionOf(row.pnl);
   return (
-    <li className="min-w-0 px-4 py-2.5">
+    <li className={`min-w-0 px-4 py-2.5 ${toneBox(TONE_OF[pnlTone])}`}>
       <div className="flex min-w-0 items-baseline justify-between gap-3">
         <span className="min-w-0 truncate text-sm font-medium">
           {name}
@@ -71,7 +73,8 @@ export function PortfolioSummary({ companies }: { companies: readonly BriefCompa
   const todayTone = summary.today === null ? "flat" : directionOf(summary.today);
 
   return (
-    <section aria-label="My portfolio" className="mb-4 min-w-0 overflow-hidden rounded-2xl border border-line bg-surface" data-testid="portfolio-summary">
+    <section aria-label="My portfolio" className={`mb-4 min-w-0 overflow-hidden rounded-2xl border border-line ${toneBox(TONE_OF[overallTone === "flat" ? todayTone : overallTone], "bg-surface")}`}
+      data-testid="portfolio-summary">
       <button
         type="button"
         aria-expanded={open}

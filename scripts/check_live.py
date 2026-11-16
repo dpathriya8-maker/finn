@@ -75,12 +75,14 @@ LAYOUT_JS = r"""
   const de = document.documentElement, w = de.clientWidth, out = [];
   if (de.scrollWidth > w) out.push(`html scrollWidth ${de.scrollWidth} > ${w}`);
   if (document.body.scrollWidth > w) out.push(`body scrollWidth ${document.body.scrollWidth} > ${w}`);
+  // An element past the right edge only matters if nothing clips it: inside a box that hides or scrolls its overflow, and that box
+  // itself fits the screen (a swipeable tab part-way through its swipe is such a box), it cannot widen the page.
+  const clipped = (el) => { for (let a = el.parentElement; a && a !== document.body; a = a.parentElement) { if (getComputedStyle(a).overflowX !== 'visible' && a.getBoundingClientRect().right <= w + 1) return true; } return false; };
   for (const el of document.querySelectorAll('body *')) {
     if (el.closest('[inert], .sr-only') || el.closest('[aria-hidden="true"] svg')) continue;
     const r = el.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0 && r.right > w + 1 && getComputedStyle(el).position !== 'fixed') {
-      const clip = el.closest('[class*="overflow-x-auto"], [class*="overflow-hidden"], [class*="overflow-x-clip"], [class*="overflow-x-hidden"]');
-      if (!clip || clip === el) { out.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} right ${Math.round(r.right)} > ${w}`); if (out.length > 5) break; }
+    if (r.width > 0 && r.height > 0 && r.right > w + 1 && getComputedStyle(el).position !== 'fixed' && !clipped(el)) {
+      out.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} right ${Math.round(r.right)} > ${w}`); if (out.length > 5) break;
     }
   }
   const nav = document.querySelector('nav');

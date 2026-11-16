@@ -65,7 +65,7 @@ export function companySections(groups: Groups): { needs: CompanyGroup[]; worth:
   return { needs: all.filter((g) => g.top >= HIGH_MIN), worth: all.filter((g) => g.top < HIGH_MIN) };
 }
 
-export type SummaryPart = { text: string; tone?: "bad" };
+export type SummaryPart = { text: string; tone?: "bad" | "good" };
 
 /**
  * The one line under the Brief's heading, worked out in code from the filings in the window (never by a model). What applies is
@@ -76,7 +76,7 @@ export type SummaryPart = { text: string; tone?: "bad" };
 export function summaryParts(groups: Groups, companyCount: number): SummaryPart[] {
   const material = [...groups.high, ...groups.medium];
   if (material.length === 0) {
-    return [{ text: `Quiet day: nothing needs action across your ${companyCount} ${companyCount === 1 ? "company" : "companies"}` }];
+    return [{ text: `Quiet day: nothing needs action across your ${companyCount} ${companyCount === 1 ? "company" : "companies"}`, tone: "good" }];
   }
   const risks = material.filter((item) => item.tone === "bad").length;
   const filed = new Set(material.map((item) => item.symbol)).size;

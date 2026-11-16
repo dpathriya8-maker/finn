@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useId, useMemo, useState } from "react";
 import { Chevron } from "@/components/brief/Chevron";
-import { TONE } from "@/components/brief/tone";
+import { TONE, toneBox } from "@/components/brief/tone";
 import { FollowSection } from "@/components/follow/FollowSection";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { SectionBox } from "@/components/ui/SectionBox";
@@ -48,7 +48,7 @@ function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: s
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className={`block min-h-11 w-full min-w-0 border-l-4 px-3 py-3 text-left ${card && scorecardTone(card) !== "neutral" ? tone.border : "border-l-transparent"}`}
+        className={`block min-h-11 w-full min-w-0 px-3 py-3 text-left ${toneBox(card ? scorecardTone(card) : "neutral")}`}
       >
         <span className="flex min-w-0 items-center gap-2.5">
           <Avatar symbol={entry.symbol} name={entry.name} size={32} />
@@ -71,7 +71,7 @@ function CompanyRow({ entry, onInvest }: { entry: IndexEntry; onInvest: (name: s
           <span className="min-w-0 flex-1 truncate">
             {card ? promiseCounts(card) : entry.status === "statements_only" ? "What management said is in the research" : "Open the research to read the filings"}
           </span>
-          {tone.tag && card && <span className={`shrink-0 whitespace-nowrap rounded px-1.5 font-medium ${tone.chip}`}>{tone.tag}</span>}
+          {tone.tag && card && <span className={`shrink-0 whitespace-nowrap rounded px-1.5 font-medium ${tone.chipOnTint}`}>{tone.tag}</span>}
           <span className="shrink-0">
             <Chevron open={open} />
           </span>

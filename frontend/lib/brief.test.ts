@@ -205,3 +205,15 @@ describe("effectiveWindow (the Brief never opens on an empty day if a wider wind
     expect(effectiveWindow(b, 24, false, ["ITC"])).toEqual({ hours: 72, widened: true });
   });
 });
+
+describe("the summary line's colours", () => {
+  const groups = (items: Item[]) => groupItems(items);
+  it("a quiet day is good news, so it is green; risks are red", async () => {
+    const { summaryParts } = await import("@/lib/brief");
+    expect(summaryParts(groups([]), 18)).toEqual([{ text: "Quiet day: nothing needs action across your 18 companies", tone: "good" }]);
+    const risk = item({ id: "r", priority: 90, tone: "bad", published_at: hoursBefore(2) });
+    expect(summaryParts(groups([risk]), 18)).toEqual([{ text: "1 risk to review", tone: "bad" }]);
+    const worth = item({ id: "w", priority: 60, published_at: hoursBefore(2) });
+    expect(summaryParts(groups([worth]), 18)).toEqual([{ text: "1 filing worth a look" }]); // neutral: no colour
+  });
+});

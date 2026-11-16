@@ -25,6 +25,10 @@
   --bad-bg: #fde8ec;
   --watch: #92400e;
   --watch-bg: #fef3c7;
+  /* Soft card tints: the status colour mixed into the card surface, never a fill. About 9% in light mode. */
+  --good-tint: color-mix(in srgb, var(--good) 9%, var(--surface));
+  --bad-tint: color-mix(in srgb, var(--bad) 9%, var(--surface));
+  --watch-tint: color-mix(in srgb, var(--watch) 10%, var(--surface));
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,7 +36,7 @@
     /* Dark: a soft indigo-tinted charcoal page (not near-black) with cards one step lighter. */
     --ink: #f1f2f8;
     --ink-soft: #c9cce0;
-    --ink-faint: #a3a8c3;
+    --ink-faint: #b3b8d1;
     --page: #1c1f2e;
     --surface: #272b3d;
     --backdrop: #151724;
@@ -47,6 +51,10 @@
     --bad-bg: rgba(255, 120, 140, 0.14);
     --watch: #fbbf24;
     --watch-bg: rgba(251, 191, 36, 0.14);
+    /* In dark mode a tint needs a little more to show: about 16%. */
+    --good-tint: color-mix(in srgb, var(--good) 16%, var(--surface));
+    --bad-tint: color-mix(in srgb, var(--bad) 16%, var(--surface));
+    --watch-tint: color-mix(in srgb, var(--watch) 16%, var(--surface));
   }
 }
 
@@ -68,6 +76,9 @@
   --color-bad-bg: var(--bad-bg);
   --color-watch: var(--watch);
   --color-watch-bg: var(--watch-bg);
+  --color-good-tint: var(--good-tint);
+  --color-bad-tint: var(--bad-tint);
+  --color-watch-tint: var(--watch-tint);
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
