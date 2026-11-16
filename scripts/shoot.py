@@ -92,7 +92,14 @@ def shoot(url: str, out: Path, *, dark: bool, width: int, height: int, wait: flo
         shown = max(full_height, height)
         if max_height:
             shown = min(shown, max_height)  # a long page (a company with many promises) is cut here
-        shot = page.call("Page.captureScreenshot", format="png", captureBeyondViewport=True, clip={"x": 0, "y": 0, "width": width, "height": shown, "scale": 1})
+        # The window is made as tall as the picture for a moment, and every sideways-scrolled box is put back, instead of capturing
+        # "beyond the viewport", which makes the swipeable Brief tabs snap back to the first tab in the picture.
+        page.evaluate("window.__scrolled = [...document.querySelectorAll('*')].filter(e => e.scrollLeft > 0).map(e => [e, e.scrollLeft]); true")
+        page.call("Emulation.setDeviceMetricsOverride", width=width, height=shown, deviceScaleFactor=2, mobile=True)
+        time.sleep(0.5)
+        page.evaluate("window.__scrolled.forEach(([e, left]) => { e.scrollLeft = left }); true")
+        time.sleep(0.3)
+        shot = page.call("Page.captureScreenshot", format="png", clip={"x": 0, "y": 0, "width": width, "height": shown, "scale": 1})
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_bytes(base64.b64decode(shot["data"]))
         print(f"{out} ({width}px wide, {shown}px of {full_height}px, {'dark' if dark else 'light'})")

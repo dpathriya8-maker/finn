@@ -25,10 +25,11 @@ function load<T>(url: string): Promise<T> {
 }
 
 /** Loads a static JSON file at run time (not baked into the build), so a data refresh needs no rebuild. */
-export function useJson<T>(url: string): LoadState<T> {
+export function useJson<T>(url: string | null): LoadState<T> {
   const [state, setState] = useState<LoadState<T>>({ kind: "loading" });
 
   useEffect(() => {
+    if (url === null) return; // nothing to load: no request, so no failed request in the console
     let cancelled = false;
     load<T>(url)
       .then((data) => {
@@ -42,5 +43,5 @@ export function useJson<T>(url: string): LoadState<T> {
     };
   }, [url]);
 
-  return state;
+  return url === null ? { kind: "error" } : state;
 }

@@ -26,11 +26,23 @@ async function toReply(res: Response): Promise<Reply> {
   return (await res.json()) as Reply; // 200 ready or failed, 202 running
 }
 
+let prepared: Promise<string[]> | null = null;
+
+/** The companies researched in advance (the Research tab's list), asked once. */
+function preparedSymbols(): Promise<string[]> {
+  prepared ??= fetch("/data/research/index.json", { cache: "no-store" })
+    .then((res) => (res.ok ? res.json() : { companies: [] }))
+    .then((data: { companies?: { symbol: string }[] }) => (data.companies ?? []).map((c) => c.symbol))
+    .catch(() => []);
+  return prepared;
+}
+
 export const realDeps: FlowDeps = {
   configured: Boolean(API_URL),
   now: () => Date.now(),
   sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
   async shipped(symbol) {
+    if (!(await preparedSymbols()).includes(symbol)) return null; // not prepared: go straight to the engine, with no failed request
     const res = await fetch(`/data/research/${encodeURIComponent(symbol)}.json`, { cache: "no-store" });
     return res.ok ? ((await res.json()) as ResearchRecord) : null;
   },

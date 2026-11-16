@@ -128,6 +128,18 @@ export function ResultsCardView({ card }: { card: ResultsCard }) {
           ))}
           {conversion && <li className="text-ink-faint">{conversion}</li>}
           <li className="text-ink-faint">Changes and margins are calculated from these figures, not taken from the filing.</li>
+          {card.source.url && card.source.pages.length > 0 && (
+            <li>
+              <a
+                href={`${card.source.url}#page=${card.source.pages[0]}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex min-h-11 items-center font-medium text-accent underline underline-offset-2"
+              >
+                Open the filing at page {card.source.pages[0]}
+              </a>
+            </li>
+          )}
         </ul>
       </details>
     </section>

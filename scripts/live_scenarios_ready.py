@@ -134,3 +134,30 @@ def define(scenario) -> None:
         wait=5,
         checks=[("a returning reader does not see it", "!document.querySelector('[data-testid=first-visit-hint]')")],
     )
+    scenario(
+        "figures-as-printed",
+        "/",
+        setup=[SEVEN],
+        wait=5,
+        checks=[
+            (
+                "'Figures as printed' opens and links to the filing at that page",
+                "(() => { const art = [...document.querySelectorAll('article')].find(a => a.textContent.includes('Kaynes')); "
+                "const row = [...art.querySelectorAll('button[aria-expanded]')].find(x => /Q2 FY27|results/i.test(x.textContent)); row.click(); "
+                "return new Promise(r => setTimeout(() => { const s = [...document.querySelectorAll('summary')].find(x => x.textContent.includes('Figures as printed')); if (!s) return r(false); s.click(); "
+                "setTimeout(() => { const a = [...document.querySelectorAll('a')].find(x => x.textContent.includes('Open the filing at page')); r(!!a && /[.]pdf#page=[0-9]+/.test(a.getAttribute('href')) && a.rel.includes('noopener')); }, 300); }, 400)); })()",
+            ),
+        ],
+    )
+    scenario(
+        "unprepared-ticker-makes-no-404",
+        "/research?symbol=ZZZZ",
+        wait=4,
+        contrast=False,
+        checks=[
+            (
+                "a ticker that was never prepared does not ask for files that do not exist",
+                "performance.getEntriesByType('resource').filter(e => /[/]data[/](research[/])?ZZZZ[.]json/.test(e.name)).length === 0",
+            ),
+        ],
+    )
