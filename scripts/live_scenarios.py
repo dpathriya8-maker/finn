@@ -23,6 +23,9 @@ def define(scenario) -> None:
     import live_scenarios_follow
 
     live_scenarios_follow.define(scenario)
+    import live_scenarios_ready
+
+    live_scenarios_ready.define(scenario)
     scenario("brief", "/", checks=[("summary line is shown", "!!document.querySelector('[data-testid=summary]')"),
                                    ("no portfolio card without amounts", f"!{SUMMARY}")])
     scenario("brief-open", "/", setup=[SEVEN], expand=True, wait=5, shot_name="brief-open")

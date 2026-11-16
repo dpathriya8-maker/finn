@@ -19,11 +19,19 @@ const TABS = [
 export function BriefHome() {
   const [active, setActive] = useState(0);
   const [moving, setMoving] = useState(false);
+  const [warm, setWarm] = useState(false); // the Brief has settled: get the other tab ready so a swipe is instant
   const scroller = useRef<HTMLDivElement>(null);
   const timer = useRef<number | undefined>(undefined);
   const target = useRef<number | null>(null); // the tab a tap asked for, until the scroll has arrived
 
   useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  // The Interested tab loads six data files and draws a long list. It is not on screen at first, so it waits until the reader
+  // goes there (or the Brief has had a few seconds to itself), which keeps the first screen fast.
+  useEffect(() => {
+    const id = window.setTimeout(() => setWarm(true), 3000);
+    return () => window.clearTimeout(id);
+  }, []);
 
   /** The scroll has stopped: finish the trip if a tap's animation stalled, then settle on the panel we are at. */
   function settle() {
@@ -90,7 +98,7 @@ export function BriefHome() {
               inert={hidden}
               className={`w-full shrink-0 snap-start ${hidden ? "h-0 overflow-hidden" : ""}`}
             >
-              {tab.id === "invested" ? <MorningBrief /> : <InterestedTab />}
+              {tab.id === "invested" ? <MorningBrief /> : warm || active === i || moving ? <InterestedTab /> : null}
             </section>
           );
         })}

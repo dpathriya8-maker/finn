@@ -12,7 +12,9 @@ const requests = new Map<string, Promise<unknown>>();
 function load<T>(url: string): Promise<T> {
   let request = requests.get(url);
   if (!request) {
-    request = fetch(url, { cache: "no-store" }).then((res) => {
+    // The browser's own cache rules: the data files are served `must-revalidate`, so each page load asks whether the file changed and
+    // gets a fresh one the moment the pipeline has published it. (`no-store` would also have made the preload above unusable.)
+    request = fetch(url).then((res) => {
       if (!res.ok) throw new Error(`${url} returned ${res.status}`);
       return res.json();
     });

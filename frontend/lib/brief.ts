@@ -123,6 +123,21 @@ export const WINDOWS = [
   { hours: 168, label: "7 days" },
 ] as const;
 
+/**
+ * The window the Brief actually shows. A reader who picked a window gets exactly that one. A reader who did not gets the default
+ * (24 hours) unless it holds nothing material, in which case the Brief looks back to the next window that does (3 days, then 7) and
+ * says so; if none holds anything material it stays on the default. Always counted from the data's own time, never the device clock.
+ */
+export function effectiveWindow(brief: Brief, hours: number, chosen: boolean, muted: readonly string[] = []): { hours: number; widened: boolean } {
+  if (chosen) return { hours, widened: false };
+  for (const w of WINDOWS) {
+    if (w.hours < hours) continue;
+    const groups = groupItems(selectItems(brief, w.hours, muted));
+    if (thingsThatMatter(groups) > 0) return { hours: w.hours, widened: w.hours !== hours };
+  }
+  return { hours, widened: false };
+}
+
 /** The Brief's heading: "Today's Highlights" for the last day, otherwise "Highlights: last 3 days". */
 export function highlightsTitle(hours: number): string {
   return hours === 24 ? "Today's Highlights" : `Highlights: last ${windowLabel(hours)}`;

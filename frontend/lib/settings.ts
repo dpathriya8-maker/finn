@@ -17,6 +17,8 @@ export type Overrides = {
 
 export type Settings = {
   windowHours: number;
+  /** True when the reader picked a window themselves; false while it is the published default (the Brief may then look further back). */
+  windowChosen: boolean;
   volumeMultiple: number;
   priceMovePct: number;
   mutedSymbols: string[];
@@ -86,6 +88,7 @@ export function resolveSettings(overrides: Overrides, config: AppConfig | null):
   }
   return {
     windowHours: overrides.windowHours ?? defaults.window_hours,
+    windowChosen: overrides.windowHours !== undefined,
     volumeMultiple: overrides.volumeMultiple ?? defaults.volume_multiple,
     priceMovePct: overrides.priceMovePct ?? defaults.price_move_pct,
     mutedSymbols: overrides.mutedSymbols ?? [],

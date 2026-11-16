@@ -40,7 +40,7 @@ describe("parseOverrides", () => {
 describe("resolveSettings", () => {
   it("follows the published defaults when the user changed nothing", () => {
     expect(resolveSettings({}, config)).toEqual({
-      windowHours: 24, volumeMultiple: 2, priceMovePct: 5, mutedSymbols: [],
+      windowHours: 24, windowChosen: false, volumeMultiple: 2, priceMovePct: 5, mutedSymbols: [],
       alertCategories: { results: true, dividend: false },
     });
   });
@@ -48,6 +48,7 @@ describe("resolveSettings", () => {
   it("lets the user's choices win over the defaults", () => {
     const s = resolveSettings({ windowHours: 168, volumeMultiple: 3, alertCategories: { dividend: true, results: false }, mutedSymbols: ["ITC"] }, config);
     expect(s.windowHours).toBe(168);
+    expect(s.windowChosen).toBe(true);
     expect(s.volumeMultiple).toBe(3);
     expect(s.alertCategories).toEqual({ results: false, dividend: true });
     expect(s.mutedSymbols).toEqual(["ITC"]);

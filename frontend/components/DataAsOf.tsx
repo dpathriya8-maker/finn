@@ -11,7 +11,7 @@ type State = { kind: "loading" } | { kind: "ready"; meta: Meta } | { kind: "erro
  * Fetched at run time (not baked into the build), which is the same path the Morning Brief
  * will use. Sample data is labelled as such; a missing file is said out loud, never hidden.
  */
-export function DataAsOf() {
+export function DataAsOf({ stale = false }: { stale?: boolean }) {
   const [state, setState] = useState<State>({ kind: "loading" });
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function DataAsOf() {
   }
   const isSample = state.meta.note === "skeleton";
   return (
-    <p>
+    <p className={stale ? "font-medium text-watch" : undefined}>
       Data as of {formatIst(state.meta.generated_at)}
       {isSample && <span className="ml-2 rounded bg-watch-bg px-1.5 py-0.5 text-xs font-medium text-watch">Sample data</span>}
     </p>

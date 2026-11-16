@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Alerts · FINN" };
 export default function AlertsPage() {
   return (
     <>
-      <WindowHeader title="Alerts">
+      <WindowHeader title="Alerts" staleTitle="Latest alerts">
         <p className="mt-1 text-sm text-ink-soft">Only what crosses your own lines.</p>
       </WindowHeader>
 

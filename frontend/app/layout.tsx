@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { preload } from "react-dom";
 import type { ReactNode } from "react";
 import { BottomNav } from "@/components/BottomNav";
 import { FinnMark } from "@/components/FinnMark";
@@ -29,6 +30,10 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
+  // The two data files every screen reads (the nav's alerts dot, the Brief, Alerts, You) start downloading with the page, not after
+  // the scripts have run and asked for them.
+  preload("/data/brief.json", { as: "fetch", crossOrigin: "anonymous" });
+  preload("/data/config.json", { as: "fetch", crossOrigin: "anonymous" });
   return (
     <html lang="en">
       <body>

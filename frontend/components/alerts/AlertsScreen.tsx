@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SignalCard } from "@/components/alerts/SignalCard";
+import { CaughtUp } from "@/components/CaughtUp";
 import { CompanyCard } from "@/components/brief/CompanyCard";
 import { PricesProvider } from "@/components/brief/PricesContext";
 import { filingAlerts, filingNote, signalAlerts, signalReasons } from "@/lib/alerts";
 import { markAlertsSeen } from "@/lib/alertsSeen";
-import { GROUP_LIMIT, groupByCompany, whenLabel } from "@/lib/brief";
+import { GROUP_LIMIT, groupByCompany } from "@/lib/brief";
 import { useSettings } from "@/lib/settings";
 import type { AppConfig, Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
@@ -62,8 +63,8 @@ export function AlertsScreen() {
       <p className="mt-3 rounded-xl bg-line px-3 py-2 text-xs leading-5 text-ink-soft">
         Your lines: price moves above ±{settings.priceMovePct}%, volume above {settings.volumeMultiple}× its 20-day average,{" "}
         {kinds} kinds of filing
-        {settings.mutedSymbols.length > 0 && `, ${settings.mutedSymbols.length} muted`}.{" "}
-        <Link href="/settings" className="font-medium text-accent underline underline-offset-2">
+        {settings.mutedSymbols.length > 0 && `, ${settings.mutedSymbols.length} muted`}.
+        <Link href="/settings" className="-mb-2 flex min-h-11 items-center font-medium text-accent underline underline-offset-2">
           Change them
         </Link>
       </p>
@@ -103,13 +104,7 @@ export function AlertsScreen() {
         </section>
       )}
 
-      <p className="mt-10 text-center text-sm text-ink-soft">
-        <span className="font-semibold text-good" aria-hidden="true">
-          ✓
-        </span>{" "}
-        You&apos;re all caught up
-        <span className="mt-1 block text-xs text-ink-faint">Checked {whenLabel(brief.generated_at, brief.generated_at)}</span>
-      </p>
+      <CaughtUp generatedAt={brief.generated_at} className="mt-10" />
       <p className="mx-auto mt-4 max-w-xs text-center text-xs leading-5 text-ink-faint">
         FINN checks when you open it. Push notifications to your phone are not part of this version.
       </p>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useId, useState, type ReactNode } from "react";
+import { DataAsOf } from "@/components/DataAsOf";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { SlidersIcon } from "@/components/ui/Icons";
 import { highlightsTitle, windowLabel, WINDOWS } from "@/lib/brief";
-import { updateSettings, useSettings } from "@/lib/settings";
-import type { AppConfig } from "@/lib/types";
-import { useJson } from "@/lib/useJson";
+import { updateSettings } from "@/lib/settings";
+import { useWindow } from "@/lib/useWindow";
 
 const OPTIONS = [
   { hours: 24, text: "Last 24 hours" },
@@ -16,23 +16,41 @@ const OPTIONS = [
 
 /**
  * The heading of a screen that looks back over a time window (the Brief and Alerts): an optional line above, the title, one
- * sliders button that opens the window in a bottom sheet (the thumb zone), and "Showing the last 24 hours" under it.
+ * sliders button that opens the window in a bottom sheet (the thumb zone), and what is being shown under it.
  * One component for both screens, and one setting (`windowHours` in settings storage), so a change on either is the change on both.
  * With no `title` it is the Brief's own: "Today's Highlights", or "Highlights: last 3 days".
+ *
+ * Counted from the data's own time, never the device clock. If the data is more than a day older than the device's clock the title
+ * becomes "Latest highlights" (`staleTitle`) and the first line is "Data as of ...", so an old file is never passed off as today.
+ * On the Brief (`widen`), while the reader has not picked a window and the default holds nothing material, it looks back further;
+ * the heading then simply names the wider window, and the Brief says why under the tabs (a sentence added up here after the data
+ * loaded would push the whole page down).
  */
-export function WindowHeader({ title, above, children }: { title?: string; above?: ReactNode; children?: ReactNode }) {
-  const configState = useJson<AppConfig>("/data/config.json");
-  const settings = useSettings(configState.kind === "ready" ? configState.data : null);
+export function WindowHeader({
+  title,
+  staleTitle = "Latest highlights",
+  widen = false,
+  above,
+  children,
+}: {
+  title?: string;
+  staleTitle?: string;
+  widen?: boolean;
+  above?: ReactNode;
+  children?: ReactNode;
+}) {
+  const win = useWindow(widen);
   const [open, setOpen] = useState(false);
   const titleId = useId();
-  const hours = settings.windowHours;
+  const hours = win.hours;
+  const showing = `Showing the last ${windowLabel(hours)}`;
 
   return (
     <section aria-labelledby={titleId} className="pt-4">
       {above}
       <div className="flex items-start justify-between gap-3">
         <h1 id={titleId} className="min-w-0 text-2xl font-semibold tracking-tight">
-          {title ?? highlightsTitle(hours)}
+          {win.stale ? staleTitle : (title ?? highlightsTitle(hours))}
         </h1>
         <button
           type="button"
@@ -44,7 +62,23 @@ export function WindowHeader({ title, above, children }: { title?: string; above
           <SlidersIcon size={20} />
         </button>
       </div>
-      <p className="mt-0.5 text-sm text-ink-faint">Showing the last {windowLabel(hours)}</p>
+      {win.stale ? (
+        <>
+          <div className="mt-0.5 text-sm" data-testid="data-as-of">
+            <DataAsOf stale />
+          </div>
+          <p className="text-sm text-ink-faint">{showing} before then</p>
+        </>
+      ) : (
+        <>
+          <p className="mt-0.5 text-sm text-ink-faint">
+            {showing}
+          </p>
+          <div className="text-sm text-ink-soft" data-testid="data-as-of">
+            <DataAsOf />
+          </div>
+        </>
+      )}
       {children}
 
       <BottomSheet open={open} onClose={() => setOpen(false)} title="Time window">

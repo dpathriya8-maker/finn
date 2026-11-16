@@ -4,10 +4,11 @@ import { useId, useMemo, useState } from "react";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
 import { GroupSection } from "@/components/brief/GroupSection";
 import { PricesProvider } from "@/components/brief/PricesContext";
+import { CaughtUp } from "@/components/CaughtUp";
 import { BecauseProvider } from "@/components/follow/BecauseContext";
 import { BuildingIcon, CloseIcon, PersonIcon } from "@/components/ui/Icons";
 import { SectionBox } from "@/components/ui/SectionBox";
-import { companySections, groupItems, selectItems, whenLabel, windowLabel, WINDOWS } from "@/lib/brief";
+import { companySections, groupItems, selectItems, windowLabel, WINDOWS } from "@/lib/brief";
 import { toggleFollow, useFollow, type Follow } from "@/lib/follow";
 import { becauseLine, isFollowed, nothingLine, namedPeople, reasonsFor, suggest, topicById, TOPICS, type Reason, type Suggestion } from "@/lib/followMatch";
 import { shortName } from "@/lib/headline";
@@ -151,23 +152,34 @@ function StarterTopics({ follow }: { follow: Follow }) {
  * Brief's own three-line cards with the risks first, each filing once, with a grey line on why it is here. Routine and
  * lower-priority filings are collapsed exactly as on the Brief. A followed thing with no filing in the window says so.
  */
-function Feed({ brief, follow, hours, chips }: { brief: Brief; follow: Follow; hours: number; chips: Chip[] }) {
+function Feed({ brief, follow, hours, chosen, chips }: { brief: Brief; follow: Follow; hours: number; chosen: boolean; chips: Chip[] }) {
   const nameOf = useMemo(() => new Map(brief.companies.map((c) => [c.symbol, shortName(c.name)])), [brief]);
-  const inWindow = useMemo(() => selectItems(brief, hours), [brief, hours]);
-  const reasons = useMemo(() => {
+  // Why each filing matches, for every filing in the data; the window is chosen below.
+  const allReasons = useMemo(() => {
     const map = new Map<string, Reason[]>();
-    for (const item of inWindow) {
+    for (const item of brief.items) {
       const r = reasonsFor(item, follow, (symbol) => nameOf.get(symbol) ?? symbol);
       if (r.length > 0) map.set(item.id, r);
     }
     return map;
-  }, [inWindow, follow, nameOf]);
+  }, [brief, follow, nameOf]);
+  // The reader's own window if they picked one; otherwise the default, or the next window that has something they follow.
+  const shownHours = useMemo(() => {
+    if (chosen) return hours;
+    for (const w of WINDOWS) {
+      if (w.hours >= hours && selectItems(brief, w.hours).some((item) => allReasons.has(item.id))) return w.hours;
+    }
+    return hours;
+  }, [brief, allReasons, hours, chosen]);
+  const widened = shownHours !== hours;
+  const inWindow = useMemo(() => selectItems(brief, shownHours), [brief, shownHours]);
+  const reasons = useMemo(() => new Map(inWindow.filter((item) => allReasons.has(item.id)).map((item) => [item.id, allReasons.get(item.id)!])), [inWindow, allReasons]);
   const because = useMemo(() => new Map([...reasons].map(([id, r]) => [id, becauseLine(r)])), [reasons]);
   const matched = useMemo(() => inWindow.filter((item) => reasons.has(item.id)), [inWindow, reasons]);
   const groups = useMemo(() => groupItems(matched), [matched]);
   const sections = useMemo(() => companySections(groups), [groups]);
-  const windowText = windowLabel(hours);
-  const wider = WINDOWS.find((w) => w.hours > hours);
+  const windowText = windowLabel(shownHours);
+  const wider = WINDOWS.find((w) => w.hours > shownHours);
 
   // Followed things that no filing in the window matches, said plainly.
   const matchedKeys = new Set([...reasons.values()].flat().map((r) => `${r.kind}:${r.id.toLowerCase()}`));
@@ -176,7 +188,11 @@ function Feed({ brief, follow, hours, chips }: { brief: Brief; follow: Follow; h
 
   return (
     <div className="mt-5" data-testid="following-feed">
-      <SectionBox title="Following" count={`${matched.length} ${matched.length === 1 ? "filing" : "filings"} · last ${windowText}`}>
+      <SectionBox
+        title="Following"
+        count={`${matched.length} ${matched.length === 1 ? "filing" : "filings"} · last ${windowText}`}
+        hint={widened ? `Nothing about what you follow in the last ${windowLabel(hours)}, so this looks further back.` : undefined}
+      >
         {matched.length > 0 && (
           <PricesProvider brief={brief}>
             <BecauseProvider value={because}>
@@ -208,15 +224,7 @@ function Feed({ brief, follow, hours, chips }: { brief: Brief; follow: Follow; h
         )}
       </SectionBox>
 
-      {matched.length > 0 && (
-        <p className="mt-8 text-center text-sm text-ink-soft">
-          <span className="font-semibold text-good" aria-hidden="true">
-            ✓
-          </span>{" "}
-          You&apos;re all caught up
-          <span className="mt-1 block text-xs text-ink-faint">Filings checked {whenLabel(brief.generated_at, brief.generated_at)}</span>
-        </p>
-      )}
+      {matched.length > 0 && <CaughtUp generatedAt={brief.generated_at} className="mt-8" />}
     </div>
   );
 }
@@ -225,7 +233,7 @@ function Feed({ brief, follow, hours, chips }: { brief: Brief; follow: Follow; h
  * Follow a company, a person or a topic, and see their filings. Following is kept in this browser only. It picks which filings
  * appear here; it sends no push notification. FINN reads filings, not news.
  */
-export function FollowSection({ brief, hours, researchMissing }: { brief: Brief; hours: number; researchMissing: boolean }) {
+export function FollowSection({ brief, hours, chosen, researchMissing }: { brief: Brief; hours: number; chosen: boolean; researchMissing: boolean }) {
   const follow = useFollow();
   const nameOf = useMemo(() => new Map(brief.companies.map((c) => [c.symbol, shortName(c.name)])), [brief]);
   const chips = chipsFor(follow, (symbol) => nameOf.get(symbol) ?? symbol);
@@ -234,7 +242,7 @@ export function FollowSection({ brief, hours, researchMissing }: { brief: Brief;
     <section aria-label="Follow" data-testid="follow-section">
       <Search brief={brief} follow={follow} />
       <div className="mt-3">{chips.length > 0 ? <Chips chips={chips} /> : <StarterTopics follow={follow} />}</div>
-      {chips.length > 0 && <Feed brief={brief} follow={follow} hours={hours} chips={chips} />}
+      {chips.length > 0 && <Feed brief={brief} follow={follow} hours={hours} chosen={chosen} chips={chips} />}
       <p className="mt-6 text-xs leading-5 text-ink-faint" data-testid="follow-note">
         FINN follows filings from the {brief.companies.length} companies it tracks. Any NSE company is next.
         {researchMissing ? " The filings of the research companies are not available right now." : ""}

@@ -1,6 +1,5 @@
 "use client";
 
-import { DataAsOf } from "@/components/DataAsOf";
 import { WindowHeader } from "@/components/WindowHeader";
 import { useGreeting } from "@/lib/profile";
 
@@ -14,10 +13,6 @@ function Greeting() {
 /** The Brief's heading: a greeting, "Today's Highlights", the time-window button, and when the data was last updated. */
 export function BriefHeader() {
   return (
-    <WindowHeader above={<Greeting />}>
-      <div className="mt-1 text-sm text-ink-soft">
-        <DataAsOf />
-      </div>
-    </WindowHeader>
+    <WindowHeader above={<Greeting />} widen />
   );
 }

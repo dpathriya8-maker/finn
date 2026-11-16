@@ -205,7 +205,7 @@ export function InterestedTab() {
   const companies = [...index.data.companies].sort((a, b) => Number(follow.companies.includes(b.symbol)) - Number(follow.companies.includes(a.symbol)));
   return (
     <div>
-      <FollowSection brief={merged} hours={settings.windowHours} researchMissing={research.kind === "error"} />
+      <FollowSection brief={merged} hours={settings.windowHours} chosen={settings.windowChosen} researchMissing={research.kind === "error"} />
 
       <SectionBox title="Companies you are researching" hint="Tap one to open it. Follow it to see its filings in your feed." className="mt-4">
         {companies.map((entry) => (

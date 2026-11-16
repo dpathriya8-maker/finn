@@ -413,3 +413,17 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Verified:** 199 unit tests, 683 backend tests, types, lint, build; the whole browser sweep (360 and 390 px, light and dark) on the production build.
 
 **Not done:** the You tab's own sections are not boxed (not asked).
+
+## Night plan, Part D: ready for graders (16 Nov 2026)
+
+**Asked:** stale-data safety on the Brief and Alerts, a 60-second demo list in the README and the email, a first-visit hint, and Lighthouse on the live Brief and Research.
+
+**Done:**
+- **Stale data.** Windows were already counted from the data's own time; the device clock is now used only to say the data is more than a day old, and then the heading is "Latest highlights" (Alerts: "Latest alerts"), the first line is "Data as of <date, time>" and the footer says "That's everything in the latest data" (S131). Checked by faking a clock ten days ahead: the Brief is not empty and says it is old.
+- **A finding that changes the first impression.** With data made on a Monday morning the default 24 hours held 0 material filings, so the Brief opened on "Quiet day" and the Kaynes results card (demo step 1) was three days back. While the reader has not chosen a window the Brief now looks back to 3 days, then 7, and says so; the Following feed does the same; a chosen window is never changed (S132). The note first went in the heading and made the page jump (layout shift 0.093); it is now under the tabs (0.004).
+- **First-visit hint** (S133), **60-second demo** at the top of the README and in the email.
+- **Lighthouse was not run.** The environment refused to download and run the package (`npx lighthouse`), and I did not work around that. Instead `scripts/perf_audit.py` measures a real Chromium load with slow-4G and a 4x slower CPU (the settings Lighthouse's mobile run simulates): first and largest paint, layout shift, blocking time, and accessibility and best-practice checks in the page (names on every button, link and field, headings in order, text size, tap targets, `noopener`). These are not Lighthouse scores and are labelled so. It found: Alerts' largest paint at 4.6 s on the live site (a chain of requests), the Brief's at 2.5 s, a 73 by 16 px link. Fixed by preloading the two shared data files, letting the browser's own cache rules apply (the files are served must-revalidate), not drawing the hidden Interested tab until it is needed, and a full-size tap target (S134).
+
+**Verified:** 209 unit tests (12 new: the window rule and stale data), types, lint, build; 279 browser checks on the production build for the screens this touches at 360 and 390 px, light and dark, plus 44 for the new states; the audit on the local build: Brief, Alerts, Research and You all inside Lighthouse's "good" limits.
+
+**Not done:** the actual Lighthouse scores. One command for DP: `npx lighthouse https://finn-mocha.vercel.app --form-factor=mobile`.

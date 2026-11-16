@@ -2,18 +2,20 @@
 
 import Link from "next/link";
 import { CollapsedRow } from "@/components/brief/CollapsedRow";
+import { CaughtUp } from "@/components/CaughtUp";
+import { FirstVisitHint } from "@/components/brief/FirstVisitHint";
 import { GroupSection } from "@/components/brief/GroupSection";
 import { PortfolioSummary } from "@/components/brief/PortfolioSummary";
 import { PricesProvider } from "@/components/brief/PricesContext";
-import { companySections, groupItems, selectItems, staleNotes, summaryParts, whenLabel, WINDOWS } from "@/lib/brief";
-import { updateSettings, useSettings } from "@/lib/settings";
-import type { AppConfig, Brief } from "@/lib/types";
+import { companySections, groupItems, selectItems, staleNotes, summaryParts, windowLabel, WINDOWS } from "@/lib/brief";
+import { updateSettings } from "@/lib/settings";
+import type { Brief } from "@/lib/types";
 import { useJson } from "@/lib/useJson";
+import { useWindow } from "@/lib/useWindow";
 
 export function MorningBrief() {
   const briefState = useJson<Brief>("/data/brief.json");
-  const configState = useJson<AppConfig>("/data/config.json");
-  const settings = useSettings(configState.kind === "ready" ? configState.data : null);
+  const { hours, widened, settings } = useWindow(true);
 
   if (briefState.kind === "loading") {
     return <div className="h-64 animate-pulse rounded-2xl bg-line" aria-label="Loading your brief" />;
@@ -28,7 +30,6 @@ export function MorningBrief() {
   }
 
   const brief = briefState.data;
-  const hours = settings.windowHours;
   const groups = groupItems(selectItems(brief, hours, settings.mutedSymbols));
   const sections = companySections(groups);
   const companyCount = brief.companies.filter((c) => !settings.mutedSymbols.includes(c.symbol)).length;
@@ -48,6 +49,13 @@ export function MorningBrief() {
           </span>
         ))}
       </p>
+      {widened && (
+        <p className="mt-1 text-xs leading-5 text-ink-faint" data-testid="widened-note">
+          Nothing material in the last {windowLabel(settings.windowHours)}, so this looks further back.
+        </p>
+      )}
+
+      <FirstVisitHint />
 
       {stale.length > 0 && (
         <p className="mt-3 rounded-xl bg-watch-bg px-3 py-2 text-xs leading-5 text-watch" role="status">
@@ -103,13 +111,7 @@ export function MorningBrief() {
         </p>
       )}
 
-      <p className="mt-10 pb-2 text-center text-sm text-ink-soft">
-        <span className="font-semibold text-good" aria-hidden="true">
-          ✓
-        </span>{" "}
-        You&apos;re all caught up
-        <span className="mt-1 block text-xs text-ink-faint">Checked {whenLabel(brief.generated_at, brief.generated_at)}</span>
-      </p>
+      <CaughtUp generatedAt={brief.generated_at} className="mt-10 pb-2" />
     </PricesProvider>
   );
 }

@@ -102,7 +102,7 @@ describe("signalAlerts", () => {
 
 describe("filingAlerts", () => {
   const settings = (over: Partial<Settings> = {}): Settings => ({
-    windowHours: 24, volumeMultiple: 2, priceMovePct: 5, mutedSymbols: [], alertCategories: { results: true, dividend: false, insider_trading: false }, ...over,
+    windowHours: 24, windowChosen: false, volumeMultiple: 2, priceMovePct: 5, mutedSymbols: [], alertCategories: { results: true, dividend: false, insider_trading: false }, ...over,
   });
 
   it("includes only the categories the user switched on", () => {

@@ -4,6 +4,17 @@ FINN is a mobile-first web app with two modes. **Push** is a calm Morning Brief 
 
 Built for the ENAM AI Engineer Build Challenge. The design rule behind every screen: **a claim is shown only with its source, and a number is never a model's guess.**
 
+## 60-second demo
+
+Open https://finn-mocha.vercel.app on a phone. (The research engine runs on a free server: the first Research action may wake it, up to 2 minutes.)
+
+1. **Brief:** open the Kaynes results card. (When the last 24 hours are quiet the Brief looks back further and says so.)
+2. Tap **Figures as printed** to see the source page.
+3. **Research → Bajaj Finance:** promises, misses first.
+4. Ask **"What did they say about margins?"**
+5. **Research TITAN** (never prepared; wakes the free server, up to 2 min).
+6. **You → "Try with sample holdings"**, then open a card on the Brief for the calculator.
+
 <table>
 <tr>
 <td><img src="docs/screens/01-brief-light.png" width="190" alt="Morning Brief"></td>

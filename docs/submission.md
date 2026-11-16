@@ -35,6 +35,14 @@ Still yours:
 > - **Code:** https://github.com/dpathriya8-maker/finn
 > - **Start with:** the [README](https://github.com/dpathriya8-maker/finn#readme) (what is verified and what is not, in a table) and [docs/write-up.md](https://github.com/dpathriya8-maker/finn/blob/main/docs/write-up.md) (the approach, the research behind the design, and what I left out).
 >
+> **60-second demo** (open https://finn-mocha.vercel.app on a phone; the research engine is on a free server, so the first Research action may take up to 2 minutes to wake)
+> 1. **Brief:** open the Kaynes results card.
+> 2. Tap **Figures as printed** to see the source page.
+> 3. **Research → Bajaj Finance:** promises, misses first.
+> 4. Ask **"What did they say about margins?"**
+> 5. **Research TITAN** (never prepared; wakes the free server, up to 2 min).
+> 6. **You → "Try with sample holdings"**, then open a card on the Brief for the calculator.
+>
 > **What I built**
 > - **Push:** a Morning Brief of 18 portfolio companies. One line counted in code ("1 risk to review", "Busy day: 6 of your companies filed", or "Quiet day"), then each company once with its filings under it in three lines, ranked so risks come first, with routine filings collapsed and a finite end. Results cards (Revenue, EBITDA, PBT, PAT, QoQ and YoY, read from the filing with no model and checked against Yahoo Finance); management-change cards with the filing's own profile; calm alerts on thresholds the user sets, each stating its reason and whether a same-day filing explains the move.
 > - **Pull:** research on any NSE ticker from the company's own transcripts and annual report: "Delivered 2 of 5 promises that came due" counted in code, a Promise Tracker with the bad news first (Kept / Partly / Missed / Not followed up / Too early, each with its quote, document and page), what management said about the future, and "Ask the documents", which answers only from the filings or says "Not found in the documents".

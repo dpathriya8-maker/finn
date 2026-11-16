@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { companySections, GROUP_LIMIT, groupByCompany, groupItems, selectItems, staleNotes, summaryLine, thingsThatMatter, whenLabel } from "@/lib/brief";
+import { companySections, effectiveWindow, GROUP_LIMIT, groupByCompany, groupItems, selectItems, staleNotes, summaryLine, thingsThatMatter, whenLabel } from "@/lib/brief";
 import type { Brief, Item } from "@/lib/types";
 
 const REF = "2026-11-15T09:00:00+05:30";
@@ -169,5 +169,39 @@ describe("staleNotes", () => {
 
   it("is empty when everything is fresh", () => {
     expect(staleNotes(brief([]))).toEqual([]);
+  });
+});
+
+describe("effectiveWindow (the Brief never opens on an empty day if a wider window has something)", () => {
+  const material = (id: string, hours: number) => item({ id, priority: 80, published_at: hoursBefore(hours) });
+
+  it("keeps the reader's own choice, even if it is empty", () => {
+    const b = brief([material("m", 50)]);
+    expect(effectiveWindow(b, 24, true)).toEqual({ hours: 24, widened: false });
+  });
+
+  it("keeps the default when it already has something material", () => {
+    const b = brief([material("m", 5)]);
+    expect(effectiveWindow(b, 24, false)).toEqual({ hours: 24, widened: false });
+  });
+
+  it("looks back to 3 days, then to 7, when the default holds nothing material, and says it widened", () => {
+    expect(effectiveWindow(brief([material("m", 50)]), 24, false)).toEqual({ hours: 72, widened: true });
+    expect(effectiveWindow(brief([material("m", 100)]), 24, false)).toEqual({ hours: 168, widened: true });
+  });
+
+  it("does not count routine or low filings as material", () => {
+    const b = brief([item({ id: "r", routine: true, priority: 90, published_at: hoursBefore(2) }), item({ id: "l", priority: 10, published_at: hoursBefore(2) }), material("m", 50)]);
+    expect(effectiveWindow(b, 24, false)).toEqual({ hours: 72, widened: true });
+  });
+
+  it("stays on the default when nothing is material in any window", () => {
+    expect(effectiveWindow(brief([material("m", 400)]), 24, false)).toEqual({ hours: 24, widened: false });
+    expect(effectiveWindow(brief([]), 24, false)).toEqual({ hours: 24, widened: false });
+  });
+
+  it("ignores muted companies and never looks at the device's clock", () => {
+    const b = brief([item({ id: "m", symbol: "ITC", priority: 80, published_at: hoursBefore(5) }), material("n", 50)]);
+    expect(effectiveWindow(b, 24, false, ["ITC"])).toEqual({ hours: 72, widened: true });
   });
 });

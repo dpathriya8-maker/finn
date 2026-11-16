@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import base64
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -262,8 +263,10 @@ SCENARIOS: dict[str, dict] = {}
 
 
 def scenario(key: str, path: str, *, steps: list[str] | None = None, expand: bool = False, checks: list[tuple[str, str]] | None = None,
-             wait: float = 4.0, shot_name: str | None = None, contrast: bool = True, keep_storage: bool = False, setup: list[str] | None = None) -> None:
-    SCENARIOS[key] = dict(path=path, steps=steps or [], expand=expand, checks=checks or [], wait=wait, shot=shot_name, contrast=contrast, keep_storage=keep_storage, setup=setup or [])
+             wait: float = 4.0, shot_name: str | None = None, contrast: bool = True, keep_storage: bool = False, setup: list[str] | None = None,
+             init: list[str] | None = None) -> None:
+    """`init` scripts run in the page before any of its own scripts (to fake the device clock, say); `setup` runs on the site's origin before the page is opened."""
+    SCENARIOS[key] = dict(path=path, steps=steps or [], expand=expand, checks=checks or [], wait=wait, shot=shot_name, contrast=contrast, keep_storage=keep_storage, setup=setup or [], init=init or [])
 
 
 def load_scenarios() -> None:
@@ -274,7 +277,7 @@ def load_scenarios() -> None:
 
 def run_scenarios(base: str, only: set[str] | None, shots: Path | None, widths: list[int], themes: list[bool], ignore: str = "") -> Run:
     run = Run(base.rstrip("/"), shots, ignore)
-    browser = Browser()
+    browser = Browser(port=int(os.environ.get("FINN_CHECK_PORT", "9444")))  # a different port lets two checks run side by side
     try:
         tab = browser.tab()
         for key, sc in SCENARIOS.items():
@@ -284,11 +287,13 @@ def run_scenarios(base: str, only: set[str] | None, shots: Path | None, widths: 
                 for dark in themes:
                     label = f"{key} @{width} {'dark' if dark else 'light'}"
                     print(label)
+                    init_ids: list[str] = []
                     try:
                         # Storage is set up on the site's own origin, before the page that reads it is opened.
                         open_page(tab, run.base + "/", width=width, dark=dark, wait=1.0, clear_storage=not sc["keep_storage"])
                         for js in sc["setup"]:
                             tab.js(js)
+                        init_ids = [tab.call("Page.addScriptToEvaluateOnNewDocument", source=js)["identifier"] for js in sc["init"]]
                         tab.call("Page.navigate", url=run.base + sc["path"])
                         time.sleep(sc["wait"])
                         tab.js(SET_VALUE_JS)
@@ -310,6 +315,12 @@ def run_scenarios(base: str, only: set[str] | None, shots: Path | None, widths: 
                             shot(tab, shots / (sc["shot"] + ("-dark" if dark else "-light") + ".png"), width)
                     except Exception as exc:
                         run.record(label + ": ran", False, f"{type(exc).__name__}: {exc}")
+                    finally:
+                        for identifier in init_ids:
+                            try:
+                                tab.call("Page.removeScriptToEvaluateOnNewDocument", identifier=identifier)
+                            except Exception:
+                                pass
     finally:
         browser.close()
     return run
