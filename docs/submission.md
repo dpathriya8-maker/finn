@@ -44,26 +44,28 @@ Still yours:
 > 6. **You → "Try with sample holdings"**, then open a card on the Brief for the calculator.
 >
 > **What I built**
-> - **Push:** a Morning Brief of 18 portfolio companies. One line counted in code ("1 risk to review", "Busy day: 6 of your companies filed", or "Quiet day"), then each company once with its filings under it in three lines, ranked so risks come first, with routine filings collapsed and a finite end. Results cards (Revenue, EBITDA, PBT, PAT, QoQ and YoY, read from the filing with no model and checked against Yahoo Finance); management-change cards with the filing's own profile; calm alerts on thresholds the user sets, each stating its reason and whether a same-day filing explains the move.
+> - **Push:** a Morning Brief of 18 portfolio companies. One line counted in code ("1 risk to review", "Busy day: 6 of your companies filed", or "Quiet day"), then each company once with its filings under it in three lines, ranked so risks come first, with routine filings collapsed and a finite end. Good and bad are soft tints with a word or arrow beside the colour. Results cards (Revenue, EBITDA, PBT, PAT, QoQ and YoY, read from the filing with no model and checked against Yahoo Finance); management-change cards with the filing's own profile; calm alerts on thresholds the user sets, each stating its reason and whether a same-day filing explains the move. Old data says it is old ("Latest highlights", "Data as of"), and on a quiet day the Brief looks further back and says so.
 > - **Pull:** research on any NSE ticker from the company's own transcripts and annual report: "Delivered 2 of 5 promises that came due" counted in code, a Promise Tracker with the bad news first (Kept / Partly / Missed / Not followed up / Too early, each with its quote, document and page), what management said about the future, and "Ask the documents", which answers only from the filings or says "Not found in the documents".
-> - **You:** a profile with no account: an optional name kept on the phone, the portfolio with mute, preferences, and how FINN works.
-> - **In rupees:** optional amounts per company (kept on the phone only) show "Your ₹50,000 · ▼ ₹775 today" on the Brief, and a **What if** calculator in each open card and at the top of every Research page restates real moves in rupees (today, the last 30 days, and a slider from −20% to +20%). It predicts nothing and says it is not advice.
+> - **You:** a profile with no account (an optional name kept on the phone), the portfolio with "Show in my brief" switches, My investments, preferences, and how FINN works.
+> - **My money, in rupees:** optional amounts and average buy prices per company (kept on the phone only) give profit and loss: a portfolio card on the Brief (invested, worth now, overall, today, with a breakdown, biggest loss first) and "Your ₹50,000 · ▼ ₹775 today · ▲ ₹4,200 overall" on each company. Without a buy price it shows only today's move, never an invented profit. "Try with sample holdings" fills clearly labelled sample numbers. A **What if** calculator in each open card and at the top of every Research page restates real moves in rupees (today, the last 30 days, and a slider from −20% to +20%). It predicts nothing and says it is not advice.
+> - **Follow:** one search box follows a company, a person (by exact full name) or one of ten topics, and a Following feed shows the matching filings in the Brief's own cards, each with "Because you follow ...". It covers the 22 companies FINN tracks, reads filings (not news) and sends no push notification.
 >
 > **Key decisions and trade-offs**
 > - A claim is shown only with its source, and a number is never a model's guess: a quote appears only if it is word for word on the page it cites; a verdict needs a quote from a later call; a promise is not called Kept, Partly or Missed before its date has passed; every count, change, margin and the "Delivered N of M" line is computed in code.
 > - Rules before a model: most of the app uses no model (classification, the cards, retrieval, the summary lines). A model is used for three things only, a cheap one by default, every answer cached and every call logged: 222 successful calls, 81 from the cache, about 385,000 tokens in and 36,000 out, all on the free tier ($0).
+> - Honest about time: windows are counted from the data's own timestamp, old data says it is old, and a quiet default window looks further back and says so, instead of opening on an empty day.
 > - The design follows research on investor attention and alert fatigue (short ranked Brief, risks first, a dot not a count, a reason on every alert, no confetti or streaks); the findings and how I used each, with their limits, are in the write-up. A headline takes two lines, not one, so a fact is never cut mid-way.
-> - [24 decisions made up front and 115 while building](https://github.com/dpathriya8-maker/finn/blob/main/docs/decisions.md), [what was verified about each data source, including what failed](https://github.com/dpathriya8-maker/finn/blob/main/docs/data-sources.md), and the [build log](https://github.com/dpathriya8-maker/finn/blob/main/docs/build-log.md).
+> - [24 decisions made up front and 137 while building](https://github.com/dpathriya8-maker/finn/blob/main/docs/decisions.md), [what was verified about each data source, including what failed](https://github.com/dpathriya8-maker/finn/blob/main/docs/data-sources.md), and the [build log](https://github.com/dpathriya8-maker/finn/blob/main/docs/build-log.md).
 >
 > **What I deliberately left out**
 > - Push notifications and accounts (they need a server that knows who you are; FINN keeps settings on the phone).
 > - News, broker notes and web search on the research side: research answers only from the company's own filings.
 > - Company logos and people's photos (licensing, privacy and accuracy risk).
-> - Following people and investing exist only as a labelled preview (the data is real; following triggers nothing and Invest is a "coming soon" sheet).
+> - Investing exists only as a labelled preview (a "coming soon" sheet, no order flow); following works on filings but sends no notification.
 >
 > **Where I'd take it next**
 > - Rank the Brief by exposure to what each reader holds (the amounts are already kept on the phone).
-> - Following people through exchange filings: insider trades, substantial acquisitions (SAST) and management changes.
+> - Follow any NSE company, not only the 22, and follow a person through insider trades, substantial acquisitions (SAST) and management changes.
 > - A three-question first-time setup; one brief a day with quiet hours.
 > - Hinglish across the app.
 > - Investing through a SEBI-registered broker partner, as the revenue model.
@@ -76,8 +78,9 @@ Still yours:
 > 3. Naukri's 99acres billings promise was wrongly "Not followed up"; it is now Kept, with the Q2 FY27 call (page 5) as evidence, re-read on the live site.
 > 4. A ticker I never prepared works live: TITAN was researched on the deployed engine in 34 seconds (four transcripts, 8 promises, a question answered with quotes, an unrelated one answered "Not found"). BSE answers HTTP 403 from Render, so the engine falls back to NSE, whose feed had no annual report for TITAN; the record says so.
 > 5. HAL has only one call, so it has no tracker (the page says why); Asian Paints' annual report is over the 25 MB limit and is skipped.
-> 6. The Interested tab, following people and Invest are a concept preview, marked Preview in the app. No push notifications.
-> 7. Checked in a phone-sized browser at 360 and 390 px, light and dark, not on a real phone. Neither Vercel nor Render deploys on push; I deploy by hand.
+> 6. Invest is a concept (a "coming soon" sheet). Following matches filings by exact name and by category or keywords, so a different spelling of a name will not match; it sends no push notifications.
+> 7. Checked in a phone-sized browser at 360 and 390 px, light and dark (582 of 583 scripted checks passed on the live site in the last full run (the one that failed was the engine answering 404 for a ticker nobody had researched; it now answers 200, Render was redeployed, and those scenarios were re-run: 58 of 58)), not on a real phone. Neither Vercel nor Render deploys on push; I deploy by hand.
+> 8. I could not run Lighthouse (my environment would not let me download and run it). `scripts/perf_audit.py` measures first and largest paint, layout shift, blocking time and accessibility checks on the live site with Lighthouse's mobile settings, and they are inside its "good" limits, but they are my measurements, not Lighthouse scores. `npx lighthouse https://finn-mocha.vercel.app --form-factor=mobile` gives the official ones.
 >
 > Thank you,
 > DP

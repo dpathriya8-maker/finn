@@ -437,3 +437,22 @@ One entry per step: what was asked, what was done, what went wrong. Newest at th
 **Found by the checks and fixed:** the first version failed the contrast check in dark mode only: "Risk" on a tinted card was 3.9:1 (a chip's own fill on top of the tint) and grey text on a green or amber tint was 4.2 to 4.4:1. The chip now sits on the plain surface with a thin ring, and the dark tertiary text is lighter.
 
 **Verified:** 213 unit tests, types, lint, build; 94 browser checks for this part at 360 and 390 px, light and dark, including that each tinted card's background is the status colour mixed into the real surface at the stated percentage and that its edge is 3px in the full colour, with every text at 4.5:1 or better.
+
+## Night plan, Part F: refresh, docs, final verification (16 Nov 2026)
+
+**Asked:** fresh data, the README (60-second demo, what is verified, speed numbers, retaken screenshots), the write-up, the decisions, the email, then every final check on the live site, and a night report.
+
+**Done:**
+- **Fresh data** from this laptop (`pipeline.run --research`, 06:05 IST on 16 Nov): 22 companies, no problems, no stale parts. Nothing had been filed since Sunday 22:05, so the filings are the same ones; the prices and the times are current. The Promise Tracker was not re-run (nothing new to read, and the free quota is small).
+- **Docs:** README (60-second demo at the top, what each new feature does, the table of what is verified, the speed table, screenshots retaken from the live site at 390 px), write-up, decisions (S116 to S137), the email in `docs/submission.md`, this log.
+- **Found by walking the demo on the live site, and fixed:** researching a ticker that was never prepared (TITAN) logged two 404s in the console, because the app asked for per-company data files that do not exist; it now asks only for files it knows exist. "Figures as printed" was a bare expandable list; it now also has "Open the filing at page N". Both are in `c0fa243`.
+- **A third 404, found by a stricter check, fixed on the engine:** `GET /research/{ticker}` answered 404 for "nothing researched yet", which the browser prints as a failed request in its console. My first demo check had wrongly filtered out the engine's own errors, so it passed when it should not have. The engine now answers 200 with `state: none` (the app already handled that), the check is strict, and TITAN researched from a cold engine passes with no console error (`5dec625`).
+- **Deploys:** Vercel is on `c0fa243` (the frontend); Render is on `5dec625` (Render deployed through its API by `scripts/render_deploy.py`, which never prints the key; `/health` answers 200).
+
+**Verified, on the live site after the last deploy:**
+- the full browser sweep, `scripts/check_live.py`, every screen and state at 360 and 390 px in light and dark: 582 of 583 checks passed (the one that failed was the engine answering 404 for a ticker nobody had researched; it now answers 200, Render was redeployed, and those scenarios were re-run: 58 of 58) (console and network errors, sideways scroll, text contrast, and per-feature assertions);
+- the 60-second demo walked end to end by `scripts/live_demo.py`: 18 of 18 (the Kaynes results card, Figures as printed with its page link, Bajaj Finance with the misses first, Ask answering "What did they say about margins?" with quotes and pages, TITAN researched live (24 and 57 seconds on two runs, the second after the engine's cache was cleared by a redeploy) with no console error from any step, sample holdings, the portfolio card and the calculator), and "Engine online";
+- 683 backend tests and 213 frontend unit tests, types, lint, build; the secret check on every commit;
+- speed, measured by `scripts/perf_audit.py` (not Lighthouse): see the README table.
+
+**Not done:** Lighthouse itself (the environment would not let me download and run it). One command for DP: `npx lighthouse https://finn-mocha.vercel.app --form-factor=mobile --view`.
